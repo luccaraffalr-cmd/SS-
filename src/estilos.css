@@ -183,3 +183,25 @@ h2 { font-size: 1.2rem; margin: 0; }
 .acciones .boton.secundario { margin-top: 0; }
 .acciones .ayuda { margin: 4px 0 0; }
 a.boton { display: block; text-align: center; text-decoration: none; }
+
+.boton.verde { background: #16a34a; }
+.puesto { font-size: 1.1rem; font-weight: 600; margin-top: 4px; }
+.titulo-seccion { margin-top: 28px; }
+
+/* Cola */
+.cola { margin: 0; padding-left: 28px; display: flex; flex-direction: column; gap: 6px; font-size: 1.05rem; }
+.cola:empty { display: none; }
+.cola li.yo { font-weight: 700; }
+.cola.con-acciones { list-style: none; padding: 0; }
+.cola.con-acciones li { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.boton-chico {
+  font: inherit;
+  font-size: 0.9rem;
+  padding: 6px 12px;
+  border: none;
+  border-radius: 8px;
+  background: #fee2e2;
+  color: #991b1b;
+}
+.elegir { display: flex; flex-direction: column; gap: 6px; }
+.elegir .fila { background: #f3f4f6; }

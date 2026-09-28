@@ -4,11 +4,12 @@ import { NOMBRE_ESTADO, haceCuanto, textoError } from './estados.js'
 
 const ORDEN_ESTADO = { en_viaje: 0, en_cola: 1, yendo: 2, conectado: 3, desconectado: 4 }
 
-// Gestión: todos los choferes con su estado, en tiempo real.
+// Gestión: la cola y todos los choferes con su estado, en tiempo real.
 export default function Choferes() {
   const [lista, setLista] = useState(null)
   const [ahora, setAhora] = useState(Date.now())
   const [abierto, setAbierto] = useState(null) // chofer al que se le está cambiando el estado
+  const [eligiendo, setEligiendo] = useState(false) // lista de "Agregar a la cola" abierta
   const [error, setError] = useState('')
 
   async function cargar() {
@@ -27,19 +28,50 @@ export default function Choferes() {
     return () => { supabase.removeChannel(canal); clearInterval(reloj) }
   }, [])
 
-  async function cambiar(chofer, nuevo) {
+  async function llamar(funcion, parametros) {
     setError('')
-    const { error } = await supabase.rpc('cambiar_estado_chofer', { chofer: chofer.id, nuevo })
+    const { error } = await supabase.rpc(funcion, parametros)
     if (error) setError(textoError(error))
-    else { setAbierto(null); cargar() }
+    else { setAbierto(null); setEligiendo(false); cargar() }
   }
+
+  const cola = (lista ?? []).filter((c) => c.estado === 'en_cola')
+    .sort((a, b) => new Date(a.anunciado_en) - new Date(b.anunciado_en))
+  const paraAgregar = (lista ?? []).filter((c) => !c.oculto && c.estado !== 'en_cola' && c.estado !== 'en_viaje')
 
   return (
     <main className="pantalla">
-      <h1>Choferes</h1>
+      <h1>Cola</h1>
+      {error && <p className="aviso error">{error}</p>}
+      <section className="tarjeta">
+        {lista !== null && cola.length === 0 && <p className="ayuda sin-margen">No hay nadie en la cola.</p>}
+        <ol className="cola con-acciones">
+          {cola.map((c, i) => (
+            <li key={c.id}>
+              <span><strong>{i + 1}.</strong> {c.perfiles.nombre}</span>
+              <button className="boton-chico" onClick={() => llamar('salir_de_cola', { chofer: c.id })}>Sacar</button>
+            </li>
+          ))}
+        </ol>
+        <button className="boton" onClick={() => setEligiendo(!eligiendo)}>
+          {eligiendo ? 'Cerrar' : '+ Agregar a la cola'}
+        </button>
+        {eligiendo && (
+          <div className="elegir">
+            {paraAgregar.length === 0 && <p className="ayuda sin-margen">No hay choferes para agregar.</p>}
+            {paraAgregar.map((c) => (
+              <button key={c.id} className="fila" onClick={() => llamar('agregar_a_cola', { chofer: c.id })}>
+                <span><strong>{c.perfiles.nombre}</strong></span>
+                <span className={'etiqueta estado ' + c.estado}>{NOMBRE_ESTADO[c.estado]}</span>
+              </button>
+            ))}
+          </div>
+        )}
+      </section>
+
+      <h1 className="titulo-seccion">Choferes</h1>
       {lista === null && <p>Cargando…</p>}
       {lista?.length === 0 && <p className="ayuda">Todavía no hay choferes. Crealos en la pestaña Usuarios.</p>}
-      {error && <p className="aviso error">{error}</p>}
       <ul className="lista">
         {lista?.map((c) => (
           <li key={c.id} className="tarjeta-chofer">
@@ -58,7 +90,8 @@ export default function Choferes() {
                 {c.perfiles.telefono && <a className="boton secundario" href={'tel:' + c.perfiles.telefono}>📞 Llamar</a>}
                 <p className="ayuda">Cambiar estado a:</p>
                 {['conectado', 'yendo', 'desconectado'].filter((e) => e !== c.estado).map((e) => (
-                  <button key={e} className="boton secundario" onClick={() => cambiar(c, e)}>{NOMBRE_ESTADO[e]}</button>
+                  <button key={e} className="boton secundario"
+                    onClick={() => llamar('cambiar_estado_chofer', { chofer: c.id, nuevo: e })}>{NOMBRE_ESTADO[e]}</button>
                 ))}
               </div>
             )}
