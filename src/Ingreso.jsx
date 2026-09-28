@@ -1,8 +1,9 @@
 import { useState } from 'react'
 import { supabase } from './supabase.js'
+import { aEmail } from './usuarios.js'
 
 export default function Ingreso() {
-  const [email, setEmail] = useState('')
+  const [usuario, setUsuario] = useState('')
   const [clave, setClave] = useState('')
   const [error, setError] = useState('')
   const [enviando, setEnviando] = useState(false)
@@ -11,11 +12,11 @@ export default function Ingreso() {
     e.preventDefault()
     setError('')
     setEnviando(true)
-    const { error } = await supabase.auth.signInWithPassword({ email: email.trim(), password: clave })
+    const { error } = await supabase.auth.signInWithPassword({ email: aEmail(usuario), password: clave })
     setEnviando(false)
     if (error) {
       setError(error.message === 'Invalid login credentials'
-        ? 'Email o contraseña incorrectos.'
+        ? 'Usuario o contraseña incorrectos.'
         : 'No se pudo ingresar: ' + error.message)
     }
   }
@@ -25,9 +26,9 @@ export default function Ingreso() {
       <h1>Remisería</h1>
       <form className="tarjeta" onSubmit={ingresar}>
         <label>
-          Email
-          <input type="email" autoComplete="username" value={email}
-            onChange={(e) => setEmail(e.target.value)} required />
+          Usuario o email
+          <input type="text" autoComplete="username" autoCapitalize="none" autoCorrect="off"
+            value={usuario} onChange={(e) => setUsuario(e.target.value)} required />
         </label>
         <label>
           Contraseña

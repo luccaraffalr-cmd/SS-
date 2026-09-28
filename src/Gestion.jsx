@@ -1,20 +1,34 @@
+import { useState } from 'react'
 import BotonSalir from './BotonSalir.jsx'
+import Usuarios from './Usuarios.jsx'
+import { NOMBRE_ROL } from './usuarios.js'
 
-const NOMBRE_ROL = { admin: 'Administrador', operador: 'Operador' }
-
-// Panel de gestión (admin y operadores). Por ahora solo muestra quién entró.
+// Panel de gestión (admin y operadores).
 export default function Gestion({ perfil }) {
+  const esAdmin = perfil.rol === 'admin'
+  const [seccion, setSeccion] = useState('inicio')
+
   return (
-    <main className="pantalla">
-      <h1>Panel de gestión</h1>
-      <p className="aviso ok">
-        Hola, {perfil.nombre} 👋<br />
-        <small>Rol: {NOMBRE_ROL[perfil.rol]}</small>
-      </p>
-      {perfil.rol === 'admin' && (
-        <p className="aviso">Como admin, acá vas a ver también la plata y la configuración.</p>
+    <>
+      <nav className="pestanas">
+        <button className={seccion === 'inicio' ? 'activa' : ''} onClick={() => setSeccion('inicio')}>Inicio</button>
+        {esAdmin && (
+          <button className={seccion === 'usuarios' ? 'activa' : ''} onClick={() => setSeccion('usuarios')}>Usuarios</button>
+        )}
+      </nav>
+
+      {seccion === 'usuarios' && esAdmin ? (
+        <Usuarios yo={perfil} />
+      ) : (
+        <main className="pantalla">
+          <h1>Panel de gestión</h1>
+          <p className="aviso ok">
+            Hola, {perfil.nombre} 👋<br />
+            <small>Rol: {NOMBRE_ROL[perfil.rol]}</small>
+          </p>
+          <BotonSalir />
+        </main>
       )}
-      <BotonSalir />
-    </main>
+    </>
   )
 }
