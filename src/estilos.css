@@ -196,6 +196,13 @@ a.boton { display: block; text-align: center; text-decoration: none; }
 
 .oferta { border: 3px solid #f59e0b; }
 .sin-pago { border: 3px solid #f59e0b; }
+.esperando { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 6px; }
+.esperando:empty { display: none; }
+.esperando li { display: flex; align-items: baseline; gap: 8px; padding: 8px 12px; border-radius: 10px; background: #f3f4f6; }
+.esperando strong { font-size: 1.2rem; }
+.esperando small { color: #6b7280; }
+.esperando span { margin-left: auto; color: #6b7280; font-size: 0.9rem; }
+
 .aviso-notificaciones { border: 3px solid #facc15; background: #fefce8; }
 
 .form-pago { display: flex; flex-direction: column; gap: 12px; }

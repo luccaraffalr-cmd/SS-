@@ -4,6 +4,7 @@ import { urlFotoAuto } from './fotos.js'
 import { NOMBRE_ESTADO, textoError } from './estados.js'
 import MisViajes from './MisViajes.jsx'
 import ActivarNotificaciones from './ActivarNotificaciones.jsx'
+import ViajesEsperando from './ViajesEsperando.jsx'
 
 const AYUDA_ESTADO = {
   fuera_de_servicio: 'No estás trabajando.',
@@ -111,6 +112,7 @@ export default function Chofer({ perfil }) {
       {error && <p className="aviso error">{error}</p>}
 
       <MisViajes perfil={perfil} />
+      <ViajesEsperando />
 
       <section className="tarjeta separada">
         <h2>Cola ({cola.length})</h2>
