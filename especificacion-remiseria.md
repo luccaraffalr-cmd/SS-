@@ -286,6 +286,28 @@ Hoy la ubicación "desaparece" por varios minutos. Hay que diseñar para que **n
 
 ---
 
+## 10 bis. Decisiones tomadas durante el desarrollo
+
+> Reemplazan lo que diga el resto del documento sobre el mismo tema.
+
+- **(2026-09-28) Estados del chofer simplificados a 4, sin cambios automáticos.** Reemplaza la sección 3 bis:
+
+  | Estado | Significado | Cómo se entra |
+  |---|---|---|
+  | **Fuera de servicio** | No está trabajando. | "Terminar el día" o lo pone gestión. |
+  | **Libre** | Trabajando pero no anunciado (yendo a la base, volviendo de un viaje). | "Empezar a trabajar", o al terminar un viaje. |
+  | **En cola** | Anunciado en la base, con su puesto. | "Anunciarme" o gestión "Agregar a la cola". |
+  | **En viaje** | Tiene un viaje asignado. | Al asignarle un viaje. |
+
+  - Los estados **no cambian solos por tiempo**: no hay alerta "sin señal" ni desconexión automática, y abrir la app no cambia el estado. Es normal que un chofer tarde mucho en volver a la base.
+  - "Último reporte hace X min" se muestra como dato informativo.
+  - Los choferes ven la cola, quién está Libre y quién En viaje.
+- **(2026-09-28) Cola ordenable "tipo Spotify":** en gestión se arrastra a cada chofer al puesto que se quiera.
+- **(2026-09-28) Choferes entran con un usuario** (ej. `juanperez`), no necesitan email.
+- **Ubicación (Etapa 2):** integrar a esta app el sistema de ubicación que hoy se usa para mandar a los clientes (Traccar), y a futuro que la app del chofer reporte la ubicación sola.
+
+---
+
 ## 11. Temas a confirmar con el dueño
 
 | # | Tema | Comportamiento por defecto |

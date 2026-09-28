@@ -2,7 +2,6 @@ import { useState } from 'react'
 import BotonSalir from './BotonSalir.jsx'
 import Usuarios from './Usuarios.jsx'
 import Choferes from './Choferes.jsx'
-import Configuracion from './Configuracion.jsx'
 import { NOMBRE_ROL } from './usuarios.js'
 
 // Panel de gestión (admin y operadores).
@@ -33,7 +32,6 @@ export default function Gestion({ perfil }) {
             {perfil.nombre}<br />
             <small>Rol: {NOMBRE_ROL[perfil.rol]}</small>
           </p>
-          {esAdmin && <Configuracion />}
           <BotonSalir />
         </main>
       )}

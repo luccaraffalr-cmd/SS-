@@ -154,9 +154,8 @@ h2 { font-size: 1.2rem; margin: 0; }
 .etiqueta.oculto { margin-left: 8px; background: #fef3c7; color: #92400e; }
 
 /* Colores de los estados del chofer */
-.estado.desconectado { background: #e5e7eb; color: #4b5563; }
-.estado.conectado { background: #dbeafe; color: #1e40af; }
-.estado.yendo { background: #fef3c7; color: #92400e; }
+.estado.fuera_de_servicio { background: #e5e7eb; color: #4b5563; }
+.estado.libre { background: #fef3c7; color: #92400e; }
 .estado.en_cola { background: #dcfce7; color: #166534; }
 .estado.en_viaje { background: #ede9fe; color: #5b21b6; }
 
@@ -167,9 +166,8 @@ h2 { font-size: 1.2rem; margin: 0; }
   font-size: 1.6rem;
   font-weight: 700;
 }
-.estado-grande.desconectado { background: #e5e7eb; color: #4b5563; }
-.estado-grande.conectado { background: #dbeafe; color: #1e40af; }
-.estado-grande.yendo { background: #fef3c7; color: #92400e; }
+.estado-grande.fuera_de_servicio { background: #e5e7eb; color: #4b5563; }
+.estado-grande.libre { background: #fef3c7; color: #92400e; }
 .estado-grande.en_cola { background: #dcfce7; color: #166534; }
 .estado-grande.en_viaje { background: #ede9fe; color: #5b21b6; }
 
@@ -192,8 +190,6 @@ a.boton { display: block; text-align: center; text-decoration: none; }
 .cola { margin: 0; padding-left: 28px; display: flex; flex-direction: column; gap: 6px; font-size: 1.05rem; }
 .cola:empty { display: none; }
 .cola li.yo { font-weight: 700; }
-.cola.con-acciones { list-style: none; padding: 0; }
-.cola.con-acciones li { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
 .boton-chico {
   font: inherit;
   font-size: 0.9rem;
@@ -203,22 +199,35 @@ a.boton { display: block; text-align: center; text-decoration: none; }
   background: #fee2e2;
   color: #991b1b;
 }
-/* Alerta "sin señal" */
-.alerta-sin-senal {
+
+/* Cola ordenable (gestión) */
+.cola-ordenable { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 6px; }
+.cola-ordenable:empty { display: none; }
+.fila-cola {
   display: flex;
-  flex-direction: column;
-  gap: 8px;
-  margin-bottom: 20px;
-  padding: 14px 16px;
-  border-radius: 12px;
-  background: #dc2626;
-  color: #fff;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 8px 8px 12px;
+  border-radius: 10px;
+  background: #f3f4f6;
   font-size: 1.05rem;
+  position: relative;
 }
-.alerta-fila { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
-.boton-chico.llamar { background: #fff; color: #991b1b; text-decoration: none; white-space: nowrap; }
-.tarjeta-chofer.sin-senal { outline: 3px solid #dc2626; }
-.tarjeta-chofer.sin-senal .reporte { color: #dc2626; font-weight: 600; }
+.fila-cola.arrastrando { z-index: 2; background: #e0e7ff; box-shadow: 0 6px 16px rgba(0, 0, 0, 0.2); }
+.fila-cola .numero { font-weight: 700; min-width: 1.5em; }
+.fila-cola .nombre { flex: 1; min-width: 0; }
+.manija {
+  font: inherit;
+  font-size: 1.5rem;
+  line-height: 1;
+  padding: 6px 12px;
+  border: none;
+  border-radius: 8px;
+  background: transparent;
+  color: #6b7280;
+  cursor: grab;
+  touch-action: none; /* para poder arrastrar con el dedo sin que se mueva la página */
+}
 
 /* Cartel "hay una versión nueva" */
 .aviso-version {

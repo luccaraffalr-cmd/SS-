@@ -1,31 +1,34 @@
-import { useCallback, useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import { supabase } from './supabase.js'
 import { urlFotoAuto } from './fotos.js'
 import { NOMBRE_ESTADO, textoError } from './estados.js'
 
 const CADA_CUANTO_REPORTA = 60 * 1000 // 1 minuto
 
-// App del chofer: su estado, la cola y quién está yendo o en viaje.
+const AYUDA_ESTADO = {
+  fuera_de_servicio: 'No estás trabajando.',
+  libre: 'Estás trabajando, pero no estás anunciado en la base.',
+  en_cola: '',
+  en_viaje: 'Tenés un viaje asignado.',
+}
+
+// App del chofer: su estado, la cola y quién está libre o en viaje.
 export default function Chofer({ perfil }) {
   const [chofer, setChofer] = useState(null)
   const [companeros, setCompaneros] = useState([])
   const [error, setError] = useState('')
   const [ocupado, setOcupado] = useState(false)
-  const estadoRef = useRef(null)
-  estadoRef.current = chofer?.estado
 
   const cargarTablero = useCallback(async () => {
     const { data } = await supabase.from('choferes')
-      .select('id, estado, anunciado_en, oculto, perfiles(nombre)')
-      .in('estado', ['en_cola', 'yendo', 'en_viaje'])
+      .select('id, estado, anunciado_en, perfiles(nombre)')
+      .in('estado', ['en_cola', 'libre', 'en_viaje'])
     setCompaneros(data ?? [])
   }, [])
 
-  // Al abrir la app y cada minuto: "sigo acá". Si tocó "Desconectarme", no reporta
-  // (si no, lo volvería a conectar solo).
+  // Al abrir la app y cada minuto anota "último reporte". No cambia el estado.
   useEffect(() => {
     async function reportar() {
-      if (estadoRef.current === 'desconectado') return
       const { data, error } = await supabase.rpc('reportar_chofer')
       if (error || !data) setError('No se pudo conectar con el servidor. Revisá tu internet.')
       else { setError(''); setChofer(data) }
@@ -61,15 +64,6 @@ export default function Chofer({ perfil }) {
   }
   const cambiarEstado = (nuevo) => llamar('cambiar_mi_estado', { nuevo })
 
-  async function cerrarSesion() {
-    if (chofer?.estado === 'en_viaje') {
-      setError('Tenés un viaje sin finalizar. Primero finalizalo.')
-      return
-    }
-    await supabase.rpc('cambiar_mi_estado', { nuevo: 'desconectado' })
-    await supabase.auth.signOut()
-  }
-
   if (!chofer) {
     return (
       <main className="pantalla">
@@ -82,10 +76,10 @@ export default function Chofer({ perfil }) {
   const estado = chofer.estado
   const cola = companeros.filter((c) => c.estado === 'en_cola')
     .sort((a, b) => new Date(a.anunciado_en) - new Date(b.anunciado_en))
-  const yendo = companeros.filter((c) => c.estado === 'yendo')
+  const libres = companeros.filter((c) => c.estado === 'libre')
   const enViaje = companeros.filter((c) => c.estado === 'en_viaje')
   const miPuesto = cola.findIndex((c) => c.id === perfil.id) + 1
-  const puedeAnunciarse = !chofer.oculto && (estado === 'conectado' || estado === 'yendo')
+  const puedeAnunciarse = !chofer.oculto && (estado === 'libre' || estado === 'fuera_de_servicio')
 
   return (
     <main className="pantalla">
@@ -95,29 +89,21 @@ export default function Chofer({ perfil }) {
         {NOMBRE_ESTADO[estado]}
         {estado === 'en_cola' && miPuesto > 0 && <div className="puesto">Puesto {miPuesto}</div>}
       </div>
-      {estado === 'conectado' && <p className="ayuda centrada">Tenés la app abierta, pero todavía no estás trabajando.</p>}
-      {estado === 'yendo' && <p className="ayuda centrada">Avisaste que vas para la base.</p>}
-      {estado === 'desconectado' && <p className="ayuda centrada">No estás trabajando.</p>}
+      {AYUDA_ESTADO[estado] && <p className="ayuda centrada">{AYUDA_ESTADO[estado]}</p>}
       {chofer.oculto && <p className="ayuda centrada">Solo recibís viajes que te asigna gestión.</p>}
 
       <div className="botonera">
         {puedeAnunciarse && (
           <button className="boton grande verde" disabled={ocupado} onClick={() => llamar('anunciarme')}>✋ Anunciarme</button>
         )}
+        {estado === 'fuera_de_servicio' && (
+          <button className="boton grande" disabled={ocupado} onClick={() => cambiarEstado('libre')}>Empezar a trabajar</button>
+        )}
         {estado === 'en_cola' && (
           <button className="boton secundario" disabled={ocupado} onClick={() => llamar('salir_de_cola')}>Darme de baja de la cola</button>
         )}
-        {estado === 'conectado' && (
-          <button className="boton secundario" disabled={ocupado} onClick={() => cambiarEstado('yendo')}>🚗 Yendo a la base</button>
-        )}
-        {estado === 'yendo' && (
-          <button className="boton secundario" disabled={ocupado} onClick={() => cambiarEstado('conectado')}>Ya no voy</button>
-        )}
-        {estado === 'desconectado' && (
-          <button className="boton grande" disabled={ocupado} onClick={() => cambiarEstado('conectado')}>Conectarme</button>
-        )}
-        {estado !== 'desconectado' && estado !== 'en_viaje' && (
-          <button className="boton secundario" disabled={ocupado} onClick={() => cambiarEstado('desconectado')}>Desconectarme</button>
+        {(estado === 'libre' || estado === 'en_cola') && (
+          <button className="boton secundario" disabled={ocupado} onClick={() => cambiarEstado('fuera_de_servicio')}>Terminar el día</button>
         )}
       </div>
       {error && <p className="aviso error">{error}</p>}
@@ -130,8 +116,8 @@ export default function Chofer({ perfil }) {
             <li key={c.id} className={c.id === perfil.id ? 'yo' : ''}>{c.perfiles?.nombre}{c.id === perfil.id && ' (vos)'}</li>
           ))}
         </ol>
-        {yendo.length > 0 && (
-          <p className="sin-margen"><strong>Yendo:</strong> {yendo.map((c) => c.perfiles?.nombre).join(', ')}</p>
+        {libres.length > 0 && (
+          <p className="sin-margen"><strong>Libres:</strong> {libres.map((c) => c.perfiles?.nombre).join(', ')}</p>
         )}
         {enViaje.length > 0 && (
           <p className="sin-margen"><strong>En viaje:</strong> {enViaje.map((c) => c.perfiles?.nombre).join(', ')}</p>
@@ -148,7 +134,7 @@ export default function Chofer({ perfil }) {
         </p>
       </div>
 
-      <button className="boton secundario" onClick={cerrarSesion}>Cerrar sesión</button>
+      <button className="boton secundario" onClick={() => supabase.auth.signOut()}>Cerrar sesión</button>
     </main>
   )
 }

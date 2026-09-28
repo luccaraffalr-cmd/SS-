@@ -1,7 +1,8 @@
+// Los 4 estados del chofer. Solo cambian cuando alguien toca un botón
+// (o al asignar / terminar un viaje), nunca solos por tiempo.
 export const NOMBRE_ESTADO = {
-  desconectado: 'Desconectado',
-  conectado: 'Conectado',
-  yendo: 'Yendo',
+  fuera_de_servicio: 'Fuera de servicio',
+  libre: 'Libre',
   en_cola: 'En cola',
   en_viaje: 'En viaje',
 }
