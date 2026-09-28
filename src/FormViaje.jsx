@@ -53,8 +53,8 @@ export default function FormViaje({ viaje, onListo }) {
   const [corrigiendoPago, setCorrigiendoPago] = useState(false)
   const hecho = !esNuevo && ['pago_pendiente', 'finalizado'].includes(viaje.estado)
 
-  async function corregirPago(importe, forma_pago) {
-    const { error } = await supabase.rpc('corregir_pago', { viaje: viaje.id, importe, forma_pago })
+  async function corregirPago(importe, forma_pago, cuenta) {
+    const { error } = await supabase.rpc('corregir_pago', { viaje: viaje.id, importe, forma_pago, cuenta })
     if (error) return 'No se pudo guardar: ' + error.message
     onListo()
   }
@@ -212,9 +212,12 @@ export default function FormViaje({ viaje, onListo }) {
           <h2>Pago</h2>
           {viaje.estado === 'pago_pendiente'
             ? <p className="aviso sin-margen">⏳ {viaje.chofer?.nombre ?? 'El chofer'} todavía no cargó el pago.</p>
-            : <p className="sin-margen"><strong className="importe">{dinero(viaje.importe)}</strong> · {FORMAS_PAGO[viaje.forma_pago]}</p>}
+            : <p className="sin-margen">
+                <strong className="importe">{dinero(viaje.importe)}</strong> · {FORMAS_PAGO[viaje.forma_pago]}
+                {viaje.cuenta?.nombre && <>: <strong>{viaje.cuenta.nombre}</strong></>}
+              </p>}
           {corrigiendoPago ? (
-            <FormPago importeInicial={viaje.importe} formaInicial={viaje.forma_pago}
+            <FormPago importeInicial={viaje.importe} formaInicial={viaje.forma_pago} cuentaInicial={viaje.cuenta_id}
               textoBoton="Guardar (queda registrado)" onGuardar={corregirPago} onCancelar={() => setCorrigiendoPago(false)} />
           ) : (
             <button type="button" className="boton secundario" onClick={() => setCorrigiendoPago(true)}>

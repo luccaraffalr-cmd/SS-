@@ -3,6 +3,7 @@ import BotonSalir from './BotonSalir.jsx'
 import Usuarios from './Usuarios.jsx'
 import Choferes from './Choferes.jsx'
 import Viajes from './Viajes.jsx'
+import CuentasCorrientes from './CuentasCorrientes.jsx'
 import { NOMBRE_ROL } from './usuarios.js'
 
 // Panel de gestión (admin y operadores).
@@ -13,7 +14,7 @@ export default function Gestion({ perfil }) {
   const pestanas = [
     ['viajes', 'Viajes'],
     ['choferes', 'Choferes'],
-    ...(esAdmin ? [['usuarios', 'Usuarios']] : []),
+    ...(esAdmin ? [['cuentas', 'Cuentas'], ['usuarios', 'Usuarios']] : []),
     ['cuenta', 'Mi cuenta'],
   ]
 
@@ -27,6 +28,7 @@ export default function Gestion({ perfil }) {
 
       {seccion === 'viajes' && <Viajes />}
       {seccion === 'choferes' && <Choferes />}
+      {seccion === 'cuentas' && esAdmin && <CuentasCorrientes />}
       {seccion === 'usuarios' && esAdmin && <Usuarios yo={perfil} />}
       {seccion === 'cuenta' && (
         <main className="pantalla">

@@ -6,7 +6,8 @@ import {
 } from './viajes.js'
 
 const ACTIVOS = ['sin_chofer', 'ofrecido', 'asignado']
-const CONSULTA = '*, chofer:perfiles!viajes_chofer_id_fkey(nombre), rechazo:perfiles!viajes_rechazado_por_fkey(nombre)'
+const CONSULTA = '*, chofer:perfiles!viajes_chofer_id_fkey(nombre), rechazo:perfiles!viajes_rechazado_por_fkey(nombre),'
+  + ' cuenta:cuentas_corrientes(nombre)'
 
 // Gestión: todos los viajes con su estado, con filtros por fecha, estado y chofer.
 export default function Viajes() {
@@ -145,7 +146,11 @@ export default function Viajes() {
                 {(v.cliente_nombre || v.estado === 'finalizado') && (
                   <div className="viaje-abajo">
                     <span>{v.cliente_nombre}</span>
-                    {v.estado === 'finalizado' && <span className="importe">{dinero(v.importe)} · {FORMAS_PAGO[v.forma_pago]}</span>}
+                    {v.estado === 'finalizado' && (
+                      <span className="importe">
+                        {dinero(v.importe)} · {v.cuenta?.nombre ? `Cta. cte. ${v.cuenta.nombre}` : FORMAS_PAGO[v.forma_pago]}
+                      </span>
+                    )}
                   </div>
                 )}
               </button>
