@@ -3,6 +3,20 @@ import { supabase } from './supabase.js'
 import { NOMBRE_ESTADO_VIAJE, fechaLocal, hora, unirFechaHora } from './viajes.js'
 import ElegirChofer, { useChoferesParaAsignar } from './ElegirChofer.jsx'
 
+// Explicación en palabras de en qué anda la asignación del viaje.
+function textoSituacion(v) {
+  const nombre = v.chofer?.nombre
+  if (v.estado === 'sin_chofer' && v.espera_gestion) {
+    return `❌ ${v.rechazo?.nombre ?? 'El chofer'} rechazó este viaje. No se asigna solo: elegí otro chofer o dejalo en automático.`
+  }
+  if (v.estado === 'sin_chofer') return 'Esperando chofer: se le ofrece al primero de la cola.'
+  if (v.estado === 'ofrecido' && v.oferta_vence) return `Se le ofreció a ${nombre}. Tiene 3 minutos para aceptar.`
+  if (v.estado === 'ofrecido') return `📌 Asignado a mano a ${nombre}. Esperando que lo acepte.`
+  if (v.estado === 'asignado' && !v.iniciado_en) return `${nombre} lo aceptó. Todavía no salió a hacerlo.`
+  if (v.estado === 'asignado') return `${nombre} está haciendo este viaje.`
+  return ''
+}
+
 const ANTICIPACION_POR_DEFECTO = 30
 const ANTICIPACIONES_RAPIDAS = [10, 20, 30, 45]
 
@@ -31,7 +45,15 @@ export default function FormViaje({ viaje, onListo }) {
   const [choferElegido, setChoferElegido] = useState(viaje?.chofer_id ?? '')
   const choferes = useChoferesParaAsignar()
   const cambiar = (campo) => (e) => setDatos({ ...datos, [campo]: e.target.value })
-  const sePuedeAnular = !esNuevo && ['sin_chofer', 'asignado'].includes(viaje.estado)
+  const sePuedeAnular = !esNuevo && ['sin_chofer', 'ofrecido', 'asignado'].includes(viaje.estado)
+  const sePuedePriorizar = !esNuevo && (viaje.estado === 'sin_chofer' || (viaje.estado === 'ofrecido' && viaje.oferta_vence))
+
+  async function cambiarPrioridad() {
+    setError('')
+    const { error } = await supabase.from('viajes').update({ prioritario: !viaje.prioritario }).eq('id', viaje.id)
+    if (error) setError('No se pudo cambiar la prioridad: ' + error.message)
+    else onListo()
+  }
 
   // Asignar, cambiar o sacar el chofer de un viaje ya cargado.
   async function guardarChofer() {
@@ -79,19 +101,21 @@ export default function FormViaje({ viaje, onListo }) {
     if (esProgramado) fila.hora_asignacion = asignacion.toISOString()
     else if (esNuevo || viaje.tipo === 'programado') fila.hora_asignacion = new Date().toISOString()
 
-    // Regla D: chofer elegido al cargar el viaje (queda fijo, la cola no lo toma).
-    if (esNuevo && choferElegido) {
-      const { data } = await supabase.auth.getSession()
-      Object.assign(fila, {
-        estado: 'asignado', chofer_id: choferElegido,
-        asignado_en: new Date().toISOString(), asignado_por: data.session.user.id,
-      })
-    }
+    // Regla D: chofer elegido al cargar el viaje. Se carga "en espera de gestión" (para que la
+    // cola no lo tome) y enseguida se le asigna a ese chofer, que lo tiene que aceptar.
+    if (esNuevo && choferElegido) fila.espera_gestion = true
 
     setEnviando(true)
-    const { error } = esNuevo
-      ? await supabase.from('viajes').insert(fila)
-      : await supabase.from('viajes').update(fila).eq('id', viaje.id)
+    let error
+    if (esNuevo) {
+      const r = await supabase.from('viajes').insert(fila).select('id').single()
+      error = r.error
+      if (!error && choferElegido) {
+        error = (await supabase.rpc('asignar_viaje', { viaje: r.data.id, chofer: choferElegido })).error
+      }
+    } else {
+      error = (await supabase.from('viajes').update(fila).eq('id', viaje.id)).error
+    }
     setEnviando(false)
     if (error) setError('No se pudo guardar: ' + error.message)
     else onListo()
@@ -165,14 +189,22 @@ export default function FormViaje({ viaje, onListo }) {
 
       {sePuedeAnular && (
         <div className="tarjeta separada">
+          <p className="sin-margen">{textoSituacion(viaje)}</p>
+          {sePuedePriorizar && (
+            <button type="button" className="boton secundario" onClick={cambiarPrioridad}>
+              {viaje.prioritario ? 'Quitar prioridad' : '⭐ Priorizar (se asigna antes que los demás)'}
+            </button>
+          )}
           <label>
             Chofer
             <ElegirChofer valor={choferElegido} onCambiar={setChoferElegido} choferes={choferes}
               textoVacio="Sin chofer (vuelve a la asignación automática)" />
           </label>
-          <button type="button" className="boton" disabled={enviando || choferElegido === (viaje.chofer_id ?? '')}
+          <button type="button" className="boton"
+            disabled={enviando || (choferElegido === (viaje.chofer_id ?? '') && !viaje.espera_gestion)}
             onClick={guardarChofer}>
-            {choferElegido ? 'Asignar a este chofer' : 'Dejar sin chofer'}
+            {choferElegido ? 'Asignar a este chofer'
+              : viaje.espera_gestion ? 'Pasar a asignación automática' : 'Dejar sin chofer'}
           </button>
         </div>
       )}
@@ -185,8 +217,8 @@ export default function FormViaje({ viaje, onListo }) {
             <>
               <p className="sin-margen">
                 ¿Seguro que querés anular el viaje #{viaje.id}?
-                {viaje.estado === 'asignado' && viaje.chofer?.nombre &&
-                  <> Si <strong>{viaje.chofer.nombre}</strong> ya lo estaba haciendo, vuelve al puesto 1 de la cola.</>}
+                {viaje.iniciado_en && viaje.chofer?.nombre &&
+                  <> <strong>{viaje.chofer.nombre}</strong> vuelve al puesto 1 de la cola.</>}
               </p>
               <button type="button" className="boton peligro" disabled={enviando} onClick={anular}>Sí, anular</button>
               <button type="button" className="boton secundario" onClick={() => setConfirmandoAnular(false)}>No, dejarlo</button>

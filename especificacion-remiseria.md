@@ -303,6 +303,17 @@ Hoy la ubicación "desaparece" por varios minutos. Hay que diseñar para que **n
   - "Último reporte hace X min" se muestra como dato informativo: es la última vez que el chofer hizo algo en la app (cambió su estado). Tener la app abierta no cuenta, y los cambios que hace gestión tampoco.
   - Los choferes ven la cola, quién está Libre y quién En viaje.
 - **(2026-09-28) Cola ordenable "tipo Spotify":** en gestión se arrastra a cada chofer al puesto que se quiera.
+- **(2026-09-28) Asignación con aceptación del chofer.** Reemplaza "El chofer no puede rechazar viajes" (4.3):
+  - **Oferta automática:** el viaje se le ofrece al primero de la cola, que tiene **3 minutos** para aceptar (a revisar).
+    - **No contesta:** el viaje pasa al siguiente y él conserva su lugar en la cola.
+    - **Rechaza:** el viaje pasa al siguiente y él **sale de la cola** (queda Libre; si rechaza es porque pasó algo).
+    - No se le vuelve a ofrecer el mismo viaje.
+  - **Asignación manual (gestión):** el chofer la acepta al recibirla (sin tiempo límite) y, cuando llega la hora o termina el viaje que está haciendo, toca **"Salir a hacer el viaje"**. Si la rechaza, el viaje **vuelve a gestión** (no se asigna solo).
+  - Gestión puede asignar a un chofer que está **En viaje**: queda como su **próximo viaje**.
+  - Si gestión le saca un viaje que ya estaba haciendo (reasigna o anula), el chofer vuelve al **puesto 1**.
+  - Si todos están ocupados, el viaje que espera se le ofrece al **primero que se anuncie** (como la regla B).
+- **(2026-09-28) Prioridad entre viajes esperando:** primero los marcados **⭐ Priorizar** por gestión, después los **programados**, después los **inmediatos**; dentro de cada grupo, el de hora de asignación más temprana.
+- **(2026-09-28) Tema a confirmar n.º 1:** el chofer elegido para un programado **sigue en la cola** hasta su hora (puede rechazar ofertas si sabe que no llega). Destino: opcional, pero se le muestra al chofer en la oferta.
 - **(2026-09-28) Choferes entran con un usuario** (ej. `juanperez`), no necesitan email.
 - **Ubicación (Etapa 2):** integrar a esta app el sistema de ubicación que hoy se usa para mandar a los clientes (Traccar), y a futuro que la app del chofer reporte la ubicación sola.
 
@@ -312,6 +323,6 @@ Hoy la ubicación "desaparece" por varios minutos. Hay que diseñar para que **n
 
 | # | Tema | Comportamiento por defecto |
 |---|---|---|
-| 1 | Chofer elegido que estaba en la cola: ¿sale de la cola? | Sale cuando le toca hacer el viaje |
+| 1 | Chofer elegido que estaba en la cola: ¿sale de la cola? | ✅ Resuelto: sigue en la cola hasta su hora (ver 10 bis) |
 | 2 | Viaje fallido: ¿motivo obligatorio? | Opcional |
 | 3 | Viaje fallido: ¿el chofer vuelve al puesto 1 o al final? | Al final |

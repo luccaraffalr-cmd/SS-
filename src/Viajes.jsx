@@ -2,10 +2,11 @@ import { useCallback, useEffect, useState } from 'react'
 import { supabase } from './supabase.js'
 import FormViaje from './FormViaje.jsx'
 import {
-  NOMBRE_ESTADO_VIAJE, esAsignableSinChofer, fechaCorta, fechaLocal, hora, unirFechaHora,
+  NOMBRE_ESTADO_VIAJE, esAsignableSinChofer, fechaCorta, fechaLocal, hora, tiempoRestante, unirFechaHora,
 } from './viajes.js'
 
-const ACTIVOS = ['sin_chofer', 'asignado']
+const ACTIVOS = ['sin_chofer', 'ofrecido', 'asignado']
+const CONSULTA = '*, chofer:perfiles!viajes_chofer_id_fkey(nombre), rechazo:perfiles!viajes_rechazado_por_fkey(nombre)'
 
 // Gestión: todos los viajes con su estado, con filtros por fecha, estado y chofer.
 export default function Viajes() {
@@ -18,7 +19,7 @@ export default function Viajes() {
   const [ahora, setAhora] = useState(Date.now())
 
   const cargar = useCallback(async () => {
-    let consulta = supabase.from('viajes').select('*, chofer:perfiles!viajes_chofer_id_fkey(nombre)')
+    let consulta = supabase.from('viajes').select(CONSULTA)
     if (filtroFecha) {
       const desde = unirFechaHora(filtroFecha, '00:00')
       const hasta = new Date(desde.getFullYear(), desde.getMonth(), desde.getDate() + 1)
@@ -49,8 +50,11 @@ export default function Viajes() {
   useEffect(() => {
     supabase.from('perfiles').select('id, nombre').eq('rol', 'chofer').eq('activo', true).order('nombre')
       .then(({ data }) => setChoferes(data ?? []))
-    const reloj = setInterval(() => setAhora(Date.now()), 30 * 1000)
-    return () => clearInterval(reloj)
+    // Cada pocos segundos: actualiza las cuentas regresivas y le pide al servidor que pase
+    // al siguiente chofer las ofertas vencidas (sin esperar al minuto del servidor).
+    const reloj = setInterval(() => setAhora(Date.now()), 5 * 1000)
+    const revisar = setInterval(() => supabase.rpc('revisar_asignaciones'), 20 * 1000)
+    return () => { clearInterval(reloj); clearInterval(revisar) }
   }, [])
 
   if (editando) {
@@ -95,26 +99,35 @@ export default function Viajes() {
           const urgente = esAsignableSinChofer(v, ahora)
           const esperando = v.estado === 'sin_chofer' && !urgente
           // Asignado a mano por gestión (chofer elegido o reasignado): chofer fijo, en naranja.
-          const fijo = v.estado === 'asignado' && v.asignado_por
+          const fijo = ['ofrecido', 'asignado'].includes(v.estado) && v.asignado_por
+          const etiqueta = v.estado === 'sin_chofer' && v.espera_gestion ? 'Rechazado: decidir'
+            : esperando ? `Se asigna ${hora(v.hora_asignacion)}`
+            : v.estado === 'ofrecido' && v.oferta_vence ? `Ofrecido · ${tiempoRestante(v.oferta_vence, ahora)}`
+            : v.estado === 'asignado' && !v.iniciado_en ? 'Aceptado'
+            : v.estado === 'asignado' ? 'En viaje'
+            : NOMBRE_ESTADO_VIAJE[v.estado]
           return (
             <li key={v.id}>
               <button className={'tarjeta-viaje' + (urgente ? ' urgente' : '') + (fijo ? ' fijo' : '')}
                 onClick={() => setEditando(v)}>
                 <div className="viaje-arriba">
                   <span className="viaje-hora">
+                    {v.prioritario && ['sin_chofer', 'ofrecido'].includes(v.estado) && '⭐ '}
                     {v.tipo === 'programado' ? hora(v.hora_presentacion) : hora(v.hora_asignacion)}
                     {!filtroFecha && <small> {fechaCorta(v.hora_asignacion)}</small>}
                   </span>
-                  <span className={'etiqueta viaje ' + v.estado}>
-                    {esperando ? `Se asigna ${hora(v.hora_asignacion)}` : NOMBRE_ESTADO_VIAJE[v.estado]}
-                  </span>
+                  <span className={'etiqueta viaje ' + v.estado}>{etiqueta}</span>
                 </div>
                 <div className="viaje-ruta">
                   {v.origen}{v.destino ? ' → ' + v.destino : ''}
                 </div>
                 <div className="viaje-abajo">
                   <span>{v.tipo === 'programado' ? '📅 Programado' : '⚡ Inmediato'} · #{v.id}</span>
-                  <span>{v.chofer ? (fijo ? '📌 ' : '') + v.chofer.nombre : (urgente ? '⚠️ Falta chofer' : '')}</span>
+                  <span>
+                    {v.chofer ? (fijo ? '📌 ' : '') + v.chofer.nombre
+                      : v.espera_gestion && v.rechazo ? `❌ Lo rechazó ${v.rechazo.nombre}`
+                      : urgente ? '⚠️ Falta chofer' : ''}
+                  </span>
                 </div>
                 {v.cliente_nombre && <div className="viaje-cliente">{v.cliente_nombre}</div>}
               </button>

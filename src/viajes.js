@@ -1,5 +1,6 @@
 export const NOMBRE_ESTADO_VIAJE = {
   sin_chofer: 'Sin chofer',
+  ofrecido: 'Esperando que acepte',
   asignado: 'Asignado',
   pago_pendiente: 'Pago pendiente',
   finalizado: 'Finalizado',
@@ -38,4 +39,17 @@ export function unirFechaHora(fecha, horaTexto) {
 // Un viaje sin chofer cuya hora de asignación ya llegó: hay que conseguirle chofer.
 export function esAsignableSinChofer(viaje, ahora = Date.now()) {
   return viaje.estado === 'sin_chofer' && new Date(viaje.hora_asignacion).getTime() <= ahora
+}
+
+// "2:31" que le quedan para aceptar una oferta automática.
+export function tiempoRestante(vence, ahora = Date.now()) {
+  const seg = Math.max(0, Math.ceil((new Date(vence).getTime() - ahora) / 1000))
+  return `${Math.floor(seg / 60)}:${String(seg % 60).padStart(2, '0')}`
+}
+
+// Tipo de viaje + hora para mostrar: "Presentarse 15:00" o "Inmediato".
+export function cuando(viaje) {
+  return viaje.tipo === 'programado'
+    ? `${fechaCorta(viaje.hora_presentacion)} ${hora(viaje.hora_presentacion)}`
+    : `Inmediato (${hora(viaje.hora_asignacion)})`
 }
