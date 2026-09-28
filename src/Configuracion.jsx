@@ -32,7 +32,8 @@ export default function Configuracion() {
         Minutos sin reportar para la alerta "sin señal"
         <input inputMode="numeric" value={minutos} onChange={(e) => setMinutos(e.target.value)} />
         <small className="ayuda">
-          Si un chofer que está trabajando pasa este tiempo sin reportar, aparece la alerta.
+          Si un chofer que está Yendo o En viaje pasa este tiempo sin reportar, aparece la alerta
+          (los que están en la cola no tienen alerta).
           Un chofer que solo estaba conectado pasa a desconectado.
         </small>
       </label>

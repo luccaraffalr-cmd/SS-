@@ -17,8 +17,9 @@ export function useConfiguracion() {
   return config
 }
 
-// Estados en los que el chofer está trabajando: si deja de reportar, hay alerta "sin señal".
-const TRABAJANDO = ['yendo', 'en_cola', 'en_viaje']
+// Estados con alerta "sin señal" si deja de reportar. "En cola" no tiene alerta
+// (decisión del dueño: el que se anunció queda fijo aunque bloquee el celular).
+const TRABAJANDO = ['yendo', 'en_viaje']
 
 export function estaSinSenal(chofer, minutos, ahora = Date.now()) {
   if (!TRABAJANDO.includes(chofer.estado)) return false
