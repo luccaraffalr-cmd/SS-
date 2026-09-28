@@ -2,7 +2,7 @@ import { useCallback, useEffect, useState } from 'react'
 import { supabase } from './supabase.js'
 import { urlFotoAuto } from './fotos.js'
 import { NOMBRE_ESTADO, textoError } from './estados.js'
-import { hora } from './viajes.js'
+import { fechaCorta, hora } from './viajes.js'
 
 const AYUDA_ESTADO = {
   fuera_de_servicio: 'No estás trabajando.',
@@ -15,7 +15,7 @@ const AYUDA_ESTADO = {
 export default function Chofer({ perfil }) {
   const [chofer, setChofer] = useState(null)
   const [companeros, setCompaneros] = useState([])
-  const [miViaje, setMiViaje] = useState(null)
+  const [misViajes, setMisViajes] = useState([]) // asignados, sin finalizar
   const [error, setError] = useState('')
   const [ocupado, setOcupado] = useState(false)
 
@@ -26,12 +26,12 @@ export default function Chofer({ perfil }) {
     setCompaneros(data ?? [])
   }, [])
 
-  // El viaje que tiene asignado ahora (si tiene).
+  // Los viajes que tiene asignados y todavía no finalizó.
   const cargarMiViaje = useCallback(async () => {
     const { data } = await supabase.from('viajes').select('*')
       .eq('chofer_id', perfil.id).eq('estado', 'asignado')
-      .order('hora_asignacion').limit(1).maybeSingle()
-    setMiViaje(data)
+      .order('asignado_en')
+    setMisViajes(data ?? [])
   }, [perfil.id])
 
   // Carga sus datos al abrir la app y al volver a ella. ("Último reporte" se anota
@@ -92,6 +92,10 @@ export default function Chofer({ perfil }) {
   const enViaje = companeros.filter((c) => c.estado === 'en_viaje')
   const miPuesto = cola.findIndex((c) => c.id === perfil.id) + 1
   const puedeAnunciarse = !chofer.oculto && (estado === 'libre' || estado === 'fuera_de_servicio')
+  // El viaje actual es el primero cuya hora de asignación ya llegó; el resto son próximos.
+  const ahora = Date.now()
+  const miViaje = misViajes.find((v) => new Date(v.hora_asignacion).getTime() <= ahora)
+  const proximos = misViajes.filter((v) => v !== miViaje)
 
   return (
     <main className="pantalla">
@@ -135,6 +139,23 @@ export default function Chofer({ perfil }) {
           {miViaje.cliente_telefono && (
             <a className="boton" href={'tel:' + miViaje.cliente_telefono}>📞 Llamar al cliente ({miViaje.cliente_telefono})</a>
           )}
+        </section>
+      )}
+
+      {proximos.length > 0 && (
+        <section className="tarjeta separada">
+          <h2>Tus próximos viajes</h2>
+          {proximos.map((v) => (
+            <div key={v.id} className="proximo">
+              <strong>
+                #{v.id} · {v.tipo === 'programado'
+                  ? `${fechaCorta(v.hora_presentacion)} ${hora(v.hora_presentacion)}`
+                  : 'Inmediato'}
+              </strong>
+              <span>{v.origen}{v.destino ? ' → ' + v.destino : ''}</span>
+              {v.cliente_nombre && <small>{v.cliente_nombre}</small>}
+            </div>
+          ))}
         </section>
       )}
 

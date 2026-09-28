@@ -94,9 +94,12 @@ export default function Viajes() {
         {viajes?.map((v) => {
           const urgente = esAsignableSinChofer(v, ahora)
           const esperando = v.estado === 'sin_chofer' && !urgente
+          // Asignado a mano por gestión (chofer elegido o reasignado): chofer fijo, en naranja.
+          const fijo = v.estado === 'asignado' && v.asignado_por
           return (
             <li key={v.id}>
-              <button className={'tarjeta-viaje' + (urgente ? ' urgente' : '')} onClick={() => setEditando(v)}>
+              <button className={'tarjeta-viaje' + (urgente ? ' urgente' : '') + (fijo ? ' fijo' : '')}
+                onClick={() => setEditando(v)}>
                 <div className="viaje-arriba">
                   <span className="viaje-hora">
                     {v.tipo === 'programado' ? hora(v.hora_presentacion) : hora(v.hora_asignacion)}
@@ -111,7 +114,7 @@ export default function Viajes() {
                 </div>
                 <div className="viaje-abajo">
                   <span>{v.tipo === 'programado' ? '📅 Programado' : '⚡ Inmediato'} · #{v.id}</span>
-                  <span>{v.chofer?.nombre ?? (urgente ? '⚠️ Falta chofer' : '')}</span>
+                  <span>{v.chofer ? (fijo ? '📌 ' : '') + v.chofer.nombre : (urgente ? '⚠️ Falta chofer' : '')}</span>
                 </div>
                 {v.cliente_nombre && <div className="viaje-cliente">{v.cliente_nombre}</div>}
               </button>

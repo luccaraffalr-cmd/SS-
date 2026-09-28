@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { supabase } from './supabase.js'
 import { NOMBRE_ESTADO_VIAJE, fechaLocal, hora, unirFechaHora } from './viajes.js'
+import ElegirChofer, { useChoferesParaAsignar } from './ElegirChofer.jsx'
 
 const ANTICIPACION_POR_DEFECTO = 30
 const ANTICIPACIONES_RAPIDAS = [10, 20, 30, 45]
@@ -27,8 +28,20 @@ export default function FormViaje({ viaje, onListo }) {
   const [error, setError] = useState('')
   const [enviando, setEnviando] = useState(false)
   const [confirmandoAnular, setConfirmandoAnular] = useState(false)
+  const [choferElegido, setChoferElegido] = useState(viaje?.chofer_id ?? '')
+  const choferes = useChoferesParaAsignar()
   const cambiar = (campo) => (e) => setDatos({ ...datos, [campo]: e.target.value })
   const sePuedeAnular = !esNuevo && ['sin_chofer', 'asignado'].includes(viaje.estado)
+
+  // Asignar, cambiar o sacar el chofer de un viaje ya cargado.
+  async function guardarChofer() {
+    setError('')
+    setEnviando(true)
+    const { error } = await supabase.rpc('asignar_viaje', { viaje: viaje.id, chofer: choferElegido || null })
+    setEnviando(false)
+    if (error) setError('No se pudo cambiar el chofer: ' + error.message)
+    else onListo()
+  }
 
   async function anular() {
     setError('')
@@ -65,6 +78,15 @@ export default function FormViaje({ viaje, onListo }) {
     }
     if (esProgramado) fila.hora_asignacion = asignacion.toISOString()
     else if (esNuevo || viaje.tipo === 'programado') fila.hora_asignacion = new Date().toISOString()
+
+    // Regla D: chofer elegido al cargar el viaje (queda fijo, la cola no lo toma).
+    if (esNuevo && choferElegido) {
+      const { data } = await supabase.auth.getSession()
+      Object.assign(fila, {
+        estado: 'asignado', chofer_id: choferElegido,
+        asignado_en: new Date().toISOString(), asignado_por: data.session.user.id,
+      })
+    }
 
     setEnviando(true)
     const { error } = esNuevo
@@ -126,6 +148,13 @@ export default function FormViaje({ viaje, onListo }) {
           <textarea rows={3} value={datos.observaciones} onChange={cambiar('observaciones')}
             placeholder="ej: con espera, ida y vuelta, lleva valija…" />
         </label>
+        {esNuevo && (
+          <label>
+            Chofer (opcional)
+            <ElegirChofer valor={choferElegido} onCambiar={setChoferElegido} choferes={choferes} />
+            <small className="ayuda">Solo si el cliente pidió un chofer en particular. Si no, se asigna solo.</small>
+          </label>
+        )}
 
         {error && <p className="aviso error">{error}</p>}
         <button className="boton" disabled={enviando}>
@@ -136,6 +165,20 @@ export default function FormViaje({ viaje, onListo }) {
 
       {sePuedeAnular && (
         <div className="tarjeta separada">
+          <label>
+            Chofer
+            <ElegirChofer valor={choferElegido} onCambiar={setChoferElegido} choferes={choferes}
+              textoVacio="Sin chofer (vuelve a la asignación automática)" />
+          </label>
+          <button type="button" className="boton" disabled={enviando || choferElegido === (viaje.chofer_id ?? '')}
+            onClick={guardarChofer}>
+            {choferElegido ? 'Asignar a este chofer' : 'Dejar sin chofer'}
+          </button>
+        </div>
+      )}
+
+      {sePuedeAnular && (
+        <div className="tarjeta separada">
           {!confirmandoAnular ? (
             <button type="button" className="boton peligro" onClick={() => setConfirmandoAnular(true)}>Anular viaje</button>
           ) : (
@@ -143,7 +186,7 @@ export default function FormViaje({ viaje, onListo }) {
               <p className="sin-margen">
                 ¿Seguro que querés anular el viaje #{viaje.id}?
                 {viaje.estado === 'asignado' && viaje.chofer?.nombre &&
-                  <> <strong>{viaje.chofer.nombre}</strong> vuelve al puesto 1 de la cola.</>}
+                  <> Si <strong>{viaje.chofer.nombre}</strong> ya lo estaba haciendo, vuelve al puesto 1 de la cola.</>}
               </p>
               <button type="button" className="boton peligro" disabled={enviando} onClick={anular}>Sí, anular</button>
               <button type="button" className="boton secundario" onClick={() => setConfirmandoAnular(false)}>No, dejarlo</button>

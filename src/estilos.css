@@ -189,6 +189,8 @@ a.boton { display: block; text-align: center; text-decoration: none; }
 .dato { display: flex; flex-direction: column; gap: 2px; overflow-wrap: anywhere; }
 .dato small { color: #6b7280; }
 .dato strong { font-size: 1.1rem; }
+.proximo { display: flex; flex-direction: column; gap: 2px; padding: 10px 12px; border-radius: 10px; background: #f3f4f6; overflow-wrap: anywhere; }
+.proximo small { color: #6b7280; }
 .puesto { font-size: 1.1rem; font-weight: 600; margin-top: 4px; }
 .titulo-seccion { margin-top: 28px; }
 
@@ -315,6 +317,7 @@ textarea {
   color: inherit;
 }
 .tarjeta-viaje.urgente { border-left-color: #dc2626; background: #fef2f2; }
+.tarjeta-viaje.fijo { border-left-color: #f97316; background: #fff7ed; }
 .viaje-arriba, .viaje-abajo { display: flex; justify-content: space-between; align-items: center; gap: 10px; }
 .viaje-hora { font-size: 1.3rem; font-weight: 700; }
 .viaje-hora small { font-size: 0.85rem; font-weight: 400; color: #6b7280; }
