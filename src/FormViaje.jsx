@@ -3,6 +3,7 @@ import { supabase } from './supabase.js'
 import { NOMBRE_ESTADO_VIAJE, fechaLocal, hora, unirFechaHora } from './viajes.js'
 import ElegirChofer, { useChoferesParaAsignar } from './ElegirChofer.jsx'
 import FormPago from './FormPago.jsx'
+import HistorialViaje from './HistorialViaje.jsx'
 import { FORMAS_PAGO, dinero } from './viajes.js'
 
 // Explicación en palabras de en qué anda la asignación del viaje.
@@ -267,6 +268,8 @@ export default function FormViaje({ viaje, onListo }) {
           )}
         </div>
       )}
+
+      {!esNuevo && <HistorialViaje viajeId={viaje.id} />}
     </main>
   )
 }

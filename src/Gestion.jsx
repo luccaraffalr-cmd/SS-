@@ -4,6 +4,7 @@ import Usuarios from './Usuarios.jsx'
 import Choferes from './Choferes.jsx'
 import Viajes from './Viajes.jsx'
 import CuentasCorrientes from './CuentasCorrientes.jsx'
+import AlertaSinChofer from './AlertaSinChofer.jsx'
 import { NOMBRE_ROL } from './usuarios.js'
 
 // Panel de gestión (admin y operadores).
@@ -25,6 +26,7 @@ export default function Gestion({ perfil }) {
           <button key={id} className={seccion === id ? 'activa' : ''} onClick={() => setSeccion(id)}>{texto}</button>
         ))}
       </nav>
+      <AlertaSinChofer onVer={() => setSeccion('viajes')} />
 
       {seccion === 'viajes' && <Viajes />}
       {seccion === 'choferes' && <Choferes />}
