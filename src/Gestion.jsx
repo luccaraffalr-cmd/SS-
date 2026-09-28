@@ -1,29 +1,35 @@
 import { useState } from 'react'
 import BotonSalir from './BotonSalir.jsx'
 import Usuarios from './Usuarios.jsx'
+import Choferes from './Choferes.jsx'
 import { NOMBRE_ROL } from './usuarios.js'
 
 // Panel de gestión (admin y operadores).
 export default function Gestion({ perfil }) {
   const esAdmin = perfil.rol === 'admin'
-  const [seccion, setSeccion] = useState('inicio')
+  const [seccion, setSeccion] = useState('choferes')
+
+  const pestanas = [
+    ['choferes', 'Choferes'],
+    ...(esAdmin ? [['usuarios', 'Usuarios']] : []),
+    ['cuenta', 'Mi cuenta'],
+  ]
 
   return (
     <>
       <nav className="pestanas">
-        <button className={seccion === 'inicio' ? 'activa' : ''} onClick={() => setSeccion('inicio')}>Inicio</button>
-        {esAdmin && (
-          <button className={seccion === 'usuarios' ? 'activa' : ''} onClick={() => setSeccion('usuarios')}>Usuarios</button>
-        )}
+        {pestanas.map(([id, texto]) => (
+          <button key={id} className={seccion === id ? 'activa' : ''} onClick={() => setSeccion(id)}>{texto}</button>
+        ))}
       </nav>
 
-      {seccion === 'usuarios' && esAdmin ? (
-        <Usuarios yo={perfil} />
-      ) : (
+      {seccion === 'choferes' && <Choferes />}
+      {seccion === 'usuarios' && esAdmin && <Usuarios yo={perfil} />}
+      {seccion === 'cuenta' && (
         <main className="pantalla">
-          <h1>Panel de gestión</h1>
+          <h1>Mi cuenta</h1>
           <p className="aviso ok">
-            Hola, {perfil.nombre} 👋<br />
+            {perfil.nombre}<br />
             <small>Rol: {NOMBRE_ROL[perfil.rol]}</small>
           </p>
           <BotonSalir />
