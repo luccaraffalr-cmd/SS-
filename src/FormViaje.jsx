@@ -26,7 +26,18 @@ export default function FormViaje({ viaje, onListo }) {
   })
   const [error, setError] = useState('')
   const [enviando, setEnviando] = useState(false)
+  const [confirmandoAnular, setConfirmandoAnular] = useState(false)
   const cambiar = (campo) => (e) => setDatos({ ...datos, [campo]: e.target.value })
+  const sePuedeAnular = !esNuevo && ['sin_chofer', 'asignado'].includes(viaje.estado)
+
+  async function anular() {
+    setError('')
+    setEnviando(true)
+    const { error } = await supabase.rpc('anular_viaje', { viaje: viaje.id })
+    setEnviando(false)
+    if (error) setError('No se pudo anular: ' + error.message)
+    else onListo()
+  }
 
   const esProgramado = datos.tipo === 'programado'
   const minutos = Number(datos.anticipacion)
@@ -122,6 +133,24 @@ export default function FormViaje({ viaje, onListo }) {
         </button>
         <button type="button" className="boton secundario" onClick={onListo}>Volver</button>
       </form>
+
+      {sePuedeAnular && (
+        <div className="tarjeta separada">
+          {!confirmandoAnular ? (
+            <button type="button" className="boton peligro" onClick={() => setConfirmandoAnular(true)}>Anular viaje</button>
+          ) : (
+            <>
+              <p className="sin-margen">
+                ¿Seguro que querés anular el viaje #{viaje.id}?
+                {viaje.estado === 'asignado' && viaje.chofer?.nombre &&
+                  <> <strong>{viaje.chofer.nombre}</strong> vuelve al puesto 1 de la cola.</>}
+              </p>
+              <button type="button" className="boton peligro" disabled={enviando} onClick={anular}>Sí, anular</button>
+              <button type="button" className="boton secundario" onClick={() => setConfirmandoAnular(false)}>No, dejarlo</button>
+            </>
+          )}
+        </div>
+      )}
     </main>
   )
 }

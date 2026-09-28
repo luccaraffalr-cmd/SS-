@@ -183,6 +183,12 @@ h2 { font-size: 1.2rem; margin: 0; }
 a.boton { display: block; text-align: center; text-decoration: none; }
 
 .boton.verde { background: #16a34a; }
+.boton.peligro { width: 100%; background: #dc2626; }
+
+.mi-viaje { border: 3px solid #7c3aed; }
+.dato { display: flex; flex-direction: column; gap: 2px; overflow-wrap: anywhere; }
+.dato small { color: #6b7280; }
+.dato strong { font-size: 1.1rem; }
 .puesto { font-size: 1.1rem; font-weight: 600; margin-top: 4px; }
 .titulo-seccion { margin-top: 28px; }
 
