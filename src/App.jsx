@@ -1,22 +1,27 @@
 import { useEffect, useState } from 'react'
-import { SUPABASE_URL, SUPABASE_ANON_KEY } from './supabase.js'
+import { supabase } from './supabase.js'
+import Ingreso from './Ingreso.jsx'
 
-// Tarea 1: solo comprueba que la app llega a Supabase.
 export default function App() {
-  const [estado, setEstado] = useState('probando')
+  // undefined = todavía cargando; null = sin sesión
+  const [sesion, setSesion] = useState(undefined)
 
   useEffect(() => {
-    fetch(`${SUPABASE_URL}/auth/v1/settings`, { headers: { apikey: SUPABASE_ANON_KEY } })
-      .then((r) => setEstado(r.ok ? 'ok' : 'error'))
-      .catch(() => setEstado('error'))
+    supabase.auth.getSession().then(({ data }) => setSesion(data.session))
+    const { data } = supabase.auth.onAuthStateChange((_evento, s) => setSesion(s))
+    return () => data.subscription.unsubscribe()
   }, [])
+
+  if (sesion === undefined) return <main className="pantalla"><p>Cargando…</p></main>
+  if (!sesion) return <Ingreso />
 
   return (
     <main className="pantalla">
       <h1>Remisería</h1>
-      {estado === 'probando' && <p className="aviso">Probando conexión…</p>}
-      {estado === 'ok' && <p className="aviso ok">Conectado a Supabase ✅</p>}
-      {estado === 'error' && <p className="aviso error">No se pudo conectar a Supabase ❌</p>}
+      <p className="aviso ok">Hola, {sesion.user.email} 👋</p>
+      <button className="boton secundario" onClick={() => supabase.auth.signOut()}>
+        Cerrar sesión
+      </button>
     </main>
   )
 }
