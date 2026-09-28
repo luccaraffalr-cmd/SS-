@@ -2,7 +2,7 @@ import { useCallback, useEffect, useState } from 'react'
 import { supabase } from './supabase.js'
 import FormViaje from './FormViaje.jsx'
 import {
-  NOMBRE_ESTADO_VIAJE, esAsignableSinChofer, fechaCorta, fechaLocal, hora, tiempoRestante, unirFechaHora,
+  FORMAS_PAGO, NOMBRE_ESTADO_VIAJE, dinero, esAsignableSinChofer, fechaCorta, fechaLocal, hora, tiempoRestante, unirFechaHora,
 } from './viajes.js'
 
 const ACTIVOS = ['sin_chofer', 'ofrecido', 'asignado']
@@ -18,8 +18,12 @@ export default function Viajes() {
   const [filtroChofer, setFiltroChofer] = useState('')
   const [ahora, setAhora] = useState(Date.now())
   const [errorCarga, setErrorCarga] = useState('')
+  const [pagosPendientes, setPagosPendientes] = useState(0) // de todas las fechas
 
   const cargar = useCallback(async () => {
+    supabase.from('viajes').select('id', { count: 'exact', head: true }).eq('estado', 'pago_pendiente')
+      .then(({ count }) => setPagosPendientes(count ?? 0))
+
     let consulta = supabase.from('viajes').select(CONSULTA)
     if (filtroFecha) {
       const desde = unirFechaHora(filtroFecha, '00:00')
@@ -66,6 +70,11 @@ export default function Viajes() {
   return (
     <main className="pantalla">
       <h1>Viajes</h1>
+      {pagosPendientes > 0 && (
+        <button className="aviso-pagos" onClick={() => { setFiltroFecha(''); setFiltroEstado('pago_pendiente'); setFiltroChofer('') }}>
+          ⏳ {pagosPendientes} {pagosPendientes === 1 ? 'viaje' : 'viajes'} con pago pendiente — tocá para verlos
+        </button>
+      )}
       <button className="boton" onClick={() => setEditando('nuevo')}>+ Nuevo viaje</button>
 
       <div className="filtros">
@@ -111,7 +120,8 @@ export default function Viajes() {
             : NOMBRE_ESTADO_VIAJE[v.estado]
           return (
             <li key={v.id}>
-              <button className={'tarjeta-viaje' + (urgente ? ' urgente' : '') + (fijo ? ' fijo' : '')}
+              <button className={'tarjeta-viaje' + (urgente ? ' urgente' : '') + (fijo ? ' fijo' : '')
+                + (v.estado === 'pago_pendiente' ? ' pago-pendiente' : '')}
                 onClick={() => setEditando(v)}>
                 <div className="viaje-arriba">
                   <span className="viaje-hora">
@@ -132,7 +142,12 @@ export default function Viajes() {
                       : urgente ? '⚠️ Falta chofer' : ''}
                   </span>
                 </div>
-                {v.cliente_nombre && <div className="viaje-cliente">{v.cliente_nombre}</div>}
+                {(v.cliente_nombre || v.estado === 'finalizado') && (
+                  <div className="viaje-abajo">
+                    <span>{v.cliente_nombre}</span>
+                    {v.estado === 'finalizado' && <span className="importe">{dinero(v.importe)} · {FORMAS_PAGO[v.forma_pago]}</span>}
+                  </div>
+                )}
               </button>
             </li>
           )

@@ -2,6 +2,8 @@ import { useState } from 'react'
 import { supabase } from './supabase.js'
 import { NOMBRE_ESTADO_VIAJE, fechaLocal, hora, unirFechaHora } from './viajes.js'
 import ElegirChofer, { useChoferesParaAsignar } from './ElegirChofer.jsx'
+import FormPago from './FormPago.jsx'
+import { FORMAS_PAGO, dinero } from './viajes.js'
 
 // Explicación en palabras de en qué anda la asignación del viaje.
 function textoSituacion(v) {
@@ -47,6 +49,15 @@ export default function FormViaje({ viaje, onListo }) {
   const cambiar = (campo) => (e) => setDatos({ ...datos, [campo]: e.target.value })
   const sePuedeAnular = !esNuevo && ['sin_chofer', 'ofrecido', 'asignado'].includes(viaje.estado)
   const sePuedePriorizar = !esNuevo && (viaje.estado === 'sin_chofer' || (viaje.estado === 'ofrecido' && viaje.oferta_vence))
+
+  const [corrigiendoPago, setCorrigiendoPago] = useState(false)
+  const hecho = !esNuevo && ['pago_pendiente', 'finalizado'].includes(viaje.estado)
+
+  async function corregirPago(importe, forma_pago) {
+    const { error } = await supabase.rpc('corregir_pago', { viaje: viaje.id, importe, forma_pago })
+    if (error) return 'No se pudo guardar: ' + error.message
+    onListo()
+  }
 
   async function cambiarPrioridad() {
     setError('')
@@ -186,6 +197,32 @@ export default function FormViaje({ viaje, onListo }) {
         </button>
         <button type="button" className="boton secundario" onClick={onListo}>Volver</button>
       </form>
+
+      {!esNuevo && viaje.estado === 'fallido' && (
+        <div className="tarjeta separada">
+          <p className="sin-margen">
+            ❌ <strong>Fallido</strong>{viaje.chofer?.nombre && <> · {viaje.chofer.nombre}</>}<br />
+            Motivo: {viaje.motivo_fallido || 'sin motivo'}
+          </p>
+        </div>
+      )}
+
+      {hecho && (
+        <div className="tarjeta separada">
+          <h2>Pago</h2>
+          {viaje.estado === 'pago_pendiente'
+            ? <p className="aviso sin-margen">⏳ {viaje.chofer?.nombre ?? 'El chofer'} todavía no cargó el pago.</p>
+            : <p className="sin-margen"><strong className="importe">{dinero(viaje.importe)}</strong> · {FORMAS_PAGO[viaje.forma_pago]}</p>}
+          {corrigiendoPago ? (
+            <FormPago importeInicial={viaje.importe} formaInicial={viaje.forma_pago}
+              textoBoton="Guardar (queda registrado)" onGuardar={corregirPago} onCancelar={() => setCorrigiendoPago(false)} />
+          ) : (
+            <button type="button" className="boton secundario" onClick={() => setCorrigiendoPago(true)}>
+              {viaje.estado === 'pago_pendiente' ? 'Cargar el pago desde gestión' : 'Corregir el pago'}
+            </button>
+          )}
+        </div>
+      )}
 
       {sePuedeAnular && (
         <div className="tarjeta separada">

@@ -324,5 +324,5 @@ Hoy la ubicación "desaparece" por varios minutos. Hay que diseñar para que **n
 | # | Tema | Comportamiento por defecto |
 |---|---|---|
 | 1 | Chofer elegido que estaba en la cola: ¿sale de la cola? | ✅ Resuelto: sigue en la cola hasta su hora (ver 10 bis) |
-| 2 | Viaje fallido: ¿motivo obligatorio? | Opcional |
-| 3 | Viaje fallido: ¿el chofer vuelve al puesto 1 o al final? | Al final |
+| 2 | Viaje fallido: ¿motivo obligatorio? | ✅ Resuelto (28/9/2026): opcional |
+| 3 | Viaje fallido: ¿el chofer vuelve al puesto 1 o al final? | ✅ Resuelto (28/9/2026): **vuelve al puesto 1** |

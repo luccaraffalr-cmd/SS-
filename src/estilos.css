@@ -195,6 +195,20 @@ a.boton { display: block; text-align: center; text-decoration: none; }
 .proximo .boton { margin-top: 8px; }
 
 .oferta { border: 3px solid #f59e0b; }
+.sin-pago { border: 3px solid #f59e0b; }
+
+.form-pago { display: flex; flex-direction: column; gap: 12px; }
+.form-pago input { font-size: 1.4rem; font-weight: 700; }
+.formas-pago { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.formas-pago button {
+  font: inherit;
+  padding: 12px 8px;
+  border: 2px solid #d1d5db;
+  border-radius: 10px;
+  background: #fff;
+  color: #111827;
+}
+.formas-pago button.activo { border-color: #16a34a; background: #dcfce7; font-weight: 700; }
 .cuenta-regresiva { font-size: 2.2rem; font-weight: 800; text-align: center; color: #b45309; }
 .dos-columnas .boton { width: 100%; }
 .puesto { font-size: 1.1rem; font-weight: 600; margin-top: 4px; }
@@ -324,6 +338,21 @@ textarea {
 }
 .tarjeta-viaje.urgente { border-left-color: #dc2626; background: #fef2f2; }
 .tarjeta-viaje.fijo { border-left-color: #f97316; background: #fff7ed; }
+.tarjeta-viaje.pago-pendiente { border-left-color: #f59e0b; background: #fffbeb; }
+.importe { color: #166534; font-weight: 700; }
+.aviso-pagos {
+  display: block;
+  width: 100%;
+  margin-bottom: 12px;
+  padding: 14px 16px;
+  border: none;
+  border-radius: 12px;
+  background: #f59e0b;
+  color: #fff;
+  font: inherit;
+  font-weight: 700;
+  text-align: left;
+}
 .viaje-arriba, .viaje-abajo { display: flex; justify-content: space-between; align-items: center; gap: 10px; }
 .viaje-hora { font-size: 1.3rem; font-weight: 700; }
 .viaje-hora small { font-size: 0.85rem; font-weight: 400; color: #6b7280; }

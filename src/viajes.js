@@ -8,6 +8,28 @@ export const NOMBRE_ESTADO_VIAJE = {
   anulado: 'Anulado',
 }
 
+export const FORMAS_PAGO = {
+  efectivo: 'Efectivo',
+  transferencia_chofer: 'Transferencia al chofer',
+  transferencia_duenio: 'Transferencia al dueño',
+  cuenta_corriente: 'Cuenta corriente',
+}
+
+// "$ 12.500"
+export function dinero(n) {
+  return '$ ' + Number(n).toLocaleString('es-AR', { maximumFractionDigits: 2 })
+}
+
+// Convierte lo que escribe la persona ("12.500", "12500,50") en número; null si no es válido.
+export function leerImporte(texto) {
+  const limpio = String(texto).trim().replace(/\$/g, '').replace(/\s/g, '')
+  if (!limpio) return null
+  // "12.500,50" → 12500.50 ; "12500.5" → 12500.5
+  const normal = limpio.includes(',') ? limpio.replace(/\./g, '').replace(',', '.') : limpio.replace(/\.(?=\d{3}(\D|$))/g, '')
+  const n = Number(normal)
+  return Number.isFinite(n) && n >= 0 ? n : null
+}
+
 const dosDigitos = (n) => String(n).padStart(2, '0')
 
 // "14:30"

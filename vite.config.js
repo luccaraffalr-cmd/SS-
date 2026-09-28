@@ -17,5 +17,6 @@ function archivoVersion() {
 export default defineConfig({
   plugins: [react(), archivoVersion()],
   define: { __VERSION_APP__: JSON.stringify(VERSION) },
-  server: { port: 5173 },
+  // host: true → también se puede abrir desde el celular, si está en el mismo WiFi.
+  server: { port: 5173, host: true },
 })

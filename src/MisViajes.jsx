@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState } from 'react'
 import { supabase } from './supabase.js'
 import { textoError } from './estados.js'
 import { cuando, hora, tiempoRestante } from './viajes.js'
+import FormPago from './FormPago.jsx'
 
 // App del chofer: ofertas para aceptar o rechazar, su viaje actual y los próximos.
 export default function MisViajes({ perfil }) {
@@ -10,10 +11,14 @@ export default function MisViajes({ perfil }) {
   const [error, setError] = useState('')
   const [ocupado, setOcupado] = useState(false)
   const [confirmandoRechazo, setConfirmandoRechazo] = useState(null)
+  // Al finalizar: null | 'elegir' | 'pago' | 'fallido'
+  const [finalizando, setFinalizando] = useState(null)
+  const [motivo, setMotivo] = useState('')
+  const [cargandoPago, setCargandoPago] = useState(null) // id del viaje sin pago que está cargando
 
   const cargar = useCallback(async () => {
     const { data } = await supabase.from('viajes').select('*')
-      .eq('chofer_id', perfil.id).in('estado', ['ofrecido', 'asignado'])
+      .eq('chofer_id', perfil.id).in('estado', ['ofrecido', 'asignado', 'pago_pendiente'])
       .order('asignado_en')
     setViajes(data ?? [])
   }, [perfil.id])
@@ -48,10 +53,30 @@ export default function MisViajes({ perfil }) {
     cargar()
   }
 
+  // Terminar el viaje actual: opcion = 'pago' | 'despues' | 'fallido'. Devuelve el error (texto) o nada.
+  async function finalizar(viaje, opcion, extra = {}) {
+    setError('')
+    setOcupado(true)
+    const { error } = await supabase.rpc('finalizar_viaje', { viaje, opcion, ...extra })
+    setOcupado(false)
+    if (error) return textoError(error)
+    setFinalizando(null)
+    setMotivo('')
+    cargar()
+  }
+
+  async function cargarPagoPendiente(viaje, importe, forma_pago) {
+    const { error } = await supabase.rpc('cargar_pago', { viaje, importe, forma_pago })
+    if (error) return textoError(error)
+    setCargandoPago(null)
+    cargar()
+  }
+
   const ofertas = viajes.filter((v) => v.estado === 'ofrecido'
     && (!v.oferta_vence || new Date(v.oferta_vence).getTime() > ahora))
   const actual = viajes.find((v) => v.estado === 'asignado' && v.iniciado_en)
   const aceptados = viajes.filter((v) => v.estado === 'asignado' && !v.iniciado_en)
+  const sinPago = viajes.filter((v) => v.estado === 'pago_pendiente')
 
   return (
     <>
@@ -101,6 +126,59 @@ export default function MisViajes({ perfil }) {
           {actual.cliente_telefono && (
             <a className="boton" href={'tel:' + actual.cliente_telefono}>📞 Llamar al cliente ({actual.cliente_telefono})</a>
           )}
+
+          {finalizando === null && (
+            <button className="boton grande verde" onClick={() => setFinalizando('elegir')}>🏁 Finalicé</button>
+          )}
+          {finalizando === 'elegir' && (
+            <div className="botonera">
+              <p className="sin-margen"><strong>¿Cómo terminó el viaje?</strong></p>
+              <button className="boton verde" onClick={() => setFinalizando('pago')}>💵 Cargar el pago ahora</button>
+              <button className="boton" disabled={ocupado} onClick={async () => {
+                const err = await finalizar(actual.id, 'despues'); if (err) setError(err)
+              }}>⏳ Cargar el pago después</button>
+              <button className="boton peligro" onClick={() => setFinalizando('fallido')}>❌ Fallido (no se hizo)</button>
+              <button className="boton secundario" onClick={() => setFinalizando(null)}>Volver</button>
+            </div>
+          )}
+          {finalizando === 'pago' && (
+            <FormPago textoBoton="Finalizar viaje"
+              onGuardar={(importe, forma_pago) => finalizar(actual.id, 'pago', { importe, forma_pago })}
+              onCancelar={() => setFinalizando('elegir')} />
+          )}
+          {finalizando === 'fallido' && (
+            <div className="botonera">
+              <label>
+                Motivo (opcional)
+                <textarea rows={2} value={motivo} onChange={(e) => setMotivo(e.target.value)}
+                  placeholder="ej: el cliente no estaba" />
+              </label>
+              <p className="ayuda sin-margen">Volvés al puesto 1 de la cola.</p>
+              <button className="boton peligro" disabled={ocupado} onClick={async () => {
+                const err = await finalizar(actual.id, 'fallido', { motivo }); if (err) setError(err)
+              }}>Marcar como fallido</button>
+              <button className="boton secundario" onClick={() => setFinalizando('elegir')}>Volver</button>
+            </div>
+          )}
+        </section>
+      )}
+
+      {sinPago.length > 0 && (
+        <section className="tarjeta separada sin-pago">
+          <h2>⏳ Mis viajes sin pago ({sinPago.length})</h2>
+          {sinPago.map((v) => (
+            <div key={v.id} className="proximo">
+              <strong>#{v.id} · {cuando(v)}</strong>
+              <span>{v.origen}{v.destino ? ' → ' + v.destino : ''}</span>
+              {cargandoPago === v.id ? (
+                <FormPago textoBoton="Guardar pago"
+                  onGuardar={(importe, forma) => cargarPagoPendiente(v.id, importe, forma)}
+                  onCancelar={() => setCargandoPago(null)} />
+              ) : (
+                <button className="boton verde" onClick={() => setCargandoPago(v.id)}>💵 Cargar pago</button>
+              )}
+            </div>
+          ))}
         </section>
       )}
 
