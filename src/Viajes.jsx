@@ -17,6 +17,7 @@ export default function Viajes() {
   const [filtroEstado, setFiltroEstado] = useState('')
   const [filtroChofer, setFiltroChofer] = useState('')
   const [ahora, setAhora] = useState(Date.now())
+  const [errorCarga, setErrorCarga] = useState('')
 
   const cargar = useCallback(async () => {
     let consulta = supabase.from('viajes').select(CONSULTA)
@@ -29,7 +30,8 @@ export default function Viajes() {
     if (filtroChofer === 'ninguno') consulta = consulta.is('chofer_id', null)
     else if (filtroChofer) consulta = consulta.eq('chofer_id', filtroChofer)
 
-    const { data } = await consulta.limit(500)
+    const { data, error } = await consulta.limit(500)
+    setErrorCarga(error ? error.message : '')
     // Primero los activos (del más próximo al más lejano), después el resto (el más reciente arriba).
     setViajes((data ?? []).sort((a, b) => {
       const activoA = ACTIVOS.includes(a.estado), activoB = ACTIVOS.includes(b.estado)
@@ -93,7 +95,8 @@ export default function Viajes() {
       </div>
 
       {viajes === null && <p>Cargando…</p>}
-      {viajes?.length === 0 && <p className="ayuda">No hay viajes con estos filtros.</p>}
+      {errorCarga && <p className="aviso error">No se pudieron cargar los viajes: {errorCarga}</p>}
+      {!errorCarga && viajes?.length === 0 && <p className="ayuda">No hay viajes con estos filtros.</p>}
       <ul className="lista">
         {viajes?.map((v) => {
           const urgente = esAsignableSinChofer(v, ahora)
