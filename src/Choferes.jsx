@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { supabase } from './supabase.js'
 import { NOMBRE_ESTADO, haceCuanto, textoError } from './estados.js'
+import { estaSinSenal, useConfiguracion } from './configuracion.js'
 
 const ORDEN_ESTADO = { en_viaje: 0, en_cola: 1, yendo: 2, conectado: 3, desconectado: 4 }
 
@@ -11,6 +12,7 @@ export default function Choferes() {
   const [abierto, setAbierto] = useState(null) // chofer al que se le está cambiando el estado
   const [eligiendo, setEligiendo] = useState(false) // lista de "Agregar a la cola" abierta
   const [error, setError] = useState('')
+  const { minutos_sin_senal } = useConfiguracion()
 
   async function cargar() {
     const { data } = await supabase.from('choferes').select('*, perfiles(nombre, telefono, activo)')
@@ -38,9 +40,22 @@ export default function Choferes() {
   const cola = (lista ?? []).filter((c) => c.estado === 'en_cola')
     .sort((a, b) => new Date(a.anunciado_en) - new Date(b.anunciado_en))
   const paraAgregar = (lista ?? []).filter((c) => !c.oculto && c.estado !== 'en_cola' && c.estado !== 'en_viaje')
+  const sinSenal = (lista ?? []).filter((c) => estaSinSenal(c, minutos_sin_senal, ahora))
 
   return (
     <main className="pantalla">
+      {sinSenal.length > 0 && (
+        <div className="alerta-sin-senal">
+          <strong>⚠️ Sin señal</strong>
+          {sinSenal.map((c) => (
+            <div key={c.id} className="alerta-fila">
+              <span>{c.perfiles.nombre} · {NOMBRE_ESTADO[c.estado]} · {haceCuanto(c.ultimo_reporte, ahora)}</span>
+              {c.perfiles.telefono && <a className="boton-chico llamar" href={'tel:' + c.perfiles.telefono}>📞 Llamar</a>}
+            </div>
+          ))}
+        </div>
+      )}
+
       <h1>Cola</h1>
       {error && <p className="aviso error">{error}</p>}
       <section className="tarjeta">
@@ -74,11 +89,11 @@ export default function Choferes() {
       {lista?.length === 0 && <p className="ayuda">Todavía no hay choferes. Crealos en la pestaña Usuarios.</p>}
       <ul className="lista">
         {lista?.map((c) => (
-          <li key={c.id} className="tarjeta-chofer">
+          <li key={c.id} className={'tarjeta-chofer' + (estaSinSenal(c, minutos_sin_senal, ahora) ? ' sin-senal' : '')}>
             <button className="fila" onClick={() => setAbierto(abierto === c.id ? null : c.id)}>
               <span>
                 <strong>{c.perfiles.nombre}{c.oculto && <span className="etiqueta oculto">Oculto</span>}</strong>
-                <small>
+                <small className="reporte">
                   Último reporte: {haceCuanto(c.ultimo_reporte, ahora)}
                   {c.patente ? ' · ' + c.patente : ''}
                 </small>

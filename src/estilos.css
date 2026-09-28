@@ -203,5 +203,35 @@ a.boton { display: block; text-align: center; text-decoration: none; }
   background: #fee2e2;
   color: #991b1b;
 }
+/* Alerta "sin señal" */
+.alerta-sin-senal {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 20px;
+  padding: 14px 16px;
+  border-radius: 12px;
+  background: #dc2626;
+  color: #fff;
+  font-size: 1.05rem;
+}
+.alerta-fila { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+.boton-chico.llamar { background: #fff; color: #991b1b; text-decoration: none; white-space: nowrap; }
+.tarjeta-chofer.sin-senal { outline: 3px solid #dc2626; }
+.tarjeta-chofer.sin-senal .reporte { color: #dc2626; font-weight: 600; }
+
+/* Cartel "hay una versión nueva" */
+.aviso-version {
+  display: block;
+  width: 100%;
+  padding: 14px 16px;
+  border: none;
+  background: #2563eb;
+  color: #fff;
+  font: inherit;
+  font-weight: 600;
+  text-align: center;
+}
+
 .elegir { display: flex; flex-direction: column; gap: 6px; }
 .elegir .fila { background: #f3f4f6; }
