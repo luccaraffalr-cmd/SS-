@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState } from 'react'
 import { supabase } from './supabase.js'
 import { textoError } from './estados.js'
-import { cuando, hora, tiempoRestante } from './viajes.js'
+import { cuando, hora } from './viajes.js'
 import FormPago from './FormPago.jsx'
 import { pitido } from './notificaciones.js'
 
@@ -73,8 +73,7 @@ export default function MisViajes({ perfil }) {
     cargar()
   }
 
-  const ofertas = viajes.filter((v) => v.estado === 'ofrecido'
-    && (!v.oferta_vence || new Date(v.oferta_vence).getTime() > ahora))
+  const ofertas = viajes.filter((v) => v.estado === 'ofrecido')
 
   // Con la app abierta: pitido cuando aparece una oferta nueva.
   const idsOfertas = ofertas.map((v) => v.id).join(',')
@@ -94,11 +93,10 @@ export default function MisViajes({ perfil }) {
       {error && <p className="aviso error">{error}</p>}
 
       {ofertas.map((v) => {
-        const automatica = !!v.oferta_vence
+        const automatica = !v.asignado_por
         return (
           <section key={v.id} className="tarjeta separada oferta">
             <h2>{automatica ? '🔔 Viaje para vos' : '📌 Gestión te asignó un viaje'}</h2>
-            {automatica && <div className="cuenta-regresiva">{tiempoRestante(v.oferta_vence, ahora)}</div>}
             <p className="viaje-hora sin-margen">{cuando(v)}</p>
             <div className="dato"><small>Buscar en</small><strong>{v.origen}</strong></div>
             <div className="dato"><small>Destino</small><strong>{v.destino || 'Sin destino cargado'}</strong></div>
@@ -108,7 +106,7 @@ export default function MisViajes({ perfil }) {
               <>
                 <p className="aviso sin-margen">
                   {automatica
-                    ? '¿Seguro? Si lo rechazás, salís de la cola y te tenés que volver a anunciar.'
+                    ? '¿Seguro? El viaje pasa al siguiente de la cola. Vos seguís primero.'
                     : '¿Seguro? El viaje vuelve a gestión.'}
                 </p>
                 <button className="boton peligro" disabled={ocupado} onClick={() => llamar('rechazar_viaje', v.id)}>Sí, rechazar</button>

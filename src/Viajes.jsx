@@ -2,7 +2,7 @@ import { useCallback, useEffect, useState } from 'react'
 import { supabase } from './supabase.js'
 import FormViaje from './FormViaje.jsx'
 import {
-  FORMAS_PAGO, NOMBRE_ESTADO_VIAJE, dinero, esAsignableSinChofer, fechaCorta, fechaLocal, hora, tiempoRestante, unirFechaHora,
+  FORMAS_PAGO, NOMBRE_ESTADO_VIAJE, dinero, esAsignableSinChofer, fechaCorta, fechaLocal, hora, unirFechaHora,
 } from './viajes.js'
 
 const ACTIVOS = ['sin_chofer', 'ofrecido', 'asignado']
@@ -115,7 +115,7 @@ export default function Viajes() {
           const fijo = ['ofrecido', 'asignado'].includes(v.estado) && v.asignado_por
           const etiqueta = v.estado === 'sin_chofer' && v.espera_gestion ? 'Rechazado: decidir'
             : esperando ? `Se asigna ${hora(v.hora_asignacion)}`
-            : v.estado === 'ofrecido' && v.oferta_vence ? `Ofrecido · ${tiempoRestante(v.oferta_vence, ahora)}`
+            : v.estado === 'ofrecido' && !v.asignado_por ? `Ofrecido hace ${Math.max(0, Math.floor((ahora - new Date(v.asignado_en)) / 60000))} min`
             : v.estado === 'asignado' && !v.iniciado_en ? 'Aceptado'
             : v.estado === 'asignado' ? 'En viaje'
             : NOMBRE_ESTADO_VIAJE[v.estado]

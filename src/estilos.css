@@ -264,7 +264,6 @@ a.boton { display: block; text-align: center; text-decoration: none; }
   color: #111827;
 }
 .formas-pago button.activo { border-color: #16a34a; background: #dcfce7; font-weight: 700; }
-.cuenta-regresiva { font-size: 2.2rem; font-weight: 800; text-align: center; color: #b45309; }
 .dos-columnas .boton { width: 100%; }
 .puesto { font-size: 1.1rem; font-weight: 600; margin-top: 4px; }
 .titulo-seccion { margin-top: 28px; }

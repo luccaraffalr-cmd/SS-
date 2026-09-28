@@ -38,7 +38,7 @@ Deno.serve(async (req) => {
     })
   }
   const mensaje = JSON.stringify({
-    titulo: automatica ? '🔔 Viaje para vos — tenés 3 minutos' : '📌 Gestión te asignó un viaje',
+    titulo: automatica ? '🔔 Viaje para vos' : '📌 Gestión te asignó un viaje',
     cuerpo: `${cuando}\n${v.origen}${v.destino ? ' → ' + v.destino : ''}`,
     etiqueta: `viaje-${v.id}`,
   })
@@ -52,7 +52,7 @@ Deno.serve(async (req) => {
       await webpush.sendNotification(
         { endpoint: s.endpoint, keys: { p256dh: s.p256dh, auth: s.auth } },
         mensaje,
-        { TTL: automatica ? 180 : 3600, urgency: 'high' },
+        { TTL: 3600, urgency: 'high' },
       )
       enviadas++
     } catch (e) {

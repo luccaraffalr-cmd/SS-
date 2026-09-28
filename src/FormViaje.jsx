@@ -13,7 +13,9 @@ function textoSituacion(v) {
     return `❌ ${v.rechazo?.nombre ?? 'El chofer'} rechazó este viaje. No se asigna solo: elegí otro chofer o dejalo en automático.`
   }
   if (v.estado === 'sin_chofer') return 'Esperando chofer: se le ofrece al primero de la cola.'
-  if (v.estado === 'ofrecido' && v.oferta_vence) return `Se le ofreció a ${nombre}. Tiene 3 minutos para aceptar.`
+  if (v.estado === 'ofrecido' && !v.asignado_por) {
+    return `Se le ofreció a ${nombre} (primero de la cola). Esperando que acepte. Si no contesta, podés asignárselo a otro.`
+  }
   if (v.estado === 'ofrecido') return `📌 Asignado a mano a ${nombre}. Esperando que lo acepte.`
   if (v.estado === 'asignado' && !v.iniciado_en) return `${nombre} lo aceptó. Todavía no salió a hacerlo.`
   if (v.estado === 'asignado') return `${nombre} está haciendo este viaje.`
@@ -49,7 +51,7 @@ export default function FormViaje({ viaje, onListo }) {
   const choferes = useChoferesParaAsignar()
   const cambiar = (campo) => (e) => setDatos({ ...datos, [campo]: e.target.value })
   const sePuedeAnular = !esNuevo && ['sin_chofer', 'ofrecido', 'asignado'].includes(viaje.estado)
-  const sePuedePriorizar = !esNuevo && (viaje.estado === 'sin_chofer' || (viaje.estado === 'ofrecido' && viaje.oferta_vence))
+  const sePuedePriorizar = !esNuevo && (viaje.estado === 'sin_chofer' || (viaje.estado === 'ofrecido' && !viaje.asignado_por))
 
   const [corrigiendoPago, setCorrigiendoPago] = useState(false)
   const hecho = !esNuevo && ['pago_pendiente', 'finalizado'].includes(viaje.estado)

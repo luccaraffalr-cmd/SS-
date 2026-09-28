@@ -304,14 +304,14 @@ Hoy la ubicación "desaparece" por varios minutos. Hay que diseñar para que **n
   - Los choferes ven la cola, quién está Libre y quién En viaje.
 - **(2026-09-28) Cola ordenable "tipo Spotify":** en gestión se arrastra a cada chofer al puesto que se quiera.
 - **(2026-09-28) Asignación con aceptación del chofer.** Reemplaza "El chofer no puede rechazar viajes" (4.3):
-  - **Oferta automática:** el viaje se le ofrece al primero de la cola, que tiene **3 minutos** para aceptar (a revisar).
-    - **No contesta:** el viaje pasa al siguiente y él conserva su lugar en la cola.
-    - **Rechaza:** el viaje pasa al siguiente y él **sale de la cola** (queda Libre; si rechaza es porque pasó algo).
+  - **Oferta automática:** el viaje se le ofrece al primero de la cola. **Sin tiempo límite** (cambiado el 28/9/2026: antes eran 3 minutos): queda esperando hasta que acepte o rechace; si no contesta, gestión se lo puede asignar a otro.
+    - **Rechaza:** el viaje pasa al siguiente y él **sigue primero en la cola** (cambiado el 28/9/2026: antes salía de la cola).
     - No se le vuelve a ofrecer el mismo viaje.
   - **Asignación manual (gestión):** el chofer la acepta al recibirla (sin tiempo límite) y, cuando llega la hora o termina el viaje que está haciendo, toca **"Salir a hacer el viaje"**. Si la rechaza, el viaje **vuelve a gestión** (no se asigna solo).
   - Gestión puede asignar a un chofer que está **En viaje**: queda como su **próximo viaje**.
   - Si gestión le saca un viaje que ya estaba haciendo (reasigna o anula), el chofer vuelve al **puesto 1**.
   - Si todos están ocupados, el viaje que espera se le ofrece al **primero que se anuncie** (como la regla B).
+- **(2026-09-28) Viajes ajenos que ve el chofer:** "Próximos viajes" (programados sin chofer, solo la hora de asignación) y el cartel de viajes sin chofer (hora, origen y destino; nunca datos del cliente). Por ahora **solo los ve**: no puede elegirlos; los asigna gestión.
 - **(2026-09-28) Prioridad entre viajes esperando:** primero los marcados **⭐ Priorizar** por gestión, después los **programados**, después los **inmediatos**; dentro de cada grupo, el de hora de asignación más temprana.
 - **(2026-09-28) Tema a confirmar n.º 1:** el chofer elegido para un programado **sigue en la cola** hasta su hora (puede rechazar ofertas si sabe que no llega). Destino: opcional, pero se le muestra al chofer en la oferta.
 - **(2026-09-28) Choferes entran con un usuario** (ej. `juanperez`), no necesitan email.
