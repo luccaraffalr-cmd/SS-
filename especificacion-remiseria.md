@@ -300,7 +300,7 @@ Hoy la ubicación "desaparece" por varios minutos. Hay que diseñar para que **n
   | **En viaje** | Tiene un viaje asignado. | Al asignarle un viaje. |
 
   - Los estados **no cambian solos por tiempo**: no hay alerta "sin señal" ni desconexión automática, y abrir la app no cambia el estado. Es normal que un chofer tarde mucho en volver a la base.
-  - "Último reporte hace X min" se muestra como dato informativo.
+  - "Último reporte hace X min" se muestra como dato informativo: es la última vez que el chofer hizo algo en la app (cambió su estado). Tener la app abierta no cuenta, y los cambios que hace gestión tampoco.
   - Los choferes ven la cola, quién está Libre y quién En viaje.
 - **(2026-09-28) Cola ordenable "tipo Spotify":** en gestión se arrastra a cada chofer al puesto que se quiera.
 - **(2026-09-28) Choferes entran con un usuario** (ej. `juanperez`), no necesitan email.

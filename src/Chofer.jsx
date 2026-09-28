@@ -3,8 +3,6 @@ import { supabase } from './supabase.js'
 import { urlFotoAuto } from './fotos.js'
 import { NOMBRE_ESTADO, textoError } from './estados.js'
 
-const CADA_CUANTO_REPORTA = 60 * 1000 // 1 minuto
-
 const AYUDA_ESTADO = {
   fuera_de_servicio: 'No estás trabajando.',
   libre: 'Estás trabajando, pero no estás anunciado en la base.',
@@ -26,17 +24,17 @@ export default function Chofer({ perfil }) {
     setCompaneros(data ?? [])
   }, [])
 
-  // Al abrir la app y cada minuto anota "último reporte". No cambia el estado.
+  // Carga sus datos al abrir la app y al volver a ella. ("Último reporte" se anota
+  // solo cuando el chofer toca un botón, en el servidor.)
   useEffect(() => {
-    async function reportar() {
-      const { data, error } = await supabase.rpc('reportar_chofer')
+    async function cargarMisDatos() {
+      const { data, error } = await supabase.from('choferes').select('*').eq('id', perfil.id).maybeSingle()
       if (error || !data) setError('No se pudo conectar con el servidor. Revisá tu internet.')
       else { setError(''); setChofer(data) }
     }
-    reportar()
+    cargarMisDatos()
     cargarTablero()
-    const intervalo = setInterval(reportar, CADA_CUANTO_REPORTA)
-    const alVolver = () => { if (document.visibilityState === 'visible') { reportar(); cargarTablero() } }
+    const alVolver = () => { if (document.visibilityState === 'visible') { cargarMisDatos(); cargarTablero() } }
     document.addEventListener('visibilitychange', alVolver)
 
     // Cualquier cambio en los choferes (el propio o los compañeros) llega al instante.
@@ -48,7 +46,6 @@ export default function Chofer({ perfil }) {
       .subscribe()
 
     return () => {
-      clearInterval(intervalo)
       document.removeEventListener('visibilitychange', alVolver)
       supabase.removeChannel(canal)
     }
