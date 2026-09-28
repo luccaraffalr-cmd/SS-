@@ -242,5 +242,86 @@ a.boton { display: block; text-align: center; text-decoration: none; }
   text-align: center;
 }
 
+textarea {
+  font: inherit;
+  font-weight: 400;
+  font-size: 1rem;
+  padding: 12px;
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+  resize: vertical;
+}
+
+/* Viajes */
+.filtros {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px 12px;
+  margin-top: 16px;
+  padding: 14px 16px;
+  border-radius: 12px;
+  background: #fff;
+}
+.filtros > label:first-child, .filtros .botones-rapidos { grid-column: 1 / -1; }
+.filtros label { font-size: 0.9rem; min-width: 0; }
+.filtros select, .filtros input { width: 100%; }
+
+.botones-rapidos { display: flex; flex-wrap: wrap; gap: 8px; }
+.botones-rapidos button {
+  font: inherit;
+  font-size: 0.95rem;
+  padding: 8px 14px;
+  border: 1px solid #d1d5db;
+  border-radius: 999px;
+  background: #fff;
+  color: #111827;
+}
+.botones-rapidos button.activo { background: #1f2937; border-color: #1f2937; color: #fff; }
+
+.selector-tipo { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.selector-tipo button {
+  font: inherit;
+  font-weight: 600;
+  padding: 14px;
+  border: 2px solid #d1d5db;
+  border-radius: 10px;
+  background: #fff;
+  color: #111827;
+}
+.selector-tipo button.activo { border-color: #1f2937; background: #1f2937; color: #fff; }
+
+.bloque-programado { display: flex; flex-direction: column; gap: 12px; padding: 14px; border-radius: 10px; background: #f3f4f6; }
+.dos-columnas { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.dos-columnas input { width: 100%; min-width: 0; }
+
+.tarjeta-viaje {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 14px 16px;
+  border: none;
+  border-left: 6px solid transparent;
+  border-radius: 12px;
+  background: #fff;
+  font: inherit;
+  text-align: left;
+  color: inherit;
+}
+.tarjeta-viaje.urgente { border-left-color: #dc2626; background: #fef2f2; }
+.viaje-arriba, .viaje-abajo { display: flex; justify-content: space-between; align-items: center; gap: 10px; }
+.viaje-hora { font-size: 1.3rem; font-weight: 700; }
+.viaje-hora small { font-size: 0.85rem; font-weight: 400; color: #6b7280; }
+.viaje-ruta { font-size: 1.05rem; overflow-wrap: anywhere; }
+.viaje-abajo, .viaje-cliente { font-size: 0.9rem; color: #6b7280; }
+.tarjeta-viaje.urgente .viaje-abajo span:last-child { color: #dc2626; font-weight: 700; }
+
+.etiqueta.viaje.sin_chofer { background: #fee2e2; color: #991b1b; }
+.etiqueta.viaje.asignado { background: #dbeafe; color: #1e40af; }
+.etiqueta.viaje.pago_pendiente { background: #fef3c7; color: #92400e; }
+.etiqueta.viaje.finalizado { background: #dcfce7; color: #166534; }
+.etiqueta.viaje.fallido { background: #e5e7eb; color: #4b5563; }
+.etiqueta.viaje.anulado { background: #e5e7eb; color: #4b5563; text-decoration: line-through; }
+
 .elegir { display: flex; flex-direction: column; gap: 6px; }
 .elegir .fila { background: #f3f4f6; }

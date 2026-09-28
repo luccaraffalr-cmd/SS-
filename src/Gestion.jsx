@@ -2,14 +2,16 @@ import { useState } from 'react'
 import BotonSalir from './BotonSalir.jsx'
 import Usuarios from './Usuarios.jsx'
 import Choferes from './Choferes.jsx'
+import Viajes from './Viajes.jsx'
 import { NOMBRE_ROL } from './usuarios.js'
 
 // Panel de gestión (admin y operadores).
 export default function Gestion({ perfil }) {
   const esAdmin = perfil.rol === 'admin'
-  const [seccion, setSeccion] = useState('choferes')
+  const [seccion, setSeccion] = useState('viajes')
 
   const pestanas = [
+    ['viajes', 'Viajes'],
     ['choferes', 'Choferes'],
     ...(esAdmin ? [['usuarios', 'Usuarios']] : []),
     ['cuenta', 'Mi cuenta'],
@@ -23,6 +25,7 @@ export default function Gestion({ perfil }) {
         ))}
       </nav>
 
+      {seccion === 'viajes' && <Viajes />}
       {seccion === 'choferes' && <Choferes />}
       {seccion === 'usuarios' && esAdmin && <Usuarios yo={perfil} />}
       {seccion === 'cuenta' && (

@@ -1,0 +1,124 @@
+import { useCallback, useEffect, useState } from 'react'
+import { supabase } from './supabase.js'
+import FormViaje from './FormViaje.jsx'
+import {
+  NOMBRE_ESTADO_VIAJE, esAsignableSinChofer, fechaCorta, fechaLocal, hora, unirFechaHora,
+} from './viajes.js'
+
+const ACTIVOS = ['sin_chofer', 'asignado']
+
+// Gestión: todos los viajes con su estado, con filtros por fecha, estado y chofer.
+export default function Viajes() {
+  const [viajes, setViajes] = useState(null)
+  const [choferes, setChoferes] = useState([])
+  const [editando, setEditando] = useState(null) // null = lista; 'nuevo' = alta; objeto = edición
+  const [filtroFecha, setFiltroFecha] = useState(fechaLocal())
+  const [filtroEstado, setFiltroEstado] = useState('')
+  const [filtroChofer, setFiltroChofer] = useState('')
+  const [ahora, setAhora] = useState(Date.now())
+
+  const cargar = useCallback(async () => {
+    let consulta = supabase.from('viajes').select('*, chofer:perfiles!viajes_chofer_id_fkey(nombre)')
+    if (filtroFecha) {
+      const desde = unirFechaHora(filtroFecha, '00:00')
+      const hasta = new Date(desde.getFullYear(), desde.getMonth(), desde.getDate() + 1)
+      consulta = consulta.gte('hora_asignacion', desde.toISOString()).lt('hora_asignacion', hasta.toISOString())
+    }
+    if (filtroEstado) consulta = consulta.eq('estado', filtroEstado)
+    if (filtroChofer === 'ninguno') consulta = consulta.is('chofer_id', null)
+    else if (filtroChofer) consulta = consulta.eq('chofer_id', filtroChofer)
+
+    const { data } = await consulta.limit(500)
+    // Primero los activos (del más próximo al más lejano), después el resto (el más reciente arriba).
+    setViajes((data ?? []).sort((a, b) => {
+      const activoA = ACTIVOS.includes(a.estado), activoB = ACTIVOS.includes(b.estado)
+      if (activoA !== activoB) return activoA ? -1 : 1
+      const dif = new Date(a.hora_asignacion) - new Date(b.hora_asignacion)
+      return activoA ? dif : -dif
+    }))
+  }, [filtroFecha, filtroEstado, filtroChofer])
+
+  useEffect(() => {
+    cargar()
+    const canal = supabase.channel('gestion-viajes')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'viajes' }, cargar)
+      .subscribe()
+    return () => { supabase.removeChannel(canal) }
+  }, [cargar])
+
+  useEffect(() => {
+    supabase.from('perfiles').select('id, nombre').eq('rol', 'chofer').eq('activo', true).order('nombre')
+      .then(({ data }) => setChoferes(data ?? []))
+    const reloj = setInterval(() => setAhora(Date.now()), 30 * 1000)
+    return () => clearInterval(reloj)
+  }, [])
+
+  if (editando) {
+    return <FormViaje viaje={editando === 'nuevo' ? null : editando} onListo={() => { setEditando(null); cargar() }} />
+  }
+
+  return (
+    <main className="pantalla">
+      <h1>Viajes</h1>
+      <button className="boton" onClick={() => setEditando('nuevo')}>+ Nuevo viaje</button>
+
+      <div className="filtros">
+        <label>
+          Fecha
+          <input type="date" value={filtroFecha} onChange={(e) => setFiltroFecha(e.target.value)} />
+        </label>
+        <div className="botones-rapidos">
+          <button className={filtroFecha === fechaLocal() ? 'activo' : ''} onClick={() => setFiltroFecha(fechaLocal())}>Hoy</button>
+          <button className={filtroFecha === '' ? 'activo' : ''} onClick={() => setFiltroFecha('')}>Todas las fechas</button>
+        </div>
+        <label>
+          Estado
+          <select value={filtroEstado} onChange={(e) => setFiltroEstado(e.target.value)}>
+            <option value="">Todos</option>
+            {Object.entries(NOMBRE_ESTADO_VIAJE).map(([id, texto]) => <option key={id} value={id}>{texto}</option>)}
+          </select>
+        </label>
+        <label>
+          Chofer
+          <select value={filtroChofer} onChange={(e) => setFiltroChofer(e.target.value)}>
+            <option value="">Todos</option>
+            <option value="ninguno">Sin chofer</option>
+            {choferes.map((c) => <option key={c.id} value={c.id}>{c.nombre}</option>)}
+          </select>
+        </label>
+      </div>
+
+      {viajes === null && <p>Cargando…</p>}
+      {viajes?.length === 0 && <p className="ayuda">No hay viajes con estos filtros.</p>}
+      <ul className="lista">
+        {viajes?.map((v) => {
+          const urgente = esAsignableSinChofer(v, ahora)
+          const esperando = v.estado === 'sin_chofer' && !urgente
+          return (
+            <li key={v.id}>
+              <button className={'tarjeta-viaje' + (urgente ? ' urgente' : '')} onClick={() => setEditando(v)}>
+                <div className="viaje-arriba">
+                  <span className="viaje-hora">
+                    {v.tipo === 'programado' ? hora(v.hora_presentacion) : hora(v.hora_asignacion)}
+                    {!filtroFecha && <small> {fechaCorta(v.hora_asignacion)}</small>}
+                  </span>
+                  <span className={'etiqueta viaje ' + v.estado}>
+                    {esperando ? `Se asigna ${hora(v.hora_asignacion)}` : NOMBRE_ESTADO_VIAJE[v.estado]}
+                  </span>
+                </div>
+                <div className="viaje-ruta">
+                  {v.origen}{v.destino ? ' → ' + v.destino : ''}
+                </div>
+                <div className="viaje-abajo">
+                  <span>{v.tipo === 'programado' ? '📅 Programado' : '⚡ Inmediato'} · #{v.id}</span>
+                  <span>{v.chofer?.nombre ?? (urgente ? '⚠️ Falta chofer' : '')}</span>
+                </div>
+                {v.cliente_nombre && <div className="viaje-cliente">{v.cliente_nombre}</div>}
+              </button>
+            </li>
+          )
+        })}
+      </ul>
+    </main>
+  )
+}
