@@ -3,6 +3,7 @@ import { supabase } from './supabase.js'
 import { textoError } from './estados.js'
 import { cuando, hora, tiempoRestante } from './viajes.js'
 import FormPago from './FormPago.jsx'
+import { pitido } from './notificaciones.js'
 
 // App del chofer: ofertas para aceptar o rechazar, su viaje actual y los próximos.
 export default function MisViajes({ perfil }) {
@@ -74,6 +75,16 @@ export default function MisViajes({ perfil }) {
 
   const ofertas = viajes.filter((v) => v.estado === 'ofrecido'
     && (!v.oferta_vence || new Date(v.oferta_vence).getTime() > ahora))
+
+  // Con la app abierta: pitido cuando aparece una oferta nueva.
+  const idsOfertas = ofertas.map((v) => v.id).join(',')
+  const [ofertasVistas, setOfertasVistas] = useState('')
+  useEffect(() => {
+    if (!idsOfertas) { setOfertasVistas(''); return }
+    const vistas = new Set(ofertasVistas.split(','))
+    if (idsOfertas.split(',').some((id) => !vistas.has(id))) pitido()
+    setOfertasVistas(idsOfertas)
+  }, [idsOfertas]) // eslint-disable-line react-hooks/exhaustive-deps
   const actual = viajes.find((v) => v.estado === 'asignado' && v.iniciado_en)
   const aceptados = viajes.filter((v) => v.estado === 'asignado' && !v.iniciado_en)
   const sinPago = viajes.filter((v) => v.estado === 'pago_pendiente')

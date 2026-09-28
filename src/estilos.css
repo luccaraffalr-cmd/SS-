@@ -196,6 +196,7 @@ a.boton { display: block; text-align: center; text-decoration: none; }
 
 .oferta { border: 3px solid #f59e0b; }
 .sin-pago { border: 3px solid #f59e0b; }
+.aviso-notificaciones { border: 3px solid #facc15; background: #fefce8; }
 
 .form-pago { display: flex; flex-direction: column; gap: 12px; }
 .form-pago input { font-size: 1.4rem; font-weight: 700; }

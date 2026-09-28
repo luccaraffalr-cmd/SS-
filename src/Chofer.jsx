@@ -3,6 +3,7 @@ import { supabase } from './supabase.js'
 import { urlFotoAuto } from './fotos.js'
 import { NOMBRE_ESTADO, textoError } from './estados.js'
 import MisViajes from './MisViajes.jsx'
+import ActivarNotificaciones from './ActivarNotificaciones.jsx'
 
 const AYUDA_ESTADO = {
   fuera_de_servicio: 'No estás trabajando.',
@@ -84,6 +85,7 @@ export default function Chofer({ perfil }) {
   return (
     <main className="pantalla">
       <h1>Hola, {perfil.nombre}</h1>
+      <ActivarNotificaciones />
 
       <div className={'estado-grande ' + estado}>
         {NOMBRE_ESTADO[estado]}
