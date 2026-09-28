@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { supabase } from './supabase.js'
 import { NOMBRE_ROL, llamarFuncionUsuarios } from './usuarios.js'
+import DatosChofer from './DatosChofer.jsx'
 
 const ORDEN_ROL = { admin: 0, operador: 1, chofer: 2 }
 
@@ -157,6 +158,8 @@ function EditarUsuario({ perfil, esYo, onListo }) {
         <button className="boton" disabled={enviando}>{enviando ? 'Guardando…' : 'Guardar'}</button>
         <button type="button" className="boton secundario" onClick={onListo}>Volver</button>
       </form>
+
+      {perfil.rol === 'chofer' && <DatosChofer choferId={perfil.id} />}
 
       <div className="tarjeta separada">
         <label>

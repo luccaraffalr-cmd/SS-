@@ -82,6 +82,21 @@ label .ayuda { margin: 0; }
 .casilla input { width: 22px; height: 22px; }
 
 .separada { margin-top: 16px; }
+.sin-margen { margin: 0; }
+h2 { font-size: 1.2rem; margin: 0; }
+
+.foto-auto {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  aspect-ratio: 4 / 3;
+  border-radius: 10px;
+  background: #f3f4f6;
+  color: #6b7280;
+  overflow: hidden;
+}
+.foto-auto img { width: 100%; height: 100%; object-fit: cover; }
+.boton-archivo { display: block; text-align: center; cursor: pointer; }
 
 /* Pestañas de arriba del panel */
 .pestanas {
