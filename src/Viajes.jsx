@@ -148,7 +148,8 @@ export default function Viajes() {
                     <span>{v.cliente_nombre}</span>
                     {v.estado === 'finalizado' && (
                       <span className="importe">
-                        {dinero(v.importe)} · {v.cuenta?.nombre ? `Cta. cte. ${v.cuenta.nombre}` : FORMAS_PAGO[v.forma_pago]}
+                        {dinero(v.importe)} · {(v.cuenta?.nombre || v.cuenta_otro)
+                          ? `Cta. cte. ${v.cuenta?.nombre ?? v.cuenta_otro}` : FORMAS_PAGO[v.forma_pago]}
                       </span>
                     )}
                   </div>
