@@ -195,7 +195,7 @@ export default function MisViajes({ perfil }) {
 
       {aceptados.length > 0 && (
         <section className="tarjeta separada">
-          <h2>Tus próximos viajes</h2>
+          <h2>Tus viajes asignados</h2>
           {aceptados.map((v) => {
             const llegoLaHora = new Date(v.hora_asignacion).getTime() <= ahora
             return (

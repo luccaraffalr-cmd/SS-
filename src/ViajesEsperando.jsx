@@ -4,10 +4,9 @@ import { fechaCorta, fechaLocal, hora } from './viajes.js'
 
 const CADA_CUANTO = 30 * 1000
 
-// App del chofer: viajes que esperan chofer, solo con el horario (para saber si hace falta gente).
-export default function ViajesEsperando() {
+// Viajes sin chofer, para los choferes (sin datos del cliente). Se actualiza cada 30 segundos.
+function useViajesEsperando() {
   const [viajes, setViajes] = useState(null)
-
   useEffect(() => {
     const cargar = () => supabase.rpc('viajes_esperando').then(({ data }) => setViajes(data ?? []))
     cargar()
@@ -16,26 +15,57 @@ export default function ViajesEsperando() {
     document.addEventListener('visibilitychange', alVolver)
     return () => { clearInterval(intervalo); document.removeEventListener('visibilitychange', alVolver) }
   }, [])
+  return viajes
+}
 
+// Cartel rojo: viajes que ya se tendrían que estar haciendo y no tienen chofer.
+// Al tocarlo muestra cuáles son (hora, origen y destino).
+export function AlertaSinChoferChofer() {
+  const viajes = useViajesEsperando()
+  const [abierto, setAbierto] = useState(false)
+  const urgentes = (viajes ?? []).filter((v) => v.estado === 'sin_chofer' && new Date(v.hora_asignacion) <= new Date())
+  if (urgentes.length === 0) return null
+
+  return (
+    <div className="alerta-chofer">
+      <button className="alerta-sin-chofer" onClick={() => setAbierto(!abierto)}>
+        <strong>⚠️ {urgentes.length} {urgentes.length === 1 ? 'viaje' : 'viajes'} sin chofer</strong>
+        <span className="detalle">{abierto ? 'Tocá para cerrar' : 'Tocá para ver cuáles son'}</span>
+      </button>
+      {abierto && (
+        <ul className="lista-alerta">
+          {urgentes.map((v) => (
+            <li key={v.id}>
+              <strong>{v.tipo === 'programado' ? `Presentarse ${hora(v.hora_presentacion)}` : `Para ya (desde ${hora(v.hora_asignacion)})`}</strong>
+              <span>{v.origen}{v.destino ? ' → ' + v.destino : ''}</span>
+            </li>
+          ))}
+          <li className="ayuda">Si podés hacerlo, anunciate o avisale a gestión.</li>
+        </ul>
+      )}
+    </div>
+  )
+}
+
+// "Próximos viajes": programados sin chofer que todavía no llegaron a su hora de asignación.
+export default function ProximosViajes() {
+  const viajes = useViajesEsperando()
   if (viajes === null) return null
+  const ahora = new Date()
+  const proximos = viajes.filter((v) => new Date(v.hora_asignacion) > ahora)
   const hoy = fechaLocal()
 
   return (
     <section className="tarjeta separada">
-      <h2>Viajes esperando chofer ({viajes.length})</h2>
-      {viajes.length === 0 && <p className="ayuda sin-margen">No hay viajes esperando.</p>}
+      <h2>Próximos viajes ({proximos.length})</h2>
+      {proximos.length === 0 && <p className="ayuda sin-margen">No hay próximos viajes sin chofer.</p>}
       <ul className="esperando">
-        {viajes.map((v) => {
-          const programado = v.tipo === 'programado'
-          const horaViaje = programado ? v.hora_presentacion : v.hora_asignacion
-          return (
-            <li key={v.id}>
-              <strong>{hora(horaViaje)}</strong>
-              {fechaLocal(horaViaje) !== hoy && <small> {fechaCorta(horaViaje)}</small>}
-              <span>{programado ? '📅 Programado' : '⚡ Para ya'}</span>
-            </li>
-          )
-        })}
+        {proximos.map((v) => (
+          <li key={v.id}>
+            <strong>{hora(v.hora_asignacion)}</strong>
+            {fechaLocal(v.hora_asignacion) !== hoy && <small> {fechaCorta(v.hora_asignacion)}</small>}
+          </li>
+        ))}
       </ul>
     </section>
   )

@@ -201,7 +201,6 @@ a.boton { display: block; text-align: center; text-decoration: none; }
 .esperando li { display: flex; align-items: baseline; gap: 8px; padding: 8px 12px; border-radius: 10px; background: #f3f4f6; }
 .esperando strong { font-size: 1.2rem; }
 .esperando small { color: #6b7280; }
-.esperando span { margin-left: auto; color: #6b7280; font-size: 0.9rem; }
 
 /* Historial de un viaje */
 .historial { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 8px; }
@@ -226,6 +225,30 @@ a.boton { display: block; text-align: center; text-decoration: none; }
 .alerta-sin-chofer strong { font-size: 1.1rem; }
 .alerta-sin-chofer .detalle { display: flex; flex-wrap: wrap; gap: 4px 14px; font-size: 0.95rem; }
 @keyframes latido { 50% { background: #b91c1c; } }
+
+.panel-alerta {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  max-width: 480px;
+  margin: 0 auto;
+  padding: 12px 16px 16px;
+  background: #fef2f2;
+  border-bottom: 3px solid #dc2626;
+}
+.panel-alerta .boton.secundario { margin-top: 0; }
+.viaje-alerta { display: flex; flex-direction: column; gap: 4px; padding: 12px; border-radius: 10px; background: #fff; overflow-wrap: anywhere; }
+.viaje-alerta small { color: #6b7280; }
+.viaje-alerta .rechazado { color: #b91c1c; font-weight: 600; }
+.asignar-rapido { display: grid; grid-template-columns: 1fr auto; gap: 8px; margin-top: 4px; }
+.asignar-rapido select { min-width: 0; }
+.asignar-rapido .boton { padding: 10px 14px; }
+
+/* Cartel para los choferes */
+.alerta-chofer { margin: -8px 0 16px; border-radius: 12px; overflow: hidden; }
+.lista-alerta { list-style: none; margin: 0; padding: 10px 14px; display: flex; flex-direction: column; gap: 8px; background: #fef2f2; }
+.lista-alerta li { display: flex; flex-direction: column; overflow-wrap: anywhere; }
+.lista-alerta .ayuda { margin: 0; }
 
 .aviso-notificaciones { border: 3px solid #facc15; background: #fefce8; }
 
