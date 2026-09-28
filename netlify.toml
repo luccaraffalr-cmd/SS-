@@ -1,0 +1,9 @@
+[build]
+  command = "npm run build"
+  publish = "dist"
+
+# Todas las direcciones abren la app (necesario para las pantallas internas).
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200

@@ -1,0 +1,25 @@
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  background: #f3f4f6;
+  color: #111827;
+}
+
+.pantalla {
+  max-width: 480px;
+  margin: 0 auto;
+  padding: 24px 16px;
+}
+
+h1 { font-size: 1.6rem; margin: 0 0 16px; }
+
+.aviso {
+  padding: 16px;
+  border-radius: 12px;
+  background: #fff;
+  font-size: 1.1rem;
+}
+.aviso.ok { background: #dcfce7; color: #166534; }
+.aviso.error { background: #fee2e2; color: #991b1b; }
