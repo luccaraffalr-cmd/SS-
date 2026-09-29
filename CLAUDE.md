@@ -44,27 +44,23 @@
    `public/sin-internet.html`): los cambios de pantallas llegan solos al publicar en Netlify. Solo hace falta
    un APK nuevo si cambia la parte nativa (`android/`) o `capacitor.config.json`. La usan choferes **y el dueño**
    (gestión desde el celular). Dentro de la app no andan las web push: por eso los avisos van por Firebase.
-   El APK de prueba instalado en el celular del usuario (29/9/2026) es anterior a esto y trae las pantallas adentro.
    Se firma con la clave de depuración de esta compu (`%USERPROFILE%\.android\debug.keystore`): no borrarla,
    o los celulares no van a poder actualizar sin desinstalar. Parte nativa: `UbicacionService.java`
    (servicio en primer plano que manda a `reportar_mi_ubicacion`) y `UbicacionPlugin.java`.
 
-## Estado (29/9/2026)
-- **Etapa 1 terminada** (SQL 001–015 aplicados; 016 = ofertas sin tiempo límite, pedirle confirmación de que lo corrió).
-- Hay commits locales **sin publicar** en Netlify (próximos viajes, carteles de viajes sin chofer, ofertas sin tiempo).
-- Pendiente antes de usarla en serio: publicar, borrar datos de prueba (usuarios `prueba1`/`prueba2` y sus viajes),
-  cargar los choferes reales (fotos de autos en Descargas\remises), y en cada celular: activar notificaciones,
-  instalar la app y batería "sin restricciones".
-- **Etapa 2 en curso** (elegida el 29/9/2026; la Etapa 3 queda para después). Ver 10 bis de la especificación.
-  - Ubicación: Traccar Client (celulares, id 1–12) → servidor propio en Render (repo GitHub
-    `luccaraffalr-cmd/remis`, `server.js`, https://remis-oikl.onrender.com) → lo reenvía a Supabase
-    (`reportar_ubicacion`, con la clave de `config_privada`, que en Render va en la variable `CLAVE_SUPABASE`).
-  - SQL 017 aplicado. Hecho en la app: pestaña Mapa, "N.º en Traccar Client" en la ficha del chofer,
-    link de seguimiento `/seguir/<código>` (`Seguimiento.jsx`, `CompartirViaje.jsx`).
-  - Render ya reenvía (probado el 29/9/2026 con el celular n.º 12: aparece en el Mapa). A Claude no le deja
-    hacer push a `remis`: el usuario sube los archivos desde la web de GitHub ("Add file → Upload files").
-  - Central vieja de Render **cerrada** (29/9/2026): Render quedó solo como puente de ubicaciones. Sin `/debug`:
-    para diagnosticar, Render → Logs. Hasta publicar en Netlify no hay links de seguimiento (el usuario lo aceptó).
-  - Pendiente: cargar el N.º de Traccar de cada chofer, publicar (quedaban 8 deploys en septiembre; publicar
-    por tandas) y probar el link del pasajero desde un celular.
-    Después: parte 2 = app Android propia (servicio en primer plano) que reemplace a Traccar Client.
+## Estado (29/9/2026, tarde)
+- **Etapa 1 terminada.** SQL 001–020 aplicados. **Todo publicado en Netlify el 29/9/2026** (quedan ~7 deploys de septiembre;
+  publicar por tandas).
+- **Etapa 2** (ver 10 bis de la especificación):
+  - Traccar Client (2 choferes, id 1–12) → Render (repo `luccaraffalr-cmd/remis`, solo puente; central vieja cerrada)
+    → `reportar_ubicacion` (clave en `config_privada` / variable `CLAVE_SUPABASE` de Render). A Claude no le
+    deja hacer push a `remis`: el usuario sube los archivos desde la web de GitHub.
+  - App Android propia hecha: ubicación automática (Empezar a trabajar → Terminar el día), revisión de permisos,
+    avisos de viajes por Firebase (probados), carga las pantallas desde Netlify. `DescargasRemiseria.apk` = versión
+    definitiva (29/9). Todavía no la usa nadie: próximos pasos = instalarla en el celular del usuario y del dueño,
+    después en los 2 choferes de Traccar (comparar cortes con las dos apps a la vez; `historial_ubicacion` guarda 7 días),
+    y después en el resto. Traccar y Render siguen hasta que la app demuestre que anda igual o mejor.
+- Hecho también: viajes fijos (`019`) y calendario en Viajes.
+- Pendiente antes de usarla en serio: borrar datos de prueba (usuarios `prueba1`/`prueba2` y sus viajes),
+  cargar los choferes reales (fotos de autos en Descargasemises) y el N.º de Traccar de los que lo usan.
+- Después: Etapa 3 (plata y clientes: cuenta corriente de choferes con comisiones, resúmenes, clientes y saldos).
