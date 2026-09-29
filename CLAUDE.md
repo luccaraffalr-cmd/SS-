@@ -48,7 +48,8 @@
     link de seguimiento `/seguir/<código>` (`Seguimiento.jsx`, `CompartirViaje.jsx`).
   - Render ya reenvía (probado el 29/9/2026 con el celular n.º 12: aparece en el Mapa). A Claude no le deja
     hacer push a `remis`: el usuario sube los archivos desde la web de GitHub ("Add file → Upload files").
-  - Central vieja de Render: se cierra (`server.js` "puente" en Descargas\remis-para-subir) **después de publicar
-    en Netlify**, así siempre hay con qué mandar links. Sin `/debug`: para diagnosticar, Render → Logs.
-  - Pendiente: probar el link del pasajero con un viaje real, cargar el N.º de Traccar de cada chofer y publicar.
+  - Central vieja de Render **cerrada** (29/9/2026): Render quedó solo como puente de ubicaciones. Sin `/debug`:
+    para diagnosticar, Render → Logs. Hasta publicar en Netlify no hay links de seguimiento (el usuario lo aceptó).
+  - Pendiente: cargar el N.º de Traccar de cada chofer, publicar (quedaban 8 deploys en septiembre; publicar
+    por tandas) y probar el link del pasajero desde un celular.
     Después: parte 2 = app Android propia (servicio en primer plano) que reemplace a Traccar Client.
