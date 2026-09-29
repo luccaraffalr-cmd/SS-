@@ -2,12 +2,16 @@ import { useEffect, useState } from 'react'
 import { Ubicacion, dejarDeCompartir, empezarACompartir } from './ubicacionApp.js'
 import { textoError } from './estados.js'
 
-// Solo en la app Android: compartir la ubicación y revisar que el celular esté bien configurado.
-// (Prueba: por ahora se prende y apaga a mano; después irá con "Empezar a trabajar".)
-export default function UbicacionApp({ perfil }) {
+// Si pasa más que esto sin mandar, algo anda mal (sin señal, GPS apagado…).
+const SEGUNDOS_SIN_ENVIO = 120
+
+// Solo en la app Android. La ubicación se comparte sola mientras el chofer trabaja
+// (Libre, En cola o En viaje) y se apaga al "Terminar el día". Acá solo se avisa si falta configurar algo.
+export default function UbicacionApp({ perfil, estadoChofer }) {
   const [estado, setEstado] = useState(null)
   const [error, setError] = useState('')
   const [ahora, setAhora] = useState(Date.now())
+  const trabajando = !!estadoChofer && estadoChofer !== 'fuera_de_servicio'
 
   useEffect(() => {
     const revisar = () => Ubicacion.estado().then(setEstado).catch(() => {})
@@ -18,6 +22,25 @@ export default function UbicacionApp({ perfil }) {
     const reloj = setInterval(() => { setAhora(Date.now()); revisar() }, 5000)
     return () => { document.removeEventListener('visibilitychange', alVolver); clearInterval(reloj) }
   }, [])
+
+  // Prende o apaga según el estado del chofer. Al abrir la app (o volver a ella) se vuelve a
+  // prender por las dudas: si Android cortó el servicio, así arranca de nuevo.
+  const tienePermiso = !!estado && estado.ubicacion !== 'no'
+  useEffect(() => {
+    if (!estadoChofer || !estado) return
+    async function sincronizar() {
+      try {
+        if (trabajando && tienePermiso) setEstado(await empezarACompartir(perfil.id))
+        else if (!trabajando && estado.activo) setEstado(await dejarDeCompartir())
+        setError('')
+      } catch (e) { setError(textoError(e)) }
+    }
+    sincronizar()
+    const alVolver = () => { if (document.visibilityState === 'visible') sincronizar() }
+    document.addEventListener('visibilitychange', alVolver)
+    return () => document.removeEventListener('visibilitychange', alVolver)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [trabajando, tienePermiso, perfil.id, !!estado])
 
   async function hacer(accion) {
     setError('')
@@ -56,22 +79,34 @@ export default function UbicacionApp({ perfil }) {
     },
     { listo: estado.gps, texto: 'GPS (Ubicación) prendido', ayuda: 'Prendelo desde la barra de arriba del celular.' },
   ]
-  const todoListo = pasos.every((p) => p.listo)
+  const faltaAlgo = pasos.some((p) => !p.listo)
   const segundos = estado.ultimoEnvio ? Math.round((ahora - estado.ultimoEnvio) / 1000) : null
+  const sinEnviar = trabajando && estado.activo && (segundos === null ? false : segundos > SEGUNDOS_SIN_ENVIO)
+
+  // Todo bien: una línea chiquita (o nada si no está trabajando).
+  if (!faltaAlgo && !sinEnviar && !error) {
+    if (!trabajando) return null
+    return (
+      <p className="ayuda centrada">
+        📍 Compartiendo tu ubicación{segundos !== null && ` · último envío hace ${segundos} s`}
+      </p>
+    )
+  }
 
   return (
-    <section className={'tarjeta separada ubicacion-app' + (estado.activo ? ' activa' : '')}>
-      <h2>📍 Mi ubicación</h2>
+    <section className={'tarjeta separada ubicacion-app' + (trabajando ? ' falta' : '')}>
+      <h2>📍 {trabajando ? 'Tu ubicación no se está compartiendo bien' : 'Configurá la ubicación'}</h2>
       <p className="sin-margen">
-        {estado.activo ? <strong>Compartiendo tu ubicación</strong> : 'No estás compartiendo tu ubicación.'}
-        {estado.activo && (
-          <><br /><small className="ayuda">
-            {segundos === null ? 'Todavía no se mandó ninguna.' : `Último envío: hace ${segundos} s.`}
-            {estado.ultimoError && ` ⚠️ ${estado.ultimoError}`}
-          </small></>
-        )}
+        {trabajando
+          ? 'Mientras trabajás, gestión tiene que ver dónde estás. Activá lo que falta:'
+          : 'Antes de empezar a trabajar, dejá todo esto en ✅ (se hace una sola vez):'}
       </p>
-
+      {sinEnviar && (
+        <p className="aviso error sin-margen">
+          Hace {Math.round(segundos / 60)} min que no se manda tu ubicación. Revisá que tengas internet y el GPS prendido.
+          {estado.ultimoError && <><br /><small>{estado.ultimoError}</small></>}
+        </p>
+      )}
       <ul className="pasos-config">
         {pasos.map((p) => (
           <li key={p.texto} className={p.listo ? 'listo' : ''}>
@@ -82,16 +117,7 @@ export default function UbicacionApp({ perfil }) {
           </li>
         ))}
       </ul>
-
       {error && <p className="aviso error">{error}</p>}
-      {estado.activo ? (
-        <button type="button" className="boton secundario" onClick={() => hacer(dejarDeCompartir)}>Dejar de compartir</button>
-      ) : (
-        <button type="button" className="boton verde" disabled={estado.ubicacion === 'no'}
-          onClick={() => hacer(() => empezarACompartir(perfil.id))}>
-          Empezar a compartir{!todoListo && ' (falta configurar)'}
-        </button>
-      )}
     </section>
   )
 }

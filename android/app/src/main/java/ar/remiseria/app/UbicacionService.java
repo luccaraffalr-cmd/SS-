@@ -30,6 +30,8 @@ import com.google.android.gms.location.Priority;
 
 import org.json.JSONObject;
 
+import java.io.ByteArrayOutputStream;
+import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.HttpURLConnection;
 import java.net.URL;
@@ -132,8 +134,13 @@ public class UbicacionService extends Service {
                 salida.write(cuerpo.toString().getBytes(StandardCharsets.UTF_8));
             }
             int codigo = conexion.getResponseCode();
+            String respuesta = leer(codigo < 400 ? conexion.getInputStream() : conexion.getErrorStream());
             if (codigo >= 200 && codigo < 300) {
                 p.edit().putLong("ultimoEnvio", System.currentTimeMillis()).remove("ultimoError").apply();
+                // El servidor devuelve el estado del chofer: si terminó el día (o lo puso gestión), se apaga solo.
+                if (respuesta.contains("fuera_de_servicio")) apagar();
+            } else if (respuesta.contains("Clave incorrecta")) {
+                apagar(); // usuario desactivado o clave vieja: la app pide una nueva al volver a abrirse
             } else {
                 p.edit().putString("ultimoError", "El servidor respondió " + codigo).apply();
             }
@@ -141,6 +148,23 @@ public class UbicacionService extends Service {
             p.edit().putString("ultimoError", "Sin conexión: " + e.getClass().getSimpleName()).apply();
         } finally {
             if (conexion != null) conexion.disconnect();
+        }
+    }
+
+    private void apagar() {
+        prefs(this).edit().putBoolean("activo", false).apply();
+        stopSelf();
+    }
+
+    private static String leer(InputStream entrada) {
+        if (entrada == null) return "";
+        try (InputStream e = entrada) {
+            ByteArrayOutputStream salida = new ByteArrayOutputStream();
+            byte[] buffer = new byte[1024];
+            for (int n; (n = e.read(buffer)) > 0; ) salida.write(buffer, 0, n);
+            return salida.toString("UTF-8");
+        } catch (Exception ex) {
+            return "";
         }
     }
 

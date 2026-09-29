@@ -36,7 +36,11 @@
 7. **App Android** (Capacitor, carpeta `android/`): se arma con `.\compilar-app.ps1` (build web + `cap sync` +
    Gradle) → `android\app\build\outputs\apk\debug\app-debug.apk`. Usa Java 21 de `%LOCALAPPDATA%\jdk21`
    (el Java 25 de Android Studio no anda con Gradle 8.14) y el SDK de `%LOCALAPPDATA%\Android\Sdk`.
-   La app lleva la web adentro: **cada cambio de pantallas para los choferes necesita un APK nuevo.**
+   La app **carga las pantallas desde Netlify** (`server.url` en `capacitor.config.json`; sin internet muestra
+   `public/sin-internet.html`): los cambios de pantallas llegan solos al publicar en Netlify. Solo hace falta
+   un APK nuevo si cambia la parte nativa (`android/`) o `capacitor.config.json`. La usan choferes **y el dueño**
+   (gestión desde el celular). Dentro de la app no andan las notificaciones web push (pendiente: avisos nativos).
+   El APK de prueba instalado en el celular del usuario (29/9/2026) es anterior a esto y trae las pantallas adentro.
    Se firma con la clave de depuración de esta compu (`%USERPROFILE%\.android\debug.keystore`): no borrarla,
    o los celulares no van a poder actualizar sin desinstalar. Parte nativa: `UbicacionService.java`
    (servicio en primer plano que manda a `reportar_mi_ubicacion`) y `UbicacionPlugin.java`.

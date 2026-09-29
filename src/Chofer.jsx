@@ -6,7 +6,13 @@ import MisViajes from './MisViajes.jsx'
 import ActivarNotificaciones from './ActivarNotificaciones.jsx'
 import ProximosViajes, { AlertaSinChoferChofer } from './ViajesEsperando.jsx'
 import UbicacionApp from './UbicacionApp.jsx'
-import { esAppAndroid } from './ubicacionApp.js'
+import { dejarDeCompartir, esAppAndroid } from './ubicacionApp.js'
+
+// Cerrar sesión: en la app Android también deja de compartir la ubicación.
+async function salir() {
+  if (esAppAndroid) await dejarDeCompartir().catch(() => {})
+  supabase.auth.signOut()
+}
 
 const AYUDA_ESTADO = {
   fuera_de_servicio: 'No estás trabajando.',
@@ -72,7 +78,7 @@ export default function Chofer({ perfil }) {
     return (
       <main className="pantalla">
         {error ? <p className="aviso error">{error}</p> : <p>Cargando…</p>}
-        <button className="boton secundario" onClick={() => supabase.auth.signOut()}>Cerrar sesión</button>
+        <button className="boton secundario" onClick={salir}>Cerrar sesión</button>
       </main>
     )
   }
@@ -114,7 +120,7 @@ export default function Chofer({ perfil }) {
       </div>
       {error && <p className="aviso error">{error}</p>}
 
-      {esAppAndroid && <UbicacionApp perfil={perfil} />}
+      {esAppAndroid && <UbicacionApp perfil={perfil} estadoChofer={estado} />}
       <MisViajes perfil={perfil} />
       <ProximosViajes />
 
@@ -144,7 +150,7 @@ export default function Chofer({ perfil }) {
         </p>
       </div>
 
-      <button className="boton secundario" onClick={() => supabase.auth.signOut()}>Cerrar sesión</button>
+      <button className="boton secundario" onClick={salir}>Cerrar sesión</button>
     </main>
   )
 }

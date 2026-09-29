@@ -466,7 +466,6 @@ textarea {
 
 /* App Android: compartir ubicación y revisar la configuración del celular */
 .ubicacion-app { border: 3px solid #f59e0b; }
-.ubicacion-app.activa { border-color: #16a34a; }
 .pasos-config { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 8px; }
 .pasos-config li { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
 .pasos-config li span { display: flex; flex-direction: column; min-width: 0; }
@@ -513,3 +512,4 @@ textarea {
   color: #111827;
 }
 .dias-semana button.activo { border-color: #1f2937; background: #1f2937; color: #fff; font-weight: 700; }
+.ubicacion-app.falta { border-color: #dc2626; background: #fef2f2; }

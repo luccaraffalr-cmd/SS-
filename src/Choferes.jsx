@@ -92,9 +92,12 @@ export default function Choferes() {
                   Último reporte: {haceCuanto(c.ultimo_reporte, ahora)}
                   {c.patente ? ' · ' + c.patente : ''}
                 </small>
-                {(c.equipo_traccar || ubicacionDe(c)) && (
-                  <small className={ubicacionDe(c) && sinSenal(ubicacionDe(c), ahora) ? 'texto-alerta' : ''}>
-                    📍 Ubicación: {haceCuanto(ubicacionDe(c), ahora)}
+                {(c.estado !== 'fuera_de_servicio' || ubicacionDe(c)) && (
+                  // Trabajando sin ubicación (o cortada hace rato): en rojo, para llamarlo.
+                  <small className={c.estado !== 'fuera_de_servicio' && (!ubicacionDe(c) || sinSenal(ubicacionDe(c), ahora))
+                    ? 'texto-alerta' : ''}>
+                    📍 {ubicacionDe(c) ? `Ubicación: ${haceCuanto(ubicacionDe(c), ahora)}` : 'Sin ubicación'}
+                    {c.estado !== 'fuera_de_servicio' && (!ubicacionDe(c) || sinSenal(ubicacionDe(c), ahora)) && ' ⚠️'}
                   </small>
                 )}
               </span>

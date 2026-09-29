@@ -1,5 +1,9 @@
 {
   "appId": "ar.remiseria.app",
   "appName": "Remisería",
-  "webDir": "dist"
+  "webDir": "dist",
+  "server": {
+    "url": "https://fastidious-cocada-43719b.netlify.app",
+    "errorPath": "sin-internet.html"
+  }
 }
