@@ -315,6 +315,12 @@ Hoy la ubicación "desaparece" por varios minutos. Hay que diseñar para que **n
 - **(2026-09-28) Prioridad entre viajes esperando:** primero los marcados **⭐ Priorizar** por gestión, después los **programados**, después los **inmediatos**; dentro de cada grupo, el de hora de asignación más temprana.
 - **(2026-09-28) Tema a confirmar n.º 1:** el chofer elegido para un programado **sigue en la cola** hasta su hora (puede rechazar ofertas si sabe que no llega). Destino: opcional, pero se le muestra al chofer en la oferta.
 - **(2026-09-28) Choferes entran con un usuario** (ej. `juanperez`), no necesitan email.
+- **(2026-09-29) Viajes fijos** (se repiten todas las semanas, ej. "todos los lunes a las 12"):
+  - Se cargan en Viajes → "🔁 Viajes fijos" (admin y operadores): días de la semana (uno o varios), hora de presentación, minutos de anticipación para asignar, datos del viaje y **chofer fijo opcional**.
+  - El servidor crea solo los viajes programados de las **próximas 4 semanas**. Cada uno es un viaje normal: se puede cambiar o anular un día suelto (feriado, el cliente avisa que no va) sin tocar el viaje fijo.
+  - Si se cambia el viaje fijo, se **actualizan los viajes futuros**, salvo los que se cambiaron o anularon a mano. Pausar o borrar el viaje fijo borra los viajes futuros que todavía no se ofrecieron a nadie (los ya ofrecidos quedan anulados).
+  - Sin chofer fijo: van por la cola como cualquier programado. Con chofer fijo: a cada viaje se lo **ofrece al chofer 7 días antes** de su hora de asignación y lo tiene que aceptar (como una asignación a mano; si lo rechaza, vuelve a gestión). Se ven en naranja.
+  - **Calendario** en Viajes (📋 Lista / 📅 Calendario): el mes entero con la cantidad de viajes de cada día (en rojo si alguno está sin chofer); al tocar un día se ven sus viajes.
 - **Ubicación (Etapa 2):** integrar a esta app el sistema de ubicación que hoy se usa para mandar a los clientes (Traccar), y a futuro que la app del chofer reporte la ubicación sola.
 - **(2026-09-29) Etapa 2, parte 1 — ubicación desde Traccar Client:**
   - Hoy cada celular tiene Traccar Client (identificador 1 a 12) mandando a un servidor propio en Render (repo `remis`, "Senda Segura", sin base de datos). **Render reenvía cada ubicación a Supabase** (como mucho una vez cada 10 s por auto), así no se reconfiguran los celulares antes de tener la app Android propia. La central vieja de Render sigue andando mientras tanto.

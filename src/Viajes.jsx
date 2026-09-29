@@ -1,19 +1,19 @@
 import { useCallback, useEffect, useState } from 'react'
 import { supabase } from './supabase.js'
 import FormViaje from './FormViaje.jsx'
-import {
-  FORMAS_PAGO, NOMBRE_ESTADO_VIAJE, dinero, esAsignableSinChofer, fechaCorta, fechaLocal, hora, unirFechaHora,
-} from './viajes.js'
+import TarjetaViaje, { CONSULTA_VIAJES } from './TarjetaViaje.jsx'
+import Calendario from './Calendario.jsx'
+import ViajesFijos from './ViajesFijos.jsx'
+import { NOMBRE_ESTADO_VIAJE, fechaLocal, unirFechaHora } from './viajes.js'
 
 const ACTIVOS = ['sin_chofer', 'ofrecido', 'asignado']
-const CONSULTA = '*, chofer:perfiles!viajes_chofer_id_fkey(nombre), rechazo:perfiles!viajes_rechazado_por_fkey(nombre),'
-  + ' cuenta:cuentas_corrientes(nombre)'
 
 // Gestión: todos los viajes con su estado, con filtros por fecha, estado y chofer.
 export default function Viajes() {
   const [viajes, setViajes] = useState(null)
   const [choferes, setChoferes] = useState([])
   const [editando, setEditando] = useState(null) // null = lista; 'nuevo' = alta; objeto = edición
+  const [vista, setVista] = useState('lista') // 'lista' | 'calendario' | 'fijos'
   const [filtroFecha, setFiltroFecha] = useState(fechaLocal())
   const [filtroEstado, setFiltroEstado] = useState('')
   const [filtroChofer, setFiltroChofer] = useState('')
@@ -25,7 +25,7 @@ export default function Viajes() {
     supabase.from('viajes').select('id', { count: 'exact', head: true }).eq('estado', 'pago_pendiente')
       .then(({ count }) => setPagosPendientes(count ?? 0))
 
-    let consulta = supabase.from('viajes').select(CONSULTA)
+    let consulta = supabase.from('viajes').select(CONSULTA_VIAJES)
     if (filtroFecha) {
       const desde = unirFechaHora(filtroFecha, '00:00')
       const hasta = new Date(desde.getFullYear(), desde.getMonth(), desde.getDate() + 1)
@@ -67,10 +67,36 @@ export default function Viajes() {
   if (editando) {
     return <FormViaje viaje={editando === 'nuevo' ? null : editando} onListo={() => { setEditando(null); cargar() }} />
   }
+  if (vista === 'fijos') return <ViajesFijos onVolver={() => setVista('lista')} />
+
+  const selectorVista = (
+    <div className="selector-tipo selector-vista">
+      <button type="button" className={vista === 'lista' ? 'activo' : ''} onClick={() => setVista('lista')}>📋 Lista</button>
+      <button type="button" className={vista === 'calendario' ? 'activo' : ''} onClick={() => setVista('calendario')}>📅 Calendario</button>
+    </div>
+  )
+  const botones = (
+    <div className="dos-columnas">
+      {botones}
+      <button className="boton secundario sin-margen-arriba" onClick={() => setVista('fijos')}>🔁 Viajes fijos</button>
+    </div>
+  )
+
+  if (vista === 'calendario') {
+    return (
+      <main className="pantalla">
+        <h1>Viajes</h1>
+        {selectorVista}
+        {botones}
+        <Calendario ahora={ahora} onAbrir={setEditando} />
+      </main>
+    )
+  }
 
   return (
     <main className="pantalla">
       <h1>Viajes</h1>
+      {selectorVista}
       {pagosPendientes > 0 && (
         <button className="aviso-pagos" onClick={() => { setFiltroFecha(''); setFiltroEstado('pago_pendiente'); setFiltroChofer('') }}>
           ⏳ {pagosPendientes} {pagosPendientes === 1 ? 'viaje' : 'viajes'} con pago pendiente — tocá para verlos
@@ -108,56 +134,11 @@ export default function Viajes() {
       {errorCarga && <p className="aviso error">No se pudieron cargar los viajes: {errorCarga}</p>}
       {!errorCarga && viajes?.length === 0 && <p className="ayuda">No hay viajes con estos filtros.</p>}
       <ul className="lista">
-        {viajes?.map((v) => {
-          const urgente = esAsignableSinChofer(v, ahora)
-          const esperando = v.estado === 'sin_chofer' && !urgente
-          // Asignado a mano por gestión (chofer elegido o reasignado): chofer fijo, en naranja.
-          const fijo = ['ofrecido', 'asignado'].includes(v.estado) && v.asignado_por
-          const etiqueta = v.estado === 'sin_chofer' && v.espera_gestion ? 'Rechazado: decidir'
-            : esperando ? `Se asigna ${hora(v.hora_asignacion)}`
-            : v.estado === 'ofrecido' && !v.asignado_por ? `Ofrecido hace ${Math.max(0, Math.floor((ahora - new Date(v.asignado_en)) / 60000))} min`
-            : v.estado === 'asignado' && !v.iniciado_en ? 'Aceptado'
-            : v.estado === 'asignado' ? 'En viaje'
-            : NOMBRE_ESTADO_VIAJE[v.estado]
-          return (
-            <li key={v.id}>
-              <button className={'tarjeta-viaje' + (urgente ? ' urgente' : '') + (fijo ? ' fijo' : '')
-                + (v.estado === 'pago_pendiente' ? ' pago-pendiente' : '')}
-                onClick={() => setEditando(v)}>
-                <div className="viaje-arriba">
-                  <span className="viaje-hora">
-                    {v.prioritario && ['sin_chofer', 'ofrecido'].includes(v.estado) && '⭐ '}
-                    {v.tipo === 'programado' ? hora(v.hora_presentacion) : hora(v.hora_asignacion)}
-                    {!filtroFecha && <small> {fechaCorta(v.hora_asignacion)}</small>}
-                  </span>
-                  <span className={'etiqueta viaje ' + v.estado}>{etiqueta}</span>
-                </div>
-                <div className="viaje-ruta">
-                  {v.origen}{v.destino ? ' → ' + v.destino : ''}
-                </div>
-                <div className="viaje-abajo">
-                  <span>{v.tipo === 'programado' ? '📅 Programado' : '⚡ Inmediato'} · #{v.id}</span>
-                  <span>
-                    {v.chofer ? (fijo ? '📌 ' : '') + v.chofer.nombre
-                      : v.espera_gestion && v.rechazo ? `❌ Lo rechazó ${v.rechazo.nombre}`
-                      : urgente ? '⚠️ Falta chofer' : ''}
-                  </span>
-                </div>
-                {(v.cliente_nombre || v.estado === 'finalizado') && (
-                  <div className="viaje-abajo">
-                    <span>{v.cliente_nombre}</span>
-                    {v.estado === 'finalizado' && (
-                      <span className="importe">
-                        {dinero(v.importe)} · {(v.cuenta?.nombre || v.cuenta_otro)
-                          ? `Cta. cte. ${v.cuenta?.nombre ?? v.cuenta_otro}` : FORMAS_PAGO[v.forma_pago]}
-                      </span>
-                    )}
-                  </div>
-                )}
-              </button>
-            </li>
-          )
-        })}
+        {viajes?.map((v) => (
+          <li key={v.id}>
+            <TarjetaViaje v={v} ahora={ahora} mostrarFecha={!filtroFecha} onAbrir={() => setEditando(v)} />
+          </li>
+        ))}
       </ul>
     </main>
   )

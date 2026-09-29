@@ -5,11 +5,16 @@ import ElegirChofer, { useChoferesParaAsignar } from './ElegirChofer.jsx'
 import FormPago from './FormPago.jsx'
 import HistorialViaje from './HistorialViaje.jsx'
 import CompartirViaje from './CompartirViaje.jsx'
-import { FORMAS_PAGO, dinero } from './viajes.js'
+import { FORMAS_PAGO, dinero, fechaCorta } from './viajes.js'
+import { cuandoSeOfrece } from './TarjetaViaje.jsx'
 
 // Explicación en palabras de en qué anda la asignación del viaje.
 function textoSituacion(v) {
   const nombre = v.chofer?.nombre
+  if (v.estado === 'sin_chofer' && v.chofer_fijo) {
+    return `📌 Chofer fijo: ${v.fijo?.nombre ?? '?'}. Se le ofrece el ${fechaCorta(cuandoSeOfrece(v))} (7 días antes) y lo tiene que aceptar. `
+      + 'Si querés, elegí otro chofer o dejalo en automático.'
+  }
   if (v.estado === 'sin_chofer' && v.espera_gestion) {
     return `❌ ${v.rechazo?.nombre ?? 'El chofer'} rechazó este viaje. No se asigna solo: elegí otro chofer o dejalo en automático.`
   }
@@ -48,7 +53,7 @@ export default function FormViaje({ viaje, onListo }) {
   const [error, setError] = useState('')
   const [enviando, setEnviando] = useState(false)
   const [confirmandoAnular, setConfirmandoAnular] = useState(false)
-  const [choferElegido, setChoferElegido] = useState(viaje?.chofer_id ?? '')
+  const [choferElegido, setChoferElegido] = useState(viaje?.chofer_id ?? viaje?.chofer_fijo ?? '')
   const choferes = useChoferesParaAsignar()
   const cambiar = (campo) => (e) => setDatos({ ...datos, [campo]: e.target.value })
   const sePuedeAnular = !esNuevo && ['sin_chofer', 'ofrecido', 'asignado'].includes(viaje.estado)
@@ -144,6 +149,9 @@ export default function FormViaje({ viaje, onListo }) {
           Estado: <strong>{NOMBRE_ESTADO_VIAJE[viaje.estado]}</strong>
           {viaje.chofer?.nombre && <> · Chofer: <strong>{viaje.chofer.nombre}</strong></>}
         </p>
+      )}
+      {!esNuevo && viaje.viaje_fijo_id && (
+        <p className="aviso">🔁 Este viaje sale de un <strong>viaje fijo</strong>. Si lo cambiás o anulás acá, solo cambia este día.</p>
       )}
       <form className="tarjeta" onSubmit={guardar}>
         <div className="selector-tipo">
@@ -248,7 +256,8 @@ export default function FormViaje({ viaje, onListo }) {
               textoVacio="Sin chofer (vuelve a la asignación automática)" />
           </label>
           <button type="button" className="boton"
-            disabled={enviando || (choferElegido === (viaje.chofer_id ?? '') && !viaje.espera_gestion)}
+            disabled={enviando || (choferElegido === (viaje.chofer_id ?? '') && !viaje.espera_gestion)
+              || (!!viaje.chofer_fijo && choferElegido === viaje.chofer_fijo)}
             onClick={guardarChofer}>
             {choferElegido ? 'Asignar a este chofer'
               : viaje.espera_gestion ? 'Pasar a asignación automática' : 'Dejar sin chofer'}

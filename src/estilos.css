@@ -473,3 +473,43 @@ textarea {
 .pasos-config li small { color: #6b7280; }
 .pasos-config li.listo { color: #166534; }
 .pasos-config .boton-chico { flex-shrink: 0; background: #dbeafe; color: #1e40af; }
+
+/* Viajes: lista / calendario y viajes fijos */
+.selector-vista { margin-bottom: 12px; }
+.selector-vista button { padding: 10px; }
+.boton.secundario.sin-margen-arriba { margin-top: 0; }
+.boton-chico.gris { background: #e5e7eb; color: #111827; }
+.calendario-arriba { display: flex; align-items: center; justify-content: space-between; margin: 16px 0 8px; font-size: 1.15rem; }
+.calendario-arriba .boton-chico { padding: 8px 16px; font-size: 1rem; }
+.calendario { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; }
+.calendario-dia-semana { text-align: center; font-size: 0.8rem; color: #6b7280; font-weight: 600; }
+.calendario-dia {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  min-height: 52px;
+  padding: 6px 0;
+  border: 2px solid transparent;
+  border-radius: 10px;
+  background: #fff;
+  font: inherit;
+  color: inherit;
+}
+.calendario-dia.otro-mes { opacity: 0.4; }
+.calendario-dia.hoy { border-color: #1f2937; }
+.calendario-dia.elegido { background: #1f2937; color: #fff; }
+.calendario-dia .cantidad { min-width: 22px; padding: 0 6px; border-radius: 999px; background: #dbeafe; color: #1e40af; font-size: 0.8rem; font-weight: 700; }
+.calendario-dia .cantidad.urgente { background: #dc2626; color: #fff; }
+.etiqueta-campo { margin: 0 0 6px; font-weight: 600; }
+.dias-semana { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; }
+.dias-semana button {
+  font: inherit;
+  font-size: 0.9rem;
+  padding: 10px 0;
+  border: 2px solid #d1d5db;
+  border-radius: 8px;
+  background: #fff;
+  color: #111827;
+}
+.dias-semana button.activo { border-color: #1f2937; background: #1f2937; color: #fff; font-weight: 700; }
