@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "278455970226",
+    "project_id": "senda-segura",
+    "storage_bucket": "senda-segura.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:278455970226:android:395e34fdc6068162531cab",
+        "android_client_info": {
+          "package_name": "ar.remiseria.app"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCyrgeB3vCKb41eU8BSeZ7LhEtC0iNreos"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

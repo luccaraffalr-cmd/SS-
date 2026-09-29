@@ -23,9 +23,9 @@ if ($LASTEXITCODE) { throw 'Falló la copia de la app web al proyecto Android.' 
 if ($Prueba) {
   # Sin "server.url": la app usa las pantallas copiadas adentro en vez de las de Netlify.
   $config = "$raiz\android\app\src\main\assets\capacitor.config.json"
-  $datos = Get-Content -Raw $config | ConvertFrom-Json
+  $datos = Get-Content -Raw -Encoding UTF8 $config | ConvertFrom-Json
   $datos.PSObject.Properties.Remove('server')
-  [IO.File]::WriteAllText($config, ($datos | ConvertTo-Json -Depth 10))
+  [IO.File]::WriteAllText($config, ($datos | ConvertTo-Json -Depth 10), (New-Object Text.UTF8Encoding $false))
   Write-Host 'App de PRUEBA: lleva las pantallas de esta compu (no las de Netlify).'
 }
 
