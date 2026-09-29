@@ -84,10 +84,10 @@ function NuevoUsuario({ onListo }) {
           <small className="ayuda">Sin espacios ni acentos. También puede ser un email.</small>
         </label>
         <label>
-          Contraseña
+          Contraseña provisoria
           <input value={datos.clave} onChange={cambiar('clave')} required minLength={6}
             autoCapitalize="none" autoCorrect="off" autoComplete="new-password" />
-          <small className="ayuda">Mínimo 6 caracteres. Pasásela a la persona por WhatsApp.</small>
+          <small className="ayuda">Mínimo 6 caracteres. Pasásela por WhatsApp: la primera vez que entre, la app le pide que elija una propia (que vos no vas a saber).</small>
         </label>
         {error && <p className="aviso error">{error}</p>}
         <button className="boton" disabled={enviando}>{enviando ? 'Creando…' : 'Crear usuario'}</button>
@@ -163,9 +163,10 @@ function EditarUsuario({ perfil, esYo, onListo }) {
 
       <div className="tarjeta separada">
         <label>
-          Nueva contraseña
+          Nueva contraseña provisoria
           <input value={clave} onChange={(e) => setClave(e.target.value)} minLength={6}
             autoCapitalize="none" autoCorrect="off" autoComplete="new-password" />
+          {!esYo && <small className="ayuda">Por si se la olvidó: cuando entre con esta, la app le pide que elija una propia.</small>}
         </label>
         {mensaje && <p className="aviso ok">{mensaje}</p>}
         <button type="button" className="boton secundario" disabled={clave.length < 6} onClick={cambiarClave}>

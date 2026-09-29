@@ -4,6 +4,7 @@ import Ingreso from './Ingreso.jsx'
 import Gestion from './Gestion.jsx'
 import Chofer from './Chofer.jsx'
 import BotonSalir from './BotonSalir.jsx'
+import ElegirClave from './ElegirClave.jsx'
 
 export default function App() {
   // undefined = todavía cargando; null = sin sesión / sin perfil
@@ -38,6 +39,9 @@ export default function App() {
     )
   }
 
+  if (perfil.debe_cambiar_clave) {
+    return <ElegirClave perfil={perfil} onListo={() => setPerfil({ ...perfil, debe_cambiar_clave: false })} />
+  }
   if (perfil.rol === 'chofer') return <Chofer perfil={perfil} />
   return <Gestion perfil={perfil} />
 }

@@ -61,9 +61,10 @@ Deno.serve(async (req) => {
       return respuesta({ error: yaExiste ? 'Ese usuario ya existe.' : error.message }, 400)
     }
 
+    // La contraseña es provisoria: al entrar por primera vez tiene que elegir una propia.
     const { error: errorPerfil } = await admin.from('perfiles').insert({
       id: creado.user.id, usuario: usuario.trim().toLowerCase(), rol,
-      nombre: nombre.trim(), telefono: telefono?.trim() || null,
+      nombre: nombre.trim(), telefono: telefono?.trim() || null, debe_cambiar_clave: true,
     })
     if (errorPerfil) {
       await admin.auth.admin.deleteUser(creado.user.id) // no dejar usuarios a medias
@@ -78,6 +79,8 @@ Deno.serve(async (req) => {
     if (!clave || clave.length < 6) return respuesta({ error: 'La contraseña tiene que tener al menos 6 caracteres.' }, 400)
     const { error } = await admin.auth.admin.updateUserById(id, { password: clave })
     if (error) return respuesta({ error: error.message }, 400)
+    // Si se la cambia a otro, es provisoria: la próxima vez que entre elige una propia.
+    await admin.from('perfiles').update({ debe_cambiar_clave: id !== quien.user.id }).eq('id', id)
     return respuesta({ ok: true })
   }
 
