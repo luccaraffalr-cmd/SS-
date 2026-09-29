@@ -329,7 +329,10 @@ Hoy la ubicación "desaparece" por varios minutos. Hay que diseñar para que **n
   - **Link para el pasajero:** en un viaje con chofer (ofrecido o asignado), gestión toca "Generar link" y lo comparte. Muestra mapa en vivo, foto del auto, modelo, color, patente y nombre del chofer. Si se cambia el chofer, el link sigue al nuevo. **Se apaga solo cuando el viaje se finaliza o se anula, sin límite de tiempo.**
   - El Mapa de gestión se actualiza cada 15 s (no en vivo), para no gastar el cupo gratis de mensajes en vivo de Supabase.
   - **(2026-09-29) Etapa 2, parte 2 — app Android propia (decidido):** hoy solo 2 choferes usan Traccar, y el dueño quiere una sola app. La app "Remisería" para Android reemplaza a Traccar Client:
-    - Manda la ubicación **sola desde "Empezar a trabajar" hasta "Terminar el día"** (Libre, En cola y En viaje). Fuera de servicio no manda.
+    - Manda la ubicación **sola desde "Empezar a trabajar" hasta "Terminar el día"** (Libre, En cola y En viaje). Fuera de servicio no manda. **No hay botón para prenderla o apagarla**: sigue el estado del chofer (si gestión lo pone fuera de servicio, el celular deja de mandar solo; al cerrar sesión también se apaga).
+    - Si falta configurar algo (permiso, batería, GPS), **puede trabajar igual**, pero ve un cartel rojo con lo que falta, y gestión ve "📍 Sin ubicación ⚠️" (en rojo) al lado de su nombre en Choferes.
+    - La app carga las pantallas desde Netlify: al publicar, se actualiza sola en todos los celulares (dueño incluido). Solo se reinstala si cambia la parte de Android.
+    - Las notificaciones de viajes tienen que llegar a la app misma (con Firebase), no por el navegador. Pendiente.
     - Guía al chofer con los permisos (ubicación "todo el tiempo", batería sin restricciones) y le avisa si se desactivan. Celulares: Samsung, Motorola y Xiaomi.
     - Se instala con un archivo mandado por WhatsApp (sin Play Store por ahora).
     - Se hace por pasos, sin tocar lo que ya anda: (1) prueba chica en el celular del usuario (Samsung) con la pantalla bloqueada — punto de corte; (2) juntar con la app de choferes; (3) prueba con los 2 choferes de Traccar usando las dos apps a la vez para comparar; (4) resto de los choferes. Traccar y Render siguen hasta que la app demuestre que anda igual o mejor.
