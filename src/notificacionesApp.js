@@ -11,7 +11,9 @@ function escucharRegistro() {
   escuchando = true
   PushNotifications.addListener('registration', ({ value }) => {
     localStorage.setItem('token_app', value)
+    // (El pedido a Supabase recién sale al esperar la respuesta: por eso el .then.)
     supabase.rpc('guardar_token_app', { p_token: value })
+      .then(({ error }) => { if (error) console.error('No se pudo guardar el token de avisos', error.message) })
   })
   PushNotifications.addListener('registrationError', (e) => console.error('No se pudo registrar para avisos', e))
 }

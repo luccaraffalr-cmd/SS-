@@ -60,7 +60,8 @@ export default function Viajes() {
     // Cada pocos segundos: actualiza las cuentas regresivas y le pide al servidor que pase
     // al siguiente chofer las ofertas vencidas (sin esperar al minuto del servidor).
     const reloj = setInterval(() => setAhora(Date.now()), 5 * 1000)
-    const revisar = setInterval(() => supabase.rpc('revisar_asignaciones'), 20 * 1000)
+    // (El pedido recién sale al esperar la respuesta: por eso el .then.)
+    const revisar = setInterval(() => supabase.rpc('revisar_asignaciones').then(() => {}), 20 * 1000)
     return () => { clearInterval(reloj); clearInterval(revisar) }
   }, [])
 
