@@ -321,6 +321,8 @@ Hoy la ubicación "desaparece" por varios minutos. Hay que diseñar para que **n
   - Cada chofer tiene en su ficha el **"N.º en Traccar Client"**. Se guarda solo la última ubicación de cada auto (no el recorrido).
   - Gestión (admin y operadores) tiene la pestaña **Mapa** con todos los autos, y en Choferes ve "📍 Ubicación hace X". Más de 3 min sin ubicación = se muestra como sin señal (solo aviso visual; el estado no cambia).
   - **Link para el pasajero:** en un viaje con chofer (ofrecido o asignado), gestión toca "Generar link" y lo comparte. Muestra mapa en vivo, foto del auto, modelo, color, patente y nombre del chofer. Si se cambia el chofer, el link sigue al nuevo. **Se apaga solo cuando el viaje se finaliza o se anula, sin límite de tiempo.**
+  - El Mapa de gestión se actualiza cada 15 s (no en vivo), para no gastar el cupo gratis de mensajes en vivo de Supabase.
+  - **(2026-09-29) Se cierra la central vieja de Render** (pantalla de la central, links `/v/…` y diagnóstico): Render queda solo como puente de ubicaciones. Los links para el pasajero se generan únicamente desde esta app.
 
 ---
 

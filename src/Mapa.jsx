@@ -33,11 +33,11 @@ export default function Mapa() {
     cargarChoferes()
     cargarUbicaciones()
     const canal = supabase.channel('gestion-mapa')
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'ubicaciones' },
-        ({ new: u }) => u?.equipo && setUbicaciones((antes) => ({ ...antes, [u.equipo]: u })))
       .on('postgres_changes', { event: '*', schema: 'public', table: 'choferes' }, cargarChoferes)
       .subscribe()
-    const reloj = setInterval(() => setAhora(Date.now()), 15 * 1000)
+    // Las ubicaciones se piden cada 15 s (no en vivo): recibir cada movimiento de cada auto
+    // gastaría el cupo gratis de mensajes en vivo de Supabase.
+    const reloj = setInterval(() => { setAhora(Date.now()); cargarUbicaciones() }, 15 * 1000)
     return () => { supabase.removeChannel(canal); clearInterval(reloj) }
   }, [])
 
