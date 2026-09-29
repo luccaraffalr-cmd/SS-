@@ -4,6 +4,7 @@ import Usuarios from './Usuarios.jsx'
 import Choferes from './Choferes.jsx'
 import Viajes from './Viajes.jsx'
 import CuentasCorrientes from './CuentasCorrientes.jsx'
+import Mapa from './Mapa.jsx'
 import AlertaSinChofer from './AlertaSinChofer.jsx'
 import { NOMBRE_ROL } from './usuarios.js'
 
@@ -15,6 +16,7 @@ export default function Gestion({ perfil }) {
   const pestanas = [
     ['viajes', 'Viajes'],
     ['choferes', 'Choferes'],
+    ['mapa', 'Mapa'],
     ...(esAdmin ? [['cuentas', 'Cuentas'], ['usuarios', 'Usuarios']] : []),
     ['cuenta', 'Mi cuenta'],
   ]
@@ -30,6 +32,7 @@ export default function Gestion({ perfil }) {
 
       {seccion === 'viajes' && <Viajes />}
       {seccion === 'choferes' && <Choferes />}
+      {seccion === 'mapa' && <Mapa />}
       {seccion === 'cuentas' && esAdmin && <CuentasCorrientes />}
       {seccion === 'usuarios' && esAdmin && <Usuarios yo={perfil} />}
       {seccion === 'cuenta' && (

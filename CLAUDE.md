@@ -40,6 +40,11 @@
 - Pendiente antes de usarla en serio: publicar, borrar datos de prueba (usuarios `prueba1`/`prueba2` y sus viajes),
   cargar los choferes reales (fotos de autos en Descargas\remises), y en cada celular: activar notificaciones,
   instalar la app y batería "sin restricciones".
-- Siguiente: el usuario elige entre Etapa 2 (ubicación: primero integrar Traccar, que ya usan, y después app
-  Android propia) y Etapa 3 (plata y clientes: cuenta corriente de choferes con comisiones, resúmenes,
-  clientes y saldos de cuentas corrientes).
+- **Etapa 2 en curso** (elegida el 29/9/2026; la Etapa 3 queda para después). Ver 10 bis de la especificación.
+  - Ubicación: Traccar Client (celulares, id 1–12) → servidor propio en Render (repo GitHub
+    `luccaraffalr-cmd/remis`, `server.js`, https://remis-oikl.onrender.com) → lo reenvía a Supabase
+    (`reportar_ubicacion`, con la clave de `config_privada`, que en Render va en la variable `CLAVE_SUPABASE`).
+  - SQL 017 aplicado. Hecho en la app: pestaña Mapa, "N.º en Traccar Client" en la ficha del chofer,
+    link de seguimiento `/seguir/<código>` (`Seguimiento.jsx`, `CompartirViaje.jsx`).
+  - Pendiente: que el usuario suba el `server.js` nuevo a `remis` y cargue `CLAVE_SUPABASE` en Render; probar
+    con un celular real. Después: parte 2 = app Android propia (servicio en primer plano) que reemplace a Traccar Client.

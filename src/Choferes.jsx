@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { supabase } from './supabase.js'
 import { NOMBRE_ESTADO, haceCuanto, textoError } from './estados.js'
 import ColaOrdenable from './ColaOrdenable.jsx'
+import { sinSenal } from './mapa.js'
 
 const ORDEN_ESTADO = { en_viaje: 0, en_cola: 1, libre: 2, fuera_de_servicio: 3 }
 
@@ -12,6 +13,12 @@ export default function Choferes() {
   const [abierto, setAbierto] = useState(null) // chofer al que se le está cambiando el estado
   const [eligiendo, setEligiendo] = useState(false) // lista de "Agregar a la cola" abierta
   const [error, setError] = useState('')
+  const [ubicaciones, setUbicaciones] = useState({}) // equipo de Traccar -> última ubicación
+
+  async function cargarUbicaciones() {
+    const { data } = await supabase.from('ubicaciones').select('equipo, reportado_en')
+    setUbicaciones(Object.fromEntries((data ?? []).map((u) => [u.equipo, u.reportado_en])))
+  }
 
   async function cargar() {
     const { data } = await supabase.from('choferes').select('*, perfiles(nombre, telefono, activo)')
@@ -22,10 +29,11 @@ export default function Choferes() {
 
   useEffect(() => {
     cargar()
+    cargarUbicaciones()
     const canal = supabase.channel('gestion-choferes')
       .on('postgres_changes', { event: '*', schema: 'public', table: 'choferes' }, cargar)
       .subscribe()
-    const reloj = setInterval(() => setAhora(Date.now()), 30 * 1000)
+    const reloj = setInterval(() => { setAhora(Date.now()); cargarUbicaciones() }, 30 * 1000)
     return () => { supabase.removeChannel(canal); clearInterval(reloj) }
   }, [])
 
@@ -81,6 +89,11 @@ export default function Choferes() {
                   Último reporte: {haceCuanto(c.ultimo_reporte, ahora)}
                   {c.patente ? ' · ' + c.patente : ''}
                 </small>
+                {c.equipo_traccar && (
+                  <small className={ubicaciones[c.equipo_traccar] && sinSenal(ubicaciones[c.equipo_traccar], ahora) ? 'texto-alerta' : ''}>
+                    📍 Ubicación: {haceCuanto(ubicaciones[c.equipo_traccar], ahora)}
+                  </small>
+                )}
               </span>
               <span className={'etiqueta estado ' + c.estado}>{NOMBRE_ESTADO[c.estado]}</span>
             </button>

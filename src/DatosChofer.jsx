@@ -19,7 +19,7 @@ export default function DatosChofer({ choferId }) {
       const c = ch.data ?? {}
       setDatos({
         auto_modelo: c.auto_modelo ?? '', auto_color: c.auto_color ?? '', patente: c.patente ?? '',
-        foto_auto: c.foto_auto ?? null, oculto: c.oculto ?? false,
+        foto_auto: c.foto_auto ?? null, oculto: c.oculto ?? false, equipo_traccar: c.equipo_traccar ?? '',
       })
       setComision(String(co.data?.porcentaje ?? 20))
     })
@@ -45,12 +45,14 @@ export default function DatosChofer({ choferId }) {
         auto_color: datos.auto_color.trim() || null,
         patente: datos.patente.trim().toUpperCase() || null,
         oculto: datos.oculto,
+        equipo_traccar: datos.equipo_traccar.trim() || null,
       }),
       supabase.from('comisiones').upsert({ chofer_id: choferId, porcentaje }),
     ])
     setGuardando(false)
     const err = r1.error || r2.error
-    if (err) setError('No se pudo guardar: ' + err.message)
+    if (err?.code === '23505') setError('Ese número de Traccar ya lo tiene otro chofer.')
+    else if (err) setError('No se pudo guardar: ' + err.message)
     else {
       setDatos({ ...datos, patente: datos.patente.trim().toUpperCase() })
       setMensaje('Datos del chofer guardados ✅')
@@ -98,6 +100,11 @@ export default function DatosChofer({ choferId }) {
       <label>Modelo del auto<input value={datos.auto_modelo} onChange={cambiar('auto_modelo')} placeholder="ej: Chevrolet Spin" /></label>
       <label>Color<input value={datos.auto_color} onChange={cambiar('auto_color')} placeholder="ej: Gris" /></label>
       <label>Patente<input value={datos.patente} onChange={cambiar('patente')} autoCapitalize="characters" placeholder="ej: AB123CD" /></label>
+      <label>
+        N.º en Traccar Client
+        <input inputMode="numeric" value={datos.equipo_traccar} onChange={cambiar('equipo_traccar')} placeholder="ej: 3" />
+        <small className="ayuda">El "identificador del dispositivo" que tiene configurado en su celular (el número de "Auto 3"). Sin esto no aparece en el mapa.</small>
+      </label>
       <label>
         Comisión (%)
         <input inputMode="decimal" value={comision} onChange={(e) => setComision(e.target.value)} />

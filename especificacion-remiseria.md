@@ -316,6 +316,11 @@ Hoy la ubicación "desaparece" por varios minutos. Hay que diseñar para que **n
 - **(2026-09-28) Tema a confirmar n.º 1:** el chofer elegido para un programado **sigue en la cola** hasta su hora (puede rechazar ofertas si sabe que no llega). Destino: opcional, pero se le muestra al chofer en la oferta.
 - **(2026-09-28) Choferes entran con un usuario** (ej. `juanperez`), no necesitan email.
 - **Ubicación (Etapa 2):** integrar a esta app el sistema de ubicación que hoy se usa para mandar a los clientes (Traccar), y a futuro que la app del chofer reporte la ubicación sola.
+- **(2026-09-29) Etapa 2, parte 1 — ubicación desde Traccar Client:**
+  - Hoy cada celular tiene Traccar Client (identificador 1 a 12) mandando a un servidor propio en Render (repo `remis`, "Senda Segura", sin base de datos). **Render reenvía cada ubicación a Supabase** (como mucho una vez cada 10 s por auto), así no se reconfiguran los celulares antes de tener la app Android propia. La central vieja de Render sigue andando mientras tanto.
+  - Cada chofer tiene en su ficha el **"N.º en Traccar Client"**. Se guarda solo la última ubicación de cada auto (no el recorrido).
+  - Gestión (admin y operadores) tiene la pestaña **Mapa** con todos los autos, y en Choferes ve "📍 Ubicación hace X". Más de 3 min sin ubicación = se muestra como sin señal (solo aviso visual; el estado no cambia).
+  - **Link para el pasajero:** en un viaje con chofer (ofrecido o asignado), gestión toca "Generar link" y lo comparte. Muestra mapa en vivo, foto del auto, modelo, color, patente y nombre del chofer. Si se cambia el chofer, el link sigue al nuevo. **Se apaga solo cuando el viaje se finaliza o se anula, sin límite de tiempo.**
 
 ---
 

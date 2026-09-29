@@ -4,6 +4,7 @@ import { NOMBRE_ESTADO_VIAJE, fechaLocal, hora, unirFechaHora } from './viajes.j
 import ElegirChofer, { useChoferesParaAsignar } from './ElegirChofer.jsx'
 import FormPago from './FormPago.jsx'
 import HistorialViaje from './HistorialViaje.jsx'
+import CompartirViaje from './CompartirViaje.jsx'
 import { FORMAS_PAGO, dinero } from './viajes.js'
 
 // Explicación en palabras de en qué anda la asignación del viaje.
@@ -230,6 +231,8 @@ export default function FormViaje({ viaje, onListo }) {
           )}
         </div>
       )}
+
+      {!esNuevo && viaje.chofer_id && ['ofrecido', 'asignado'].includes(viaje.estado) && <CompartirViaje viaje={viaje} />}
 
       {sePuedeAnular && (
         <div className="tarjeta separada">

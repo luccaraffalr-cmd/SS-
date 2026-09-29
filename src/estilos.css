@@ -424,3 +424,42 @@ textarea {
 
 .elegir { display: flex; flex-direction: column; gap: 6px; }
 .elegir .fila { background: #f3f4f6; }
+
+/* Mapa de gestión (Etapa 2) */
+.mapa { position: relative; z-index: 0; height: 55vh; min-height: 280px; border-radius: 12px; overflow: hidden; background: #e5e7eb; }
+.fila:disabled { opacity: 1; }
+.texto-alerta { color: #b91c1c !important; font-weight: 600; }
+.marcador-auto { font-size: 26px; line-height: 32px; text-align: center; }
+.marcador-auto b {
+  position: absolute;
+  top: 30px;
+  left: 50%;
+  transform: translateX(-50%);
+  padding: 1px 7px;
+  border: 2px solid #9ca3af;
+  border-radius: 999px;
+  background: #fff;
+  color: #111827;
+  font: 600 12px/1.4 system-ui, sans-serif;
+  white-space: nowrap;
+}
+.marcador-auto.en_viaje b { border-color: #7c3aed; }
+.marcador-auto.en_cola b { border-color: #16a34a; }
+.marcador-auto.libre b { border-color: #f59e0b; }
+.marcador-auto.sin-senal { opacity: 0.45; }
+
+/* Link de seguimiento: gestión lo genera, el pasajero lo abre */
+.link-seguimiento { padding: 10px 12px; border-radius: 8px; background: #f3f4f6; color: #1e40af; font-size: 0.9rem; overflow-wrap: anywhere; }
+.seguimiento { position: fixed; inset: 0; display: flex; flex-direction: column; background: #fff; }
+.seguimiento-mapa { position: relative; z-index: 0; flex: 1; }
+.seguimiento-barra { display: flex; flex-direction: column; gap: 12px; padding: 14px 16px calc(14px + env(safe-area-inset-bottom)); background: #1f2937; color: #fff; }
+.seguimiento-auto { display: flex; align-items: center; gap: 12px; }
+.seguimiento-auto img { width: 84px; height: 64px; flex-shrink: 0; border-radius: 8px; object-fit: cover; }
+.seguimiento-auto div, .seguimiento-estado div { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.seguimiento-auto strong { font-size: 1.1rem; }
+.seguimiento-auto span { color: #d1d5db; }
+.seguimiento-auto .patente { align-self: flex-start; margin-top: 2px; padding: 1px 8px; border-radius: 4px; background: #fff; color: #111827; font-weight: 700; letter-spacing: 1px; }
+.seguimiento-estado { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.seguimiento-estado strong { font-size: 1.05rem; }
+.seguimiento-estado small { color: #9ca3af; }
+.seguimiento-estado .boton { flex-shrink: 0; padding: 10px 16px; background: #2563eb; }
