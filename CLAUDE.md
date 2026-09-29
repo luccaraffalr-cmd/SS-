@@ -46,5 +46,7 @@
     (`reportar_ubicacion`, con la clave de `config_privada`, que en Render va en la variable `CLAVE_SUPABASE`).
   - SQL 017 aplicado. Hecho en la app: pestaña Mapa, "N.º en Traccar Client" en la ficha del chofer,
     link de seguimiento `/seguir/<código>` (`Seguimiento.jsx`, `CompartirViaje.jsx`).
-  - Pendiente: que el usuario suba el `server.js` nuevo a `remis` y cargue `CLAVE_SUPABASE` en Render; probar
-    con un celular real. Después: parte 2 = app Android propia (servicio en primer plano) que reemplace a Traccar Client.
+  - Render ya reenvía (probado el 29/9/2026 con el celular n.º 12: aparece en el Mapa). A Claude no le deja
+    hacer push a `remis`: el usuario sube los archivos desde la web de GitHub ("Add file → Upload files").
+  - Pendiente: probar el link del pasajero con un viaje real, cargar el N.º de Traccar de cada chofer y publicar.
+    Después: parte 2 = app Android propia (servicio en primer plano) que reemplace a Traccar Client.
