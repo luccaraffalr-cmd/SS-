@@ -13,14 +13,12 @@ export default function Choferes() {
   const [abierto, setAbierto] = useState(null) // chofer al que se le está cambiando el estado
   const [eligiendo, setEligiendo] = useState(false) // lista de "Agregar a la cola" abierta
   const [error, setError] = useState('')
-  const [ubicaciones, setUbicaciones] = useState({}) // equipo ('app:<id>' o n.º de Traccar) -> última ubicación
-
-  // La ubicación más reciente del chofer: la de la app o la de Traccar.
-  const ubicacionDe = (c) => [ubicaciones['app:' + c.id], ubicaciones[c.equipo_traccar]].filter(Boolean).sort().pop()
+  const [ubicaciones, setUbicaciones] = useState({}) // chofer -> cuándo mandó su última ubicación (app Android)
+  const ubicacionDe = (c) => ubicaciones[c.id]
 
   async function cargarUbicaciones() {
-    const { data } = await supabase.from('ubicaciones').select('equipo, reportado_en')
-    setUbicaciones(Object.fromEntries((data ?? []).map((u) => [u.equipo, u.reportado_en])))
+    const { data } = await supabase.from('ubicaciones').select('chofer_id, reportado_en')
+    setUbicaciones(Object.fromEntries((data ?? []).map((u) => [u.chofer_id, u.reportado_en])))
   }
 
   async function cargar() {

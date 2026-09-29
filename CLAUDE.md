@@ -48,19 +48,15 @@
    o los celulares no van a poder actualizar sin desinstalar. Parte nativa: `UbicacionService.java`
    (servicio en primer plano que manda a `reportar_mi_ubicacion`) y `UbicacionPlugin.java`.
 
-## Estado (29/9/2026, tarde)
-- **Etapa 1 terminada.** SQL 001–020 aplicados. **Todo publicado en Netlify el 29/9/2026** (quedan ~7 deploys de septiembre;
-  publicar por tandas).
-- **Etapa 2** (ver 10 bis de la especificación):
-  - Traccar Client (2 choferes, id 1–12) → Render (repo `luccaraffalr-cmd/remis`, solo puente; central vieja cerrada)
-    → `reportar_ubicacion` (clave en `config_privada` / variable `CLAVE_SUPABASE` de Render). A Claude no le
-    deja hacer push a `remis`: el usuario sube los archivos desde la web de GitHub.
-  - App Android propia hecha: ubicación automática (Empezar a trabajar → Terminar el día), revisión de permisos,
-    avisos de viajes por Firebase (probados), carga las pantallas desde Netlify. `DescargasRemiseria.apk` = versión
-    definitiva (29/9). Todavía no la usa nadie: próximos pasos = instalarla en el celular del usuario y del dueño,
-    después en los 2 choferes de Traccar (comparar cortes con las dos apps a la vez; `historial_ubicacion` guarda 7 días),
-    y después en el resto. Traccar y Render siguen hasta que la app demuestre que anda igual o mejor.
+## Estado (29/9/2026, noche)
+- **Etapa 1 terminada.** Publicado en Netlify el 29/9/2026 (quedan ~7 deploys de septiembre; publicar por tandas).
+- **Sin Traccar** (decidido 29/9): todos los choferes usan la app Android (`DescargasRemiseria.apk`, carga las
+  pantallas desde Netlify). SQL 021: limpieza y arranque de cero (sin viajes, sin viajes fijos, sin `prueba1`/`prueba2`;
+  `ubicaciones` e `historial_ubicacion` por `chofer_id`). Render (repo `remis`) quedó sin uso: se puede borrar
+  cuando el usuario quiera (lo hace él: Render → el servicio → Settings → Delete; GitHub → remis → Settings → Archive).
+- App Android: ubicación automática (Empezar a trabajar → Terminar el día), revisión de permisos, avisos por Firebase.
+  Se mide la confiabilidad con el uso real (`historial_ubicacion` guarda 7 días).
 - Hecho también: viajes fijos (`019`) y calendario en Viajes.
-- Pendiente antes de usarla en serio: borrar datos de prueba (usuarios `prueba1`/`prueba2` y sus viajes),
-  cargar los choferes reales (fotos de autos en Descargasemises) y el N.º de Traccar de los que lo usan.
+- Pendiente antes de usarla en serio: cargar los choferes reales (fotos de autos en Descargasemises), instalar la
+  app en cada celular (permisos: ubicación "todo el tiempo", batería sin restricciones, notificaciones).
 - Después: Etapa 3 (plata y clientes: cuenta corriente de choferes con comisiones, resúmenes, clientes y saldos).
