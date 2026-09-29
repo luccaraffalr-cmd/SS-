@@ -5,6 +5,8 @@ import { NOMBRE_ESTADO, textoError } from './estados.js'
 import MisViajes from './MisViajes.jsx'
 import ActivarNotificaciones from './ActivarNotificaciones.jsx'
 import ProximosViajes, { AlertaSinChoferChofer } from './ViajesEsperando.jsx'
+import UbicacionApp from './UbicacionApp.jsx'
+import { esAppAndroid } from './ubicacionApp.js'
 
 const AYUDA_ESTADO = {
   fuera_de_servicio: 'No estás trabajando.',
@@ -112,6 +114,7 @@ export default function Chofer({ perfil }) {
       </div>
       {error && <p className="aviso error">{error}</p>}
 
+      {esAppAndroid && <UbicacionApp perfil={perfil} />}
       <MisViajes perfil={perfil} />
       <ProximosViajes />
 

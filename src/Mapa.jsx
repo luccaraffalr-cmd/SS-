@@ -5,6 +5,20 @@ import { crearMapa, crearMarcador, iconoAuto, sinSenal } from './mapa.js'
 
 const ORDEN_ESTADO = { en_viaje: 0, en_cola: 1, libre: 2, fuera_de_servicio: 3 }
 
+// De dónde llega la ubicación de cada chofer: la app propia y/o Traccar Client.
+function fuentes(c, ubicaciones) {
+  return [
+    { origen: 'App', u: ubicaciones['app:' + c.id] },
+    { origen: 'Traccar', u: c.equipo_traccar ? ubicaciones[c.equipo_traccar] : undefined, equipo: c.equipo_traccar },
+  ].filter((f) => f.u || f.equipo)
+}
+
+// La más reciente de las dos (la que se muestra en el mapa).
+function masReciente(c, ubicaciones) {
+  return fuentes(c, ubicaciones).map((f) => f.u).filter(Boolean)
+    .sort((a, b) => new Date(b.reportado_en) - new Date(a.reportado_en))[0]
+}
+
 // Gestión: mapa con todos los autos en vivo (la ubicación la manda Traccar Client).
 export default function Mapa() {
   const elementoMapa = useRef(null)
@@ -46,7 +60,7 @@ export default function Mapa() {
     if (!mapa.current || !choferes) return
     const quedan = new Set()
     for (const c of choferes) {
-      const u = ubicaciones[c.equipo_traccar]
+      const u = masReciente(c, ubicaciones)
       if (!u) continue
       quedan.add(c.id)
       const icono = iconoAuto(c.perfiles.nombre, c.estado + (sinSenal(u.reportado_en, ahora) ? ' sin-senal' : ''))
@@ -72,7 +86,8 @@ export default function Mapa() {
     elementoMapa.current.scrollIntoView({ behavior: 'smooth', block: 'center' })
   }
 
-  const sinNumero = (choferes ?? []).filter((c) => !c.equipo_traccar)
+  const conUbicacion = (choferes ?? []).filter((c) => fuentes(c, ubicaciones).length > 0)
+  const sinUbicacion = (choferes ?? []).filter((c) => fuentes(c, ubicaciones).length === 0)
 
   return (
     <main className="pantalla">
@@ -81,18 +96,23 @@ export default function Mapa() {
 
       {choferes === null && <p>Cargando…</p>}
       <ul className="lista">
-        {choferes?.filter((c) => c.equipo_traccar).map((c) => {
-          const u = ubicaciones[c.equipo_traccar]
-          const cortado = u && sinSenal(u.reportado_en, ahora)
+        {conUbicacion.map((c) => {
+          const lista = fuentes(c, ubicaciones)
           return (
             <li key={c.id}>
-              <button className="fila" onClick={() => centrar(c)} disabled={!u}>
+              <button className="fila" onClick={() => centrar(c)} disabled={!masReciente(c, ubicaciones)}>
                 <span>
                   <strong>{c.perfiles.nombre}{c.oculto && <span className="etiqueta oculto">Oculto</span>}</strong>
-                  <small className={cortado ? 'texto-alerta' : ''}>
-                    {u ? `📍 Ubicación ${haceCuanto(u.reportado_en, ahora)}${cortado ? ' ⚠️' : ''}${u.velocidad > 4 && !cortado ? ` · ${u.velocidad} km/h` : ''}`
-                      : `Traccar n.º ${c.equipo_traccar}: todavía no mandó ubicación`}
-                  </small>
+                  {lista.map(({ origen, u, equipo }) => {
+                    const cortado = u && sinSenal(u.reportado_en, ahora)
+                    const quien = lista.length > 1 ? `${origen}: ` : ''
+                    return (
+                      <small key={origen} className={cortado ? 'texto-alerta' : ''}>
+                        {u ? `📍 ${quien}Ubicación ${haceCuanto(u.reportado_en, ahora)}${cortado ? ' ⚠️' : ''}${u.velocidad > 4 && !cortado ? ` · ${u.velocidad} km/h` : ''}`
+                          : `Traccar n.º ${equipo}: todavía no mandó ubicación`}
+                      </small>
+                    )
+                  })}
                 </span>
                 <span className={'etiqueta estado ' + c.estado}>{NOMBRE_ESTADO[c.estado]}</span>
               </button>
@@ -100,10 +120,10 @@ export default function Mapa() {
           )
         })}
       </ul>
-      {sinNumero.length > 0 && (
+      {sinUbicacion.length > 0 && (
         <p className="ayuda separada">
-          Sin número de Traccar (no aparecen en el mapa): {sinNumero.map((c) => c.perfiles.nombre).join(', ')}.
-          Se carga en Usuarios → el chofer → "N.º en Traccar Client".
+          Sin ubicación (no aparecen en el mapa): {sinUbicacion.map((c) => c.perfiles.nombre).join(', ')}.
+          Aparecen cuando comparten desde la app, o si usan Traccar Client, cargando su número en Usuarios → el chofer.
         </p>
       )}
     </main>

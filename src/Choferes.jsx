@@ -13,7 +13,10 @@ export default function Choferes() {
   const [abierto, setAbierto] = useState(null) // chofer al que se le está cambiando el estado
   const [eligiendo, setEligiendo] = useState(false) // lista de "Agregar a la cola" abierta
   const [error, setError] = useState('')
-  const [ubicaciones, setUbicaciones] = useState({}) // equipo de Traccar -> última ubicación
+  const [ubicaciones, setUbicaciones] = useState({}) // equipo ('app:<id>' o n.º de Traccar) -> última ubicación
+
+  // La ubicación más reciente del chofer: la de la app o la de Traccar.
+  const ubicacionDe = (c) => [ubicaciones['app:' + c.id], ubicaciones[c.equipo_traccar]].filter(Boolean).sort().pop()
 
   async function cargarUbicaciones() {
     const { data } = await supabase.from('ubicaciones').select('equipo, reportado_en')
@@ -89,9 +92,9 @@ export default function Choferes() {
                   Último reporte: {haceCuanto(c.ultimo_reporte, ahora)}
                   {c.patente ? ' · ' + c.patente : ''}
                 </small>
-                {c.equipo_traccar && (
-                  <small className={ubicaciones[c.equipo_traccar] && sinSenal(ubicaciones[c.equipo_traccar], ahora) ? 'texto-alerta' : ''}>
-                    📍 Ubicación: {haceCuanto(ubicaciones[c.equipo_traccar], ahora)}
+                {(c.equipo_traccar || ubicacionDe(c)) && (
+                  <small className={ubicacionDe(c) && sinSenal(ubicacionDe(c), ahora) ? 'texto-alerta' : ''}>
+                    📍 Ubicación: {haceCuanto(ubicacionDe(c), ahora)}
                   </small>
                 )}
               </span>

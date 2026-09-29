@@ -33,6 +33,13 @@
 5. En PowerShell, Git/Node pueden no estar en el PATH del proceso: anteponé
    `$env:Path = [Environment]::GetEnvironmentVariable('Path','Machine') + ';' + [Environment]::GetEnvironmentVariable('Path','User');`
 6. Commits en español, con autor "Lucca Raffa".
+7. **App Android** (Capacitor, carpeta `android/`): se arma con `.\compilar-app.ps1` (build web + `cap sync` +
+   Gradle) → `android\app\build\outputs\apk\debug\app-debug.apk`. Usa Java 21 de `%LOCALAPPDATA%\jdk21`
+   (el Java 25 de Android Studio no anda con Gradle 8.14) y el SDK de `%LOCALAPPDATA%\Android\Sdk`.
+   La app lleva la web adentro: **cada cambio de pantallas para los choferes necesita un APK nuevo.**
+   Se firma con la clave de depuración de esta compu (`%USERPROFILE%\.android\debug.keystore`): no borrarla,
+   o los celulares no van a poder actualizar sin desinstalar. Parte nativa: `UbicacionService.java`
+   (servicio en primer plano que manda a `reportar_mi_ubicacion`) y `UbicacionPlugin.java`.
 
 ## Estado (29/9/2026)
 - **Etapa 1 terminada** (SQL 001–015 aplicados; 016 = ofertas sin tiempo límite, pedirle confirmación de que lo corrió).

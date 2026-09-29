@@ -322,6 +322,11 @@ Hoy la ubicación "desaparece" por varios minutos. Hay que diseñar para que **n
   - Gestión (admin y operadores) tiene la pestaña **Mapa** con todos los autos, y en Choferes ve "📍 Ubicación hace X". Más de 3 min sin ubicación = se muestra como sin señal (solo aviso visual; el estado no cambia).
   - **Link para el pasajero:** en un viaje con chofer (ofrecido o asignado), gestión toca "Generar link" y lo comparte. Muestra mapa en vivo, foto del auto, modelo, color, patente y nombre del chofer. Si se cambia el chofer, el link sigue al nuevo. **Se apaga solo cuando el viaje se finaliza o se anula, sin límite de tiempo.**
   - El Mapa de gestión se actualiza cada 15 s (no en vivo), para no gastar el cupo gratis de mensajes en vivo de Supabase.
+  - **(2026-09-29) Etapa 2, parte 2 — app Android propia (decidido):** hoy solo 2 choferes usan Traccar, y el dueño quiere una sola app. La app "Remisería" para Android reemplaza a Traccar Client:
+    - Manda la ubicación **sola desde "Empezar a trabajar" hasta "Terminar el día"** (Libre, En cola y En viaje). Fuera de servicio no manda.
+    - Guía al chofer con los permisos (ubicación "todo el tiempo", batería sin restricciones) y le avisa si se desactivan. Celulares: Samsung, Motorola y Xiaomi.
+    - Se instala con un archivo mandado por WhatsApp (sin Play Store por ahora).
+    - Se hace por pasos, sin tocar lo que ya anda: (1) prueba chica en el celular del usuario (Samsung) con la pantalla bloqueada — punto de corte; (2) juntar con la app de choferes; (3) prueba con los 2 choferes de Traccar usando las dos apps a la vez para comparar; (4) resto de los choferes. Traccar y Render siguen hasta que la app demuestre que anda igual o mejor.
   - **(2026-09-29) Se cierra la central vieja de Render** (pantalla de la central, links `/v/…` y diagnóstico): Render queda solo como puente de ubicaciones. Los links para el pasajero se generan únicamente desde esta app.
 
 ---
