@@ -18,5 +18,6 @@ export default defineConfig({
   plugins: [react(), archivoVersion()],
   define: { __VERSION_APP__: JSON.stringify(VERSION) },
   // host: true → también se puede abrir desde el celular, si está en el mismo WiFi.
-  server: { port: 5173, host: true },
+  // La carpeta android/ (app Android) se ignora: si no, cada compilación recarga la página.
+  server: { port: 5173, host: true, watch: { ignored: ['**/android/**'] } },
 })

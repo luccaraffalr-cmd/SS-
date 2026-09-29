@@ -103,6 +103,7 @@ begin
     pres := public.hora_argentina(d, f.hora);
     continue when pres <= now();
 
+    nuevo := null;
     insert into public.viajes (tipo, cliente_nombre, cliente_telefono, origen, destino, observaciones,
                                hora_presentacion, hora_asignacion, creado_por,
                                viaje_fijo_id, fecha_fija, chofer_fijo, espera_gestion)

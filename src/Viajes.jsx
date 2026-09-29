@@ -77,7 +77,7 @@ export default function Viajes() {
   )
   const botones = (
     <div className="dos-columnas">
-      {botones}
+      <button className="boton" onClick={() => setEditando('nuevo')}>+ Nuevo viaje</button>
       <button className="boton secundario sin-margen-arriba" onClick={() => setVista('fijos')}>🔁 Viajes fijos</button>
     </div>
   )
@@ -102,7 +102,7 @@ export default function Viajes() {
           ⏳ {pagosPendientes} {pagosPendientes === 1 ? 'viaje' : 'viajes'} con pago pendiente — tocá para verlos
         </button>
       )}
-      <button className="boton" onClick={() => setEditando('nuevo')}>+ Nuevo viaje</button>
+      {botones}
 
       <div className="filtros">
         <label>
