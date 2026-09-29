@@ -7,10 +7,14 @@ import ActivarNotificaciones from './ActivarNotificaciones.jsx'
 import ProximosViajes, { AlertaSinChoferChofer } from './ViajesEsperando.jsx'
 import UbicacionApp from './UbicacionApp.jsx'
 import { dejarDeCompartir, esAppAndroid } from './ubicacionApp.js'
+import { olvidarNotificacionesApp } from './notificacionesApp.js'
 
 // Cerrar sesión: en la app Android también deja de compartir la ubicación.
 async function salir() {
-  if (esAppAndroid) await dejarDeCompartir().catch(() => {})
+  if (esAppAndroid) {
+    await dejarDeCompartir().catch(() => {})
+    await olvidarNotificacionesApp().catch(() => {})
+  }
   supabase.auth.signOut()
 }
 

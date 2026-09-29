@@ -71,12 +71,6 @@ export default function UbicacionApp({ perfil, estadoChofer }) {
       boton: 'Configurar',
       accion: () => Ubicacion.pedirBateria(),
     },
-    {
-      listo: estado.notificaciones,
-      texto: 'Notificaciones activadas',
-      boton: 'Activar',
-      accion: () => Ubicacion.pedirUbicacion().then((e) => (e.notificaciones ? e : Ubicacion.abrirAjustes())),
-    },
     { listo: estado.gps, texto: 'GPS (Ubicación) prendido', ayuda: 'Prendelo desde la barra de arriba del celular.' },
   ]
   const faltaAlgo = pasos.some((p) => !p.listo)

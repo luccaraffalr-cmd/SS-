@@ -1,6 +1,10 @@
 ﻿# Arma la app Android (archivo .apk) a partir de la app web.
-# Uso (en PowerShell, desde la carpeta del proyecto):  .\compilar-app.ps1
+# Uso (en PowerShell, desde la carpeta del proyecto):
+#   .\compilar-app.ps1           → app normal: abre las pantallas publicadas en Netlify.
+#   .\compilar-app.ps1 -Prueba   → app de prueba: lleva adentro las pantallas de esta compu
+#                                  (para probar en el celular antes de publicar en Netlify).
 # El archivo queda en: android\app\build\outputs\apk\debug\app-debug.apk
+param([switch]$Prueba)
 
 $raiz = $PSScriptRoot
 
@@ -15,6 +19,15 @@ npm.cmd run build
 if ($LASTEXITCODE) { throw 'Falló el armado de la app web.' }
 npx.cmd cap sync android
 if ($LASTEXITCODE) { throw 'Falló la copia de la app web al proyecto Android.' }
+
+if ($Prueba) {
+  # Sin "server.url": la app usa las pantallas copiadas adentro en vez de las de Netlify.
+  $config = "$raiz\android\app\src\main\assets\capacitor.config.json"
+  $datos = Get-Content -Raw $config | ConvertFrom-Json
+  $datos.PSObject.Properties.Remove('server')
+  [IO.File]::WriteAllText($config, ($datos | ConvertTo-Json -Depth 10))
+  Write-Host 'App de PRUEBA: lleva las pantallas de esta compu (no las de Netlify).'
+}
 
 Set-Location "$raiz\android"
 & "$raiz\android\gradlew.bat" assembleDebug --no-daemon
