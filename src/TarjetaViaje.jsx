@@ -1,7 +1,7 @@
-import { FORMAS_PAGO, NOMBRE_ESTADO_VIAJE, dinero, esAsignableSinChofer, fechaCorta, hora } from './viajes.js'
+import { FORMAS_PAGO, NOMBRE_ESTADO_VIAJE, dinero, fechaCorta, hora, problemaDelViaje } from './viajes.js'
 
 // Datos que necesita la tarjeta (se agregan al select de viajes).
-export const CONSULTA_VIAJES = '*, chofer:perfiles!viajes_chofer_id_fkey(nombre),'
+export const CONSULTA_VIAJES = '*, chofer:perfiles!viajes_chofer_id_fkey(nombre, telefono),'
   + ' rechazo:perfiles!viajes_rechazado_por_fkey(nombre), fijo:perfiles!viajes_chofer_fijo_fkey(nombre),'
   + ' cuenta:cuentas_corrientes(nombre)'
 
@@ -12,12 +12,16 @@ export function cuandoSeOfrece(v) {
 
 // Un viaje en la lista o en el calendario de gestión.
 export default function TarjetaViaje({ v, ahora, mostrarFecha, onAbrir }) {
-  const urgente = esAsignableSinChofer(v, ahora) && !v.chofer_fijo
+  // En rojo: llegó la hora y no tiene chofer, no lo aceptó o no salió (ver problemaDelViaje).
+  const problema = problemaDelViaje(v, ahora)
+  const urgente = !!problema
   const esperando = v.estado === 'sin_chofer' && !urgente
   const esperaFijo = v.estado === 'sin_chofer' && v.chofer_fijo
   // Asignado a mano por gestión (chofer elegido, reasignado o chofer fijo): en naranja.
   const fijo = (['ofrecido', 'asignado'].includes(v.estado) && v.asignado_por) || esperaFijo
-  const etiqueta = esperaFijo ? 'Chofer fijo'
+  const etiqueta = problema === 'no_salio' ? '⚠️ No salió'
+    : problema === 'sin_aceptar' ? '⚠️ Sin aceptar'
+    : esperaFijo ? 'Chofer fijo'
     : v.estado === 'sin_chofer' && v.espera_gestion ? 'Rechazado: decidir'
     : esperando ? `Se asigna ${hora(v.hora_asignacion)}`
     : v.estado === 'ofrecido' && !v.asignado_por ? `Ofrecido hace ${Math.max(0, Math.floor((ahora - new Date(v.asignado_en)) / 60000))} min`
@@ -26,7 +30,7 @@ export default function TarjetaViaje({ v, ahora, mostrarFecha, onAbrir }) {
     : NOMBRE_ESTADO_VIAJE[v.estado]
 
   return (
-    <button className={'tarjeta-viaje' + (urgente ? ' urgente' : '') + (fijo ? ' fijo' : '')
+    <button className={'tarjeta-viaje' + (urgente ? ' urgente' : fijo ? ' fijo' : '')
       + (v.estado === 'pago_pendiente' ? ' pago-pendiente' : '')}
       onClick={onAbrir}>
       <div className="viaje-arriba">

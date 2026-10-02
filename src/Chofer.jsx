@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState } from 'react'
 import { supabase } from './supabase.js'
 import { urlFotoAuto } from './fotos.js'
 import { NOMBRE_ESTADO, textoError } from './estados.js'
+import { cuando } from './viajes.js'
 import MisViajes from './MisViajes.jsx'
 import ActivarNotificaciones from './ActivarNotificaciones.jsx'
 import ProximosViajes, { AlertaSinChoferChofer } from './ViajesEsperando.jsx'
@@ -31,6 +32,7 @@ export default function Chofer({ perfil }) {
   const [companeros, setCompaneros] = useState([])
   const [error, setError] = useState('')
   const [ocupado, setOcupado] = useState(false)
+  const [pendientes, setPendientes] = useState(null) // viajes sin hacer, al querer terminar el día
 
   const cargarTablero = useCallback(async () => {
     const { data } = await supabase.from('choferes')
@@ -78,6 +80,21 @@ export default function Chofer({ perfil }) {
   }
   const cambiarEstado = (nuevo) => llamar('cambiar_mi_estado', { nuevo })
 
+  // "Terminar el día": si tiene viajes asignados para más tarde, se lo recuerda (y lo deja terminar igual).
+  async function terminarElDia() {
+    setError('')
+    const { data } = await supabase.from('viajes')
+      .select('id, estado, tipo, origen, hora_presentacion, hora_asignacion')
+      .eq('chofer_id', perfil.id).in('estado', ['ofrecido', 'asignado']).is('iniciado_en', null)
+      .order('hora_asignacion')
+    if (data?.length) setPendientes(data)
+    else cambiarEstado('fuera_de_servicio')
+  }
+  async function terminarIgual() {
+    setPendientes(null)
+    await cambiarEstado('fuera_de_servicio')
+  }
+
   if (!chofer) {
     return (
       <main className="pantalla">
@@ -119,9 +136,27 @@ export default function Chofer({ perfil }) {
           <button className="boton secundario" disabled={ocupado} onClick={() => llamar('salir_de_cola')}>Darme de baja de la cola</button>
         )}
         {(estado === 'libre' || estado === 'en_cola') && (
-          <button className="boton secundario" disabled={ocupado} onClick={() => cambiarEstado('fuera_de_servicio')}>Terminar el día</button>
+          <button className="boton secundario" disabled={ocupado} onClick={terminarElDia}>Terminar el día</button>
         )}
       </div>
+      {pendientes && (
+        <section className="tarjeta separada aviso-pendientes">
+          <p className="sin-margen">
+            <strong>{pendientes.length === 1 ? 'Tenés un viaje pendiente:' : `Tenés ${pendientes.length} viajes pendientes:`}</strong>
+          </p>
+          <ul className="lista-pendientes">
+            {pendientes.map((v) => (
+              <li key={v.id}>
+                {cuando(v)} · {v.origen}
+                {v.estado === 'ofrecido' && <small> (todavía no lo aceptaste)</small>}
+              </li>
+            ))}
+          </ul>
+          <p className="ayuda sin-margen">A la hora de cada viaje que aceptaste te va a sonar el aviso igual.</p>
+          <button className="boton peligro" disabled={ocupado} onClick={terminarIgual}>Sí, terminar el día igual</button>
+          <button className="boton secundario" onClick={() => setPendientes(null)}>No, seguir trabajando</button>
+        </section>
+      )}
       {error && <p className="aviso error">{error}</p>}
 
       {esAppAndroid && <UbicacionApp perfil={perfil} estadoChofer={estado} />}

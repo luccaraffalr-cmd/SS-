@@ -513,3 +513,12 @@ textarea {
 }
 .dias-semana button.activo { border-color: #1f2937; background: #1f2937; color: #fff; font-weight: 700; }
 .ubicacion-app.falta { border-color: #dc2626; background: #fef2f2; }
+
+/* Viajes que necesitan atención (sin chofer, sin aceptar o el chofer no salió): etiqueta en rojo */
+.tarjeta-viaje.urgente .etiqueta.viaje { background: #fee2e2; color: #991b1b; }
+
+/* Chofer: viajes pendientes al querer terminar el día */
+.aviso-pendientes { border: 3px solid #f59e0b; }
+.aviso-pendientes .boton.secundario { margin-top: 0; }
+.lista-pendientes { margin: 0; padding-left: 20px; display: flex; flex-direction: column; gap: 4px; overflow-wrap: anywhere; }
+.lista-pendientes small { color: #b45309; }

@@ -207,7 +207,7 @@ export default function MisViajes({ perfil }) {
                   </button>
                 )}
                 {llegoLaHora && actual && <small>Cuando termines el viaje actual, salí a hacer este.</small>}
-                {!llegoLaHora && <small>Se habilita a las {hora(v.hora_asignacion)}.</small>}
+                {!llegoLaHora && <small>Se habilita a las {hora(v.hora_asignacion)} (te va a sonar un aviso).</small>}
               </div>
             )
           })}

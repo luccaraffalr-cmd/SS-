@@ -63,6 +63,19 @@ export function esAsignableSinChofer(viaje, ahora = Date.now()) {
   return viaje.estado === 'sin_chofer' && new Date(viaje.hora_asignacion).getTime() <= ahora
 }
 
+// ¿Gestión tiene que ocuparse ya de este viaje? Llegó su hora de asignación y:
+//   'sin_chofer'  → no tiene chofer;
+//   'sin_aceptar' → se lo asignaron a mano (o es de chofer fijo) y todavía no lo aceptó;
+//   'no_salio'    → lo aceptó pero todavía no tocó "Salir a hacer el viaje".
+// Las ofertas automáticas (las de la cola) no cuentan: se están ofreciendo en ese momento.
+export function problemaDelViaje(viaje, ahora = Date.now()) {
+  if (viaje.iniciado_en || new Date(viaje.hora_asignacion).getTime() > ahora) return null
+  if (viaje.estado === 'sin_chofer') return 'sin_chofer'
+  if (viaje.estado === 'ofrecido' && viaje.asignado_por) return 'sin_aceptar'
+  if (viaje.estado === 'asignado') return 'no_salio'
+  return null
+}
+
 // Tipo de viaje + hora para mostrar: "Presentarse 15:00" o "Inmediato".
 export function cuando(viaje) {
   return viaje.tipo === 'programado'

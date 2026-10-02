@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { supabase } from './supabase.js'
 import TarjetaViaje, { CONSULTA_VIAJES } from './TarjetaViaje.jsx'
-import { esAsignableSinChofer, fechaLocal } from './viajes.js'
+import { fechaLocal, problemaDelViaje } from './viajes.js'
 
 const MESES = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre',
   'Octubre', 'Noviembre', 'Diciembre']
@@ -77,7 +77,8 @@ export default function Calendario({ ahora, onAbrir }) {
         {dias.map((d) => {
           const clave = fechaLocal(d)
           const lista = (porDia[clave] ?? []).filter((v) => v.estado !== 'anulado')
-          const faltaChofer = lista.some((v) => esAsignableSinChofer(v, ahora) && !v.chofer_fijo)
+          // En rojo si algún viaje del día necesita atención (sin chofer, sin aceptar o el chofer no salió).
+          const faltaChofer = lista.some((v) => problemaDelViaje(v, ahora))
           return (
             <button key={clave} type="button"
               className={'calendario-dia' + (d.getMonth() !== mes.getMonth() ? ' otro-mes' : '')

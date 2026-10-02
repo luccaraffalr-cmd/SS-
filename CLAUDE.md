@@ -48,15 +48,21 @@
    o los celulares no van a poder actualizar sin desinstalar. Parte nativa: `UbicacionService.java`
    (servicio en primer plano que manda a `reportar_mi_ubicacion`) y `UbicacionPlugin.java`.
 
-## Estado (29/9/2026, noche)
-- **Etapa 1 terminada.** Publicado en Netlify el 29/9/2026 (quedan ~7 deploys de septiembre; publicar por tandas).
-- **Sin Traccar** (decidido 29/9): todos los choferes usan la app Android (`DescargasRemiseria.apk`, carga las
+## Estado (2/10/2026)
+- **Etapa 1 terminada.** Publicado en Netlify el 29/9/2026 (quedaban ~6 deploys de septiembre; publicar por tandas).
+- **Sin Traccar** (decidido 29/9): todos los choferes usan la app Android (`Descargas\Remiseria.apk`, carga las
   pantallas desde Netlify). SQL 021: limpieza y arranque de cero (sin viajes, sin viajes fijos, sin `prueba1`/`prueba2`;
   `ubicaciones` e `historial_ubicacion` por `chofer_id`). Render (repo `remis`) quedó sin uso: se puede borrar
   cuando el usuario quiera (lo hace él: Render → el servicio → Settings → Delete; GitHub → remis → Settings → Archive).
 - App Android: ubicación automática (Empezar a trabajar → Terminar el día), revisión de permisos, avisos por Firebase.
   Se mide la confiabilidad con el uso real (`historial_ubicacion` guarda 7 días).
 - Hecho también: viajes fijos (`019`) y calendario en Viajes.
-- Pendiente antes de usarla en serio: cargar los choferes reales (fotos de autos en Descargasemises), instalar la
+- **Hecho pero SIN desplegar** (el usuario pidió no desplegar todavía; commits locales):
+  - Contraseña propia al primer ingreso: falta que el usuario corra **SQL 022** y después
+    `npx.cmd supabase functions deploy usuarios ...`.
+  - Avisos de programados (2/10): aviso "Es hora de salir" (cron `aviso-hora-de-salir`, SQL 023) y alertas
+    "no salió" / "sin aceptar" en gestión, advertencia al "Terminar el día". **Orden:** 1) deploy de `notificar`,
+    2) SQL 023 (si se corre antes, se pierden avisos), 3) publicar en Netlify (las pantallas).
+- Pendiente antes de usarla en serio: cargar los choferes reales (fotos de autos en `Descargas\remises`), instalar la
   app en cada celular (permisos: ubicación "todo el tiempo", batería sin restricciones, notificaciones).
 - Después: Etapa 3 (plata y clientes: cuenta corriente de choferes con comisiones, resúmenes, clientes y saldos).

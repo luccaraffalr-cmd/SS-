@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { supabase } from './supabase.js'
-import { NOMBRE_ESTADO_VIAJE, fechaLocal, hora, unirFechaHora } from './viajes.js'
+import { NOMBRE_ESTADO_VIAJE, fechaLocal, hora, problemaDelViaje, unirFechaHora } from './viajes.js'
 import ElegirChofer, { useChoferesParaAsignar } from './ElegirChofer.jsx'
 import FormPago from './FormPago.jsx'
 import HistorialViaje from './HistorialViaje.jsx'
@@ -11,6 +11,15 @@ import { cuandoSeOfrece } from './TarjetaViaje.jsx'
 // Explicación en palabras de en qué anda la asignación del viaje.
 function textoSituacion(v) {
   const nombre = v.chofer?.nombre
+  const problema = problemaDelViaje(v)
+  if (problema === 'no_salio') {
+    return `⚠️ ${nombre} lo aceptó pero todavía no salió a hacerlo (se habilitó a las ${hora(v.hora_asignacion)}). `
+      + 'Llamalo o asignáselo a otro.'
+  }
+  if (problema === 'sin_aceptar') {
+    return `⚠️ Asignado a mano a ${nombre}, pero todavía no lo aceptó y ya llegó la hora (${hora(v.hora_asignacion)}). `
+      + 'Llamalo o asignáselo a otro.'
+  }
   if (v.estado === 'sin_chofer' && v.chofer_fijo) {
     return `📌 Chofer fijo: ${v.fijo?.nombre ?? '?'}. Se le ofrece el ${fechaCorta(cuandoSeOfrece(v))} (7 días antes) y lo tiene que aceptar. `
       + 'Si querés, elegí otro chofer o dejalo en automático.'
@@ -245,6 +254,9 @@ export default function FormViaje({ viaje, onListo }) {
       {sePuedeAnular && (
         <div className="tarjeta separada">
           <p className="sin-margen">{textoSituacion(viaje)}</p>
+          {['no_salio', 'sin_aceptar'].includes(problemaDelViaje(viaje)) && viaje.chofer?.telefono && (
+            <a className="boton secundario" href={'tel:' + viaje.chofer.telefono}>📞 Llamar a {viaje.chofer.nombre}</a>
+          )}
           {sePuedePriorizar && (
             <button type="button" className="boton secundario" onClick={cambiarPrioridad}>
               {viaje.prioritario ? 'Quitar prioridad' : '⭐ Priorizar (se asigna antes que los demás)'}

@@ -1,19 +1,23 @@
 import { useEffect, useState } from 'react'
 import { supabase } from './supabase.js'
-import { hora } from './viajes.js'
+import { hora, problemaDelViaje } from './viajes.js'
 import ElegirChofer, { useChoferesParaAsignar } from './ElegirChofer.jsx'
 
-// Cartel rojo arriba de todo el panel de gestión cuando hay viajes que ya se tendrían
-// que estar haciendo y no tienen chofer. Al tocarlo se abre la lista para asignarlos ahí mismo.
+const CONSULTA = 'id, estado, tipo, origen, destino, cliente_nombre, hora_presentacion, hora_asignacion, iniciado_en,'
+  + ' asignado_por, espera_gestion, chofer:perfiles!viajes_chofer_id_fkey(nombre, telefono),'
+  + ' rechazo:perfiles!viajes_rechazado_por_fkey(nombre)'
+
+// Cartel rojo arriba de todo el panel de gestión con los viajes que ya llegaron a su hora y:
+// no tienen chofer, el chofer no aceptó la asignación, o la aceptó pero no salió a hacerlo.
+// Al tocarlo se abre la lista para llamar al chofer o asignárselo a otro ahí mismo.
 export default function AlertaSinChofer({ onVer }) {
   const [viajes, setViajes] = useState([])
   const [ahora, setAhora] = useState(Date.now())
-  const [abierto, setAbierto] = useState(false)
 
   useEffect(() => {
-    const cargar = () => supabase.from('viajes')
-      .select('id, tipo, origen, destino, cliente_nombre, hora_presentacion, hora_asignacion, espera_gestion, rechazo:perfiles!viajes_rechazado_por_fkey(nombre)')
-      .eq('estado', 'sin_chofer').lte('hora_asignacion', new Date().toISOString())
+    const cargar = () => supabase.from('viajes').select(CONSULTA)
+      .in('estado', ['sin_chofer', 'ofrecido', 'asignado']).is('iniciado_en', null)
+      .lte('hora_asignacion', new Date().toISOString())
       .then(({ data }) => setViajes(data ?? []))
     cargar()
     const canal = supabase.channel('alerta-sin-chofer')
@@ -24,7 +28,23 @@ export default function AlertaSinChofer({ onVer }) {
     return () => { supabase.removeChannel(canal); clearInterval(reloj) }
   }, [])
 
-  if (viajes.length === 0) return null
+  return <CartelAlertas viajes={viajes} ahora={ahora} onVer={onVer} />
+}
+
+const TITULOS = {
+  sin_chofer: (n) => `${n} ${n === 1 ? 'viaje' : 'viajes'} sin chofer`,
+  no_salio: (n) => `${n} ${n === 1 ? 'chofer no salió' : 'choferes no salieron'}`,
+  sin_aceptar: (n) => `${n} sin aceptar`,
+}
+
+// La parte que se ve (separada de la carga de datos).
+export function CartelAlertas({ viajes, ahora, onVer }) {
+  const [abierto, setAbierto] = useState(false)
+  const conProblema = viajes
+    .map((v) => ({ ...v, problema: problemaDelViaje(v, ahora) }))
+    .filter((v) => v.problema)
+    .sort((a, b) => new Date(a.hora_presentacion ?? a.hora_asignacion) - new Date(b.hora_presentacion ?? b.hora_asignacion))
+  if (conProblema.length === 0) return null
 
   const minutosPara = (fecha) => Math.round((new Date(fecha).getTime() - ahora) / 60000)
   const cuando = (v) => {
@@ -33,25 +53,30 @@ export default function AlertaSinChofer({ onVer }) {
     const texto = min > 0 ? `en ${min} min` : min === 0 ? 'ya' : `hace ${-min} min`
     return `📅 Presentarse ${hora(v.hora_presentacion)} (${texto})`
   }
-  const ordenados = [...viajes].sort((a, b) =>
-    new Date(a.hora_presentacion ?? a.hora_asignacion) - new Date(b.hora_presentacion ?? b.hora_asignacion))
+  const resumen = (v) => (v.problema === 'no_salio' ? `⏰ ${v.chofer?.nombre} no salió · `
+    : v.problema === 'sin_aceptar' ? `⏳ ${v.chofer?.nombre} no aceptó · ` : '') + cuando(v)
+  const titulo = Object.keys(TITULOS)
+    .map((p) => [p, conProblema.filter((v) => v.problema === p).length])
+    .filter(([, n]) => n > 0)
+    .map(([p, n]) => TITULOS[p](n))
+    .join(' · ')
 
   return (
     <div>
       <button className="alerta-sin-chofer" onClick={() => setAbierto(!abierto)}>
-        <strong>⚠️ {viajes.length} {viajes.length === 1 ? 'viaje' : 'viajes'} sin chofer</strong>
+        <strong>⚠️ {titulo}</strong>
         <span className="detalle">
-          {abierto ? 'Tocá para cerrar' : ordenados.slice(0, 3).map((v) => <span key={v.id}>{cuando(v)}</span>)}
+          {abierto ? 'Tocá para cerrar' : conProblema.slice(0, 3).map((v) => <span key={v.id}>{resumen(v)}</span>)}
         </span>
       </button>
       {abierto && (
-        <PanelAsignar viajes={ordenados} cuando={cuando} onVer={() => { setAbierto(false); onVer() }} />
+        <PanelAsignar viajes={conProblema} cuando={cuando} onVer={() => { setAbierto(false); onVer() }} />
       )}
     </div>
   )
 }
 
-// Lista de viajes sin chofer con un selector y "Asignar" en cada uno.
+// Lista de los viajes con problema: llamar al chofer y/o asignárselo a otro.
 function PanelAsignar({ viajes, cuando, onVer }) {
   const choferes = useChoferesParaAsignar() // se carga al abrir, así está al día
   const [elegidos, setElegidos] = useState({})
@@ -73,9 +98,21 @@ function PanelAsignar({ viajes, cuando, onVer }) {
           <strong>{cuando(v)} · #{v.id}</strong>
           <span>{v.origen}{v.destino ? ' → ' + v.destino : ''}</span>
           {v.cliente_nombre && <small>{v.cliente_nombre}</small>}
-          {v.espera_gestion && <small className="rechazado">❌ Lo rechazó {v.rechazo?.nombre ?? 'un chofer'}</small>}
+          {v.problema === 'sin_chofer' && v.espera_gestion && (
+            <small className="rechazado">❌ Lo rechazó {v.rechazo?.nombre ?? 'un chofer'}</small>
+          )}
+          {v.problema === 'no_salio' && (
+            <small className="rechazado">⏰ {v.chofer?.nombre} lo aceptó pero todavía no salió (se habilitó a las {hora(v.hora_asignacion)})</small>
+          )}
+          {v.problema === 'sin_aceptar' && (
+            <small className="rechazado">⏳ Asignado a {v.chofer?.nombre}, que todavía no lo aceptó</small>
+          )}
+          {v.problema !== 'sin_chofer' && v.chofer?.telefono && (
+            <a className="boton secundario" href={'tel:' + v.chofer.telefono}>📞 Llamar a {v.chofer.nombre}</a>
+          )}
           <div className="asignar-rapido">
-            <ElegirChofer valor={elegidos[v.id] ?? ''} choferes={choferes} textoVacio="Elegir chofer…"
+            <ElegirChofer valor={elegidos[v.id] ?? ''} choferes={choferes}
+              textoVacio={v.problema === 'sin_chofer' ? 'Elegir chofer…' : 'Pasárselo a otro chofer…'}
               onCambiar={(c) => setElegidos({ ...elegidos, [v.id]: c })} />
             <button className="boton" onClick={() => asignar(v.id)}>Asignar</button>
           </div>
