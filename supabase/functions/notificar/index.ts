@@ -1,7 +1,7 @@
 // Manda las notificaciones push al celular del chofer (app Android y navegador). La llama la base de datos:
 // - { oferta_id }: cuando le ofrecen o asignan un viaje (disparador en "ofertas").
-// - { viaje_id, aviso: 'hora_de_salir' }: cuando llega la hora de salir a hacer un viaje que aceptó
-//   (cada minuto, avisar_hora_de_salir() en la base).
+// - { aviso_id }: un aviso guardado en la tabla "avisos" (es hora de salir, cambió tu viaje, se anuló,
+//   te lo sacaron). Lo crea la base con crear_aviso().
 // Cada aviso se manda una sola vez y solo si es reciente (evita duplicados y usos indebidos).
 import { createClient } from 'npm:@supabase/supabase-js@2'
 import webpush from 'npm:web-push@3'
@@ -27,30 +27,21 @@ const recorrido = (v: Viaje) => `${v.origen}${v.destino ? ' → ' + v.destino : 
 Deno.serve(async (req) => {
   const admin = createClient(Deno.env.get('SUPABASE_URL')!, Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!)
 
-  let datos: { oferta_id?: unknown; viaje_id?: unknown; aviso?: unknown }
+  let datos: { oferta_id?: unknown; aviso_id?: unknown }
   try { datos = await req.json() } catch { return respuesta({ error: 'Datos inválidos' }, 400) }
 
   const hace2min = new Date(Date.now() - 2 * 60 * 1000).toISOString()
 
-  // Es hora de salir a hacer un viaje aceptado.
-  if (datos.aviso === 'hora_de_salir') {
-    const { data: v } = await admin.from('viajes')
-      .update({ aviso_salida_notificado_en: new Date().toISOString() })
-      .eq('id', Number(datos.viaje_id)).eq('estado', 'asignado').is('iniciado_en', null)
-      .is('aviso_salida_notificado_en', null).gte('aviso_salida_en', hace2min)
-      .select('id, tipo, origen, destino, hora_presentacion, chofer_id')
+  // Avisos guardados por la base (tabla "avisos"): es hora de salir, cambió tu viaje, se anuló…
+  if (datos.aviso_id !== undefined) {
+    const { data: aviso } = await admin.from('avisos')
+      .update({ notificado_en: new Date().toISOString() })
+      .eq('id', Number(datos.aviso_id)).is('notificado_en', null).gte('creado_en', hace2min)
+      .select('chofer_id, titulo, cuerpo, etiqueta')
       .maybeSingle()
-    if (!v) return respuesta({ ok: true, enviadas: 0, motivo: 'aviso no válido o ya enviado' })
-    const de = v.tipo === 'programado' && v.hora_presentacion
-      ? `Viaje de las ${horaArgentina(v.hora_presentacion, { hour: '2-digit', minute: '2-digit' })}`
-      : 'Tu viaje'
-    const enviadas = await enviarATodos(admin, v.chofer_id, {
-      titulo: '🚗 Es hora de salir',
-      cuerpo: `${de}
-${recorrido(v)}
-Abrí la app y tocá "Salir a hacer el viaje".`,
-      etiqueta: `salida-${v.id}`,
-    })
+    if (!aviso) return respuesta({ ok: true, enviadas: 0, motivo: 'aviso no válido o ya enviado' })
+    const enviadas = await enviarATodos(admin, aviso.chofer_id,
+      { titulo: aviso.titulo, cuerpo: aviso.cuerpo, etiqueta: aviso.etiqueta })
     return respuesta({ ok: true, enviadas })
   }
 

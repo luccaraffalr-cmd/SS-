@@ -66,6 +66,8 @@ export default function FormViaje({ viaje, onListo }) {
   const choferes = useChoferesParaAsignar()
   const cambiar = (campo) => (e) => setDatos({ ...datos, [campo]: e.target.value })
   const sePuedeAnular = !esNuevo && ['sin_chofer', 'ofrecido', 'asignado'].includes(viaje.estado)
+  // Viaje con chofer (ofrecido, aceptado o en curso): los cambios, la anulación o pasárselo a otro se le avisan.
+  const conChofer = !esNuevo && !!viaje.chofer_id && !!viaje.chofer && ['ofrecido', 'asignado'].includes(viaje.estado)
   const sePuedePriorizar = !esNuevo && (viaje.estado === 'sin_chofer' || (viaje.estado === 'ofrecido' && !viaje.asignado_por))
 
   const [corrigiendoPago, setCorrigiendoPago] = useState(false)
@@ -212,6 +214,11 @@ export default function FormViaje({ viaje, onListo }) {
           </label>
         )}
 
+        {conChofer && (
+          <p className="ayuda sin-margen">
+            Si cambiás el horario, el origen o el destino, a {viaje.chofer.nombre} le llega un aviso.
+          </p>
+        )}
         {error && <p className="aviso error">{error}</p>}
         <button className="boton" disabled={enviando}>
           {enviando ? 'Guardando…' : esNuevo ? 'Cargar viaje' : 'Guardar cambios'}
@@ -274,6 +281,9 @@ export default function FormViaje({ viaje, onListo }) {
             {choferElegido ? 'Asignar a este chofer'
               : viaje.espera_gestion ? 'Pasar a asignación automática' : 'Dejar sin chofer'}
           </button>
+          {conChofer && choferElegido !== viaje.chofer_id && (
+            <small className="ayuda">A {viaje.chofer.nombre} le llega un aviso de que le sacaron el viaje.</small>
+          )}
         </div>
       )}
 
@@ -287,6 +297,7 @@ export default function FormViaje({ viaje, onListo }) {
                 ¿Seguro que querés anular el viaje #{viaje.id}?
                 {viaje.iniciado_en && viaje.chofer?.nombre &&
                   <> <strong>{viaje.chofer.nombre}</strong> vuelve al puesto 1 de la cola.</>}
+                {conChofer && <> A {viaje.chofer.nombre} le llega un aviso.</>}
               </p>
               <button type="button" className="boton peligro" disabled={enviando} onClick={anular}>Sí, anular</button>
               <button type="button" className="boton secundario" onClick={() => setConfirmandoAnular(false)}>No, dejarlo</button>

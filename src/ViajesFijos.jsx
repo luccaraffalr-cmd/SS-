@@ -173,7 +173,7 @@ function FormViajeFijo({ fijo, choferes, onListo }) {
 
         {!esNuevo && (
           <p className="ayuda sin-margen">
-            Al guardar, los viajes de las próximas semanas se actualizan, salvo los días que cambiaste o anulaste a mano.
+            Al guardar, los viajes de las próximas semanas se actualizan, salvo los días que cambiaste o anulaste a mano. Si alguno ya se lo habían asignado a un chofer, le llega un aviso del cambio.
           </p>
         )}
         {error && <p className="aviso error">{error}</p>}

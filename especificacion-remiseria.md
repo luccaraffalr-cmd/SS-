@@ -319,6 +319,10 @@ Hoy la ubicación "desaparece" por varios minutos. Hay que diseñar para que **n
   - A la **hora de asignación** (ej. 14:00 para presentarse 14:30), al chofer que lo aceptó le suena **"🚗 Es hora de salir"** (app y navegador), **aunque esté fuera de servicio**. Queda anotado en el historial del viaje. Si gestión cambia la hora o el chofer, se vuelve a avisar.
   - En gestión, el **cartel rojo** de arriba (y la lista y el calendario, en rojo) muestra, además de los viajes sin chofer: **"⏰ no salió"** (llegó la hora y el chofer no tocó "Salir a hacer el viaje") y **"⏳ sin aceptar"** (asignación a mano o de chofer fijo sin aceptar al llegar la hora). Con botón para **llamar al chofer** y para pasárselo a otro. Las ofertas automáticas de la cola no entran.
   - Si el chofer toca **"Terminar el día"** con viajes pendientes, la app se los muestra y **lo deja terminar igual**; el aviso de la hora le suena igual.
+- **(2026-10-05) Avisos al chofer cuando gestión toca un viaje suyo** (desde que se lo asignan, aunque no lo haya aceptado, hasta que lo finaliza, incluso con el viaje en curso):
+  - **"🔄 Cambió tu viaje"** si cambia el **horario** (presentación o asignación) o el **origen / destino**, con lo que cambió. **No lo tiene que volver a aceptar.** Los cambios de cliente u observaciones no avisan.
+  - **"❌ Se anuló tu viaje"** si gestión lo anula, y **"❌ Te sacaron un viaje"** si se lo pasa a otro chofer o lo deja sin chofer.
+  - Lo que hace el propio chofer (rechazar, finalizar) no se le avisa. Cada aviso queda en el historial del viaje.
 - **(2026-09-29) Viajes fijos** (se repiten todas las semanas, ej. "todos los lunes a las 12"):
   - Se cargan en Viajes → "🔁 Viajes fijos" (admin y operadores): días de la semana (uno o varios), hora de presentación, minutos de anticipación para asignar, datos del viaje y **chofer fijo opcional**.
   - El servidor crea solo los viajes programados de las **próximas 4 semanas**. Cada uno es un viaje normal: se puede cambiar o anular un día suelto (feriado, el cliente avisa que no va) sin tocar el viaje fijo.
