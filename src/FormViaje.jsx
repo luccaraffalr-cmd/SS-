@@ -282,7 +282,7 @@ export default function FormViaje({ viaje, onListo }) {
               : viaje.espera_gestion ? 'Pasar a asignación automática' : 'Dejar sin chofer'}
           </button>
           {conChofer && choferElegido !== viaje.chofer_id && (
-            <small className="ayuda">A {viaje.chofer.nombre} le llega un aviso de que le sacaron el viaje.</small>
+            <small className="ayuda">A {viaje.chofer.nombre} le llega el aviso "Se anuló tu viaje".</small>
           )}
         </div>
       )}

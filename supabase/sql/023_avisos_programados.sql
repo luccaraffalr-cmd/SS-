@@ -3,7 +3,7 @@
 --      (le suena aunque esté fuera de servicio).
 --   2) "🔄 Cambió tu viaje": si gestión cambia el horario (presentación o asignación), el origen o el destino
 --      de un viaje suyo, desde que se lo asignan hasta que lo finaliza. No lo tiene que volver a aceptar.
---   3) "❌ Se anuló tu viaje" / "❌ Te sacaron un viaje": si gestión lo anula o se lo pasa a otro (o lo deja sin chofer).
+--   3) "❌ Se anuló tu viaje": si gestión lo anula, se lo pasa a otro o lo deja sin chofer (el mismo aviso).
 -- Cada aviso queda anotado en el historial del viaje. Los manda la función "notificar".
 -- ⚠️ Antes de correr esto, subir la versión nueva de la función "notificar"
 --    (si no, la función vieja ignora estos avisos y se pierden).
@@ -150,20 +150,14 @@ declare
   cambios text[] := '{}';
 begin
   -- Lo que hace el propio chofer (rechazar, finalizar…) no se le avisa.
-  -- 3) Se lo sacaron: tenía el viaje (ofrecido, aceptado o haciéndolo) y se anuló o pasó a otro / a nadie.
-  if old.chofer_id is not null and old.estado in ('ofrecido', 'asignado') and auth.uid() is distinct from old.chofer_id then
-    if new.estado = 'anulado' then
-      perform public.crear_aviso(new.id, old.chofer_id, '❌ Se anuló tu viaje',
-        public.texto_cuando(old.tipo, old.hora_presentacion) || E'\n' || public.texto_recorrido(old.origen, old.destino),
-        'viaje-' || new.id);
-      return null;
-    elsif new.chofer_id is distinct from old.chofer_id then
-      perform public.crear_aviso(new.id, old.chofer_id, '❌ Te sacaron un viaje',
-        public.texto_cuando(old.tipo, old.hora_presentacion) || E'\n' || public.texto_recorrido(old.origen, old.destino)
-          || case when new.chofer_id is null then E'\nGestión lo dejó sin chofer.' else E'\nGestión se lo pasó a otro chofer.' end,
-        'viaje-' || new.id);
-      return null;
-    end if;
+  -- 3) Ya no es su viaje: tenía el viaje (ofrecido, aceptado o haciéndolo) y gestión lo anuló, se lo pasó a otro
+  --    o lo dejó sin chofer. Para el chofer es el mismo aviso: "Se anuló tu viaje".
+  if old.chofer_id is not null and old.estado in ('ofrecido', 'asignado') and auth.uid() is distinct from old.chofer_id
+     and (new.estado = 'anulado' or new.chofer_id is distinct from old.chofer_id) then
+    perform public.crear_aviso(new.id, old.chofer_id, '❌ Se anuló tu viaje',
+      public.texto_cuando(old.tipo, old.hora_presentacion) || E'\n' || public.texto_recorrido(old.origen, old.destino),
+      'viaje-' || new.id);
+    return null;
   end if;
 
   -- 2) Cambió el horario, el origen o el destino de un viaje suyo (desde que se lo asignan hasta que lo finaliza).

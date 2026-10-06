@@ -61,8 +61,8 @@
   - Contraseña propia al primer ingreso: falta que el usuario corra **SQL 022** y después
     `npx.cmd supabase functions deploy usuarios ...`.
   - Avisos al chofer (2 y 5/10), todos por la tabla `avisos` + `crear_aviso()` (SQL 023) → `notificar` `{aviso_id}`:
-    "Es hora de salir" (cron `aviso-hora-de-salir`), "Cambió tu viaje" (horario/origen/destino), "Se anuló" /
-    "Te sacaron un viaje" (trigger `viajes_avisar_cambios`). Más alertas "no salió" / "sin aceptar" en gestión y
+    "Es hora de salir" (cron `aviso-hora-de-salir`), "Cambió tu viaje" (horario/origen/destino), "Se anuló tu
+    viaje" (también si se lo pasan a otro o queda sin chofer; trigger `viajes_avisar_cambios`). Más alertas "no salió" / "sin aceptar" en gestión y
     advertencia al "Terminar el día". **Orden:** 1) deploy de `notificar`, 2) SQL 023 (si se corre antes, se
     pierden avisos), 3) publicar en Netlify (las pantallas).
 - Pendiente antes de usarla en serio: cargar los choferes reales (fotos de autos en `Descargas\remises`), instalar la
