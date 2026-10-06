@@ -1,7 +1,7 @@
 // Manda las notificaciones push al celular del chofer (app Android y navegador). La llama la base de datos:
 // - { oferta_id }: cuando le ofrecen o asignan un viaje (disparador en "ofertas").
 // - { aviso_id }: un aviso guardado en la tabla "avisos" (es hora de salir, cambió tu viaje, se anuló,
-//   te lo sacaron). Lo crea la base con crear_aviso().
+//   también si se lo pasaron a otro). Lo crea la base con crear_aviso().
 // Cada aviso se manda una sola vez y solo si es reciente (evita duplicados y usos indebidos).
 import { createClient } from 'npm:@supabase/supabase-js@2'
 import webpush from 'npm:web-push@3'
