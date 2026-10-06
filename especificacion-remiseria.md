@@ -267,6 +267,15 @@ Hoy la ubicación "desaparece" por varios minutos. Hay que diseñar para que **n
 
 ---
 
+## 8 quater. Ideas para la Etapa 3 (gestión de la plata) — anotadas el 6/10/2026, a definir
+
+> Para cuando se haga la parte de gestión. Todavía no se decidió nada de esto.
+
+- **Conectar la gestión con las planillas que usa hoy la remisería:** que la app cargue los números (viajes, pagos, comisiones) directamente en esa planilla. Cómo hacerlo depende de dónde esté: Google Sheets (la app escribe sola), Excel en OneDrive (también, con más trabajo) o Excel solo en una compu (botón para bajar los números). Hace falta una copia de la planilla para ver cómo está armada.
+- **Pantalla final en el link del pasajero:** al terminar el viaje, el mismo link muestra "Viaje terminado", el **precio** y el **alias al que transferir**. El alias se elige según las cuentas: si el chofer que hizo el viaje está en negativo (le debe a la remisería), el pasajero le transfiere a una **cuenta de gestión** o a **otro chofer con saldo a favor**, en vez de a él. Necesita la cuenta corriente de los choferes. A definir: la regla exacta para elegir el alias, cuándo carga el precio el chofer y hasta cuándo se ve esa pantalla.
+
+---
+
 ## 9. Etapas sugeridas
 
 1. **Etapa 1 — Operación:** usuarios y roles, perfiles de chofer, cola, carga de viajes, reglas de asignación, notificaciones, flujo de finalización, listado de todos los viajes con estados.
