@@ -48,7 +48,7 @@
    o los celulares no van a poder actualizar sin desinstalar. Parte nativa: `UbicacionService.java`
    (servicio en primer plano que manda a `reportar_mi_ubicacion`) y `UbicacionPlugin.java`.
 
-## Estado (2/10/2026)
+## Estado (6/10/2026)
 - **Etapa 1 terminada.** Publicado en Netlify el 29/9/2026 (quedaban ~6 deploys de septiembre; publicar por tandas).
 - **Sin Traccar** (decidido 29/9): todos los choferes usan la app Android (`Descargas\Remiseria.apk`, carga las
   pantallas desde Netlify). SQL 021: limpieza y arranque de cero (sin viajes, sin viajes fijos, sin `prueba1`/`prueba2`;
@@ -57,14 +57,14 @@
 - App Android: ubicación automática (Empezar a trabajar → Terminar el día), revisión de permisos, avisos por Firebase.
   Se mide la confiabilidad con el uso real (`historial_ubicacion` guarda 7 días).
 - Hecho también: viajes fijos (`019`) y calendario en Viajes.
-- **Hecho pero SIN desplegar** (el usuario pidió no desplegar todavía; commits locales):
-  - Contraseña propia al primer ingreso: falta que el usuario corra **SQL 022** y después
-    `npx.cmd supabase functions deploy usuarios ...`.
+- **Hecho, falta publicar en Netlify** (el usuario quiere publicar todo junto; funciones `usuarios` y `notificar`
+  ya subidas a Supabase y SQL 022–023 aplicados el 6/10):
+  - Contraseña propia al primer ingreso (SQL 022, `ElegirClave.jsx`).
+  - Link del pasajero: foto a pantalla completa, DNI y alias del chofer (SQL 024, tabla `choferes_privado`).
   - Avisos al chofer (2 y 5/10), todos por la tabla `avisos` + `crear_aviso()` (SQL 023) → `notificar` `{aviso_id}`:
     "Es hora de salir" (cron `aviso-hora-de-salir`), "Cambió tu viaje" (horario/origen/destino), "Se anuló tu
-    viaje" (también si se lo pasan a otro o queda sin chofer; trigger `viajes_avisar_cambios`). Más alertas "no salió" / "sin aceptar" en gestión y
-    advertencia al "Terminar el día". **Orden:** 1) deploy de `notificar`, 2) SQL 023 (si se corre antes, se
-    pierden avisos), 3) publicar en Netlify (las pantallas).
+    viaje" (también si se lo pasan a otro o queda sin chofer; trigger `viajes_avisar_cambios`). Más alertas
+    "no salió" / "sin aceptar" en gestión y advertencia al "Terminar el día". Sin probar en el celular todavía.
 - Pendiente antes de usarla en serio: cargar los choferes reales (fotos de autos en `Descargas\remises`), instalar la
   app en cada celular (permisos: ubicación "todo el tiempo", batería sin restricciones, notificaciones).
 - Después: Etapa 3 (plata y clientes: cuenta corriente de choferes con comisiones, resúmenes, clientes y saldos).

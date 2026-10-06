@@ -1,8 +1,9 @@
 import { useEffect, useState } from 'react'
 import { supabase } from './supabase.js'
 import { achicarFoto, urlFotoAuto } from './fotos.js'
+import { soloNumerosDni } from './viajes.js'
 
-// Ficha del chofer dentro de la edición de usuario (solo admin): auto, foto, oculto y comisión.
+// Ficha del chofer dentro de la edición de usuario (solo admin): auto, foto, DNI, alias, oculto y comisión.
 export default function DatosChofer({ choferId }) {
   const [datos, setDatos] = useState(null)
   const [comision, setComision] = useState('')
@@ -15,11 +16,13 @@ export default function DatosChofer({ choferId }) {
     Promise.all([
       supabase.from('choferes').select('*').eq('id', choferId).maybeSingle(),
       supabase.from('comisiones').select('porcentaje').eq('chofer_id', choferId).maybeSingle(),
-    ]).then(([ch, co]) => {
+      supabase.from('choferes_privado').select('dni, alias').eq('chofer_id', choferId).maybeSingle(),
+    ]).then(([ch, co, pr]) => {
       const c = ch.data ?? {}
       setDatos({
         auto_modelo: c.auto_modelo ?? '', auto_color: c.auto_color ?? '', patente: c.patente ?? '',
         foto_auto: c.foto_auto ?? null, oculto: c.oculto ?? false,
+        dni: pr.data?.dni ?? '', alias: pr.data?.alias ?? '',
       })
       setComision(String(co.data?.porcentaje ?? 20))
     })
@@ -38,7 +41,7 @@ export default function DatosChofer({ choferId }) {
       return
     }
     setGuardando(true)
-    const [r1, r2] = await Promise.all([
+    const [r1, r2, r3] = await Promise.all([
       supabase.from('choferes').upsert({
         id: choferId,
         auto_modelo: datos.auto_modelo.trim() || null,
@@ -47,12 +50,18 @@ export default function DatosChofer({ choferId }) {
         oculto: datos.oculto,
       }),
       supabase.from('comisiones').upsert({ chofer_id: choferId, porcentaje }),
+      // DNI y alias: tabla aparte, que los otros choferes no pueden ver (sí el pasajero, en su link).
+      supabase.from('choferes_privado').upsert({
+        chofer_id: choferId,
+        dni: soloNumerosDni(datos.dni) || null,
+        alias: datos.alias.trim() || null,
+      }),
     ])
     setGuardando(false)
-    const err = r1.error || r2.error
+    const err = r1.error || r2.error || r3.error
     if (err) setError('No se pudo guardar: ' + err.message)
     else {
-      setDatos({ ...datos, patente: datos.patente.trim().toUpperCase() })
+      setDatos({ ...datos, patente: datos.patente.trim().toUpperCase(), dni: soloNumerosDni(datos.dni), alias: datos.alias.trim() })
       setMensaje('Datos del chofer guardados ✅')
     }
   }
@@ -98,6 +107,16 @@ export default function DatosChofer({ choferId }) {
       <label>Modelo del auto<input value={datos.auto_modelo} onChange={cambiar('auto_modelo')} placeholder="ej: Chevrolet Spin" /></label>
       <label>Color<input value={datos.auto_color} onChange={cambiar('auto_color')} placeholder="ej: Gris" /></label>
       <label>Patente<input value={datos.patente} onChange={cambiar('patente')} autoCapitalize="characters" placeholder="ej: AB123CD" /></label>
+      <label>
+        DNI
+        <input inputMode="numeric" value={datos.dni} onChange={cambiar('dni')} placeholder="ej: 30123456" />
+      </label>
+      <label>
+        Alias (para transferencias)
+        <input value={datos.alias} onChange={cambiar('alias')} autoCapitalize="none" autoCorrect="off"
+          placeholder="ej: juan.perez.mp" />
+        <small className="ayuda">El DNI y el alias los ve el pasajero en el link de seguimiento. Los otros choferes no.</small>
+      </label>
       <label>
         Comisión (%)
         <input inputMode="decimal" value={comision} onChange={(e) => setComision(e.target.value)} />

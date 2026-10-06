@@ -522,3 +522,25 @@ textarea {
 .aviso-pendientes .boton.secundario { margin-top: 0; }
 .lista-pendientes { margin: 0; padding-left: 20px; display: flex; flex-direction: column; gap: 4px; overflow-wrap: anywhere; }
 .lista-pendientes small { color: #b45309; }
+
+/* Link del pasajero: foto del auto que se agranda, DNI y alias */
+.seguimiento-foto { position: relative; flex-shrink: 0; padding: 0; border: none; background: none; cursor: zoom-in; }
+.seguimiento-foto span { position: absolute; right: 4px; bottom: 4px; font-size: 0.8rem; line-height: 1; padding: 3px; border-radius: 6px; background: rgba(0, 0, 0, 0.55); }
+.seguimiento-alias { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 10px 12px; border-radius: 10px; background: #374151; overflow-wrap: anywhere; }
+.seguimiento-alias .boton { flex-shrink: 0; padding: 8px 14px; background: #2563eb; }
+.foto-pantalla-completa {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  padding: 16px;
+  border: none;
+  background: rgba(0, 0, 0, 0.92);
+  color: #fff;
+  font: inherit;
+}
+.foto-pantalla-completa img { max-width: 100%; max-height: calc(100% - 40px); object-fit: contain; border-radius: 8px; }

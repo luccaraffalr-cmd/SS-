@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { supabase } from './supabase.js'
 import { urlFotoAuto } from './fotos.js'
+import { formatoDni } from './viajes.js'
 import { crearMapa, crearMarcador, iconoAuto } from './mapa.js'
 
 const CADA_CUANTO = 5 * 1000
@@ -24,6 +25,8 @@ export default function Seguimiento({ codigo }) {
   const marcador = useRef(null)
   const seguir = useRef(true) // si el pasajero mueve el mapa, deja de centrarlo solo
   const [datos, setDatos] = useState(null)
+  const [fotoGrande, setFotoGrande] = useState(false)
+  const [copiado, setCopiado] = useState(false)
 
   useEffect(() => {
     document.title = 'Tu remis'
@@ -61,6 +64,14 @@ export default function Seguimiento({ codigo }) {
     if (marcador.current) mapa.current.setView(marcador.current.getLatLng(), 16)
   }
 
+  async function copiarAlias() {
+    try {
+      await navigator.clipboard.writeText(datos.alias)
+      setCopiado(true)
+      setTimeout(() => setCopiado(false), 1500)
+    } catch { /* sin permiso para copiar: el alias queda a la vista */ }
+  }
+
   const [titulo, detalle] = textos(datos)
   const auto = [datos?.modelo, datos?.color].filter(Boolean).join(' · ')
 
@@ -70,12 +81,24 @@ export default function Seguimiento({ codigo }) {
       <div className="seguimiento-barra">
         {datos?.estado === 'activo' && (
           <div className="seguimiento-auto">
-            {datos.foto && <img src={urlFotoAuto(datos.foto)} alt="Foto del auto" />}
+            {datos.foto && (
+              <button type="button" className="seguimiento-foto" onClick={() => setFotoGrande(true)} aria-label="Ver la foto del auto en grande">
+                <img src={urlFotoAuto(datos.foto)} alt="Foto del auto" />
+                <span>🔍</span>
+              </button>
+            )}
             <div>
               <strong>{datos.chofer}</strong>
               {auto && <span>{auto}</span>}
               {datos.patente && <span className="patente">{datos.patente}</span>}
+              {datos.dni && <span>DNI {formatoDni(datos.dni)}</span>}
             </div>
+          </div>
+        )}
+        {datos?.estado === 'activo' && datos.alias && (
+          <div className="seguimiento-alias">
+            <span>Alias: <strong>{datos.alias}</strong></span>
+            <button type="button" className="boton" onClick={copiarAlias}>{copiado ? 'Copiado ✅' : 'Copiar'}</button>
           </div>
         )}
         <div className="seguimiento-estado">
@@ -86,6 +109,12 @@ export default function Seguimiento({ codigo }) {
           {datos?.estado === 'activo' && datos.lat != null && <button className="boton" onClick={centrar}>Centrar</button>}
         </div>
       </div>
+      {fotoGrande && datos?.foto && (
+        <button type="button" className="foto-pantalla-completa" onClick={() => setFotoGrande(false)} aria-label="Cerrar la foto">
+          <img src={urlFotoAuto(datos.foto)} alt="Foto del auto" />
+          <span>Tocá para cerrar</span>
+        </button>
+      )}
     </div>
   )
 }

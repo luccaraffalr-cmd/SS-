@@ -30,6 +30,18 @@ export function leerImporte(texto) {
   return Number.isFinite(n) && n >= 0 ? n : null
 }
 
+// DNI: se guarda sin puntos ("30.123.456" → "30123456"). Si no son solo números, queda como se escribió.
+export function soloNumerosDni(texto) {
+  const limpio = String(texto ?? '').trim()
+  const numeros = limpio.replace(/[.\s-]/g, '')
+  return /^\d+$/.test(numeros) ? numeros : limpio
+}
+
+// "30123456" → "30.123.456"
+export function formatoDni(dni) {
+  return /^\d+$/.test(dni ?? '') ? Number(dni).toLocaleString('es-AR') : dni
+}
+
 const dosDigitos = (n) => String(n).padStart(2, '0')
 
 // "14:30"
