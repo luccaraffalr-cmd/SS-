@@ -64,7 +64,9 @@
   - Avisos al chofer (2 y 5/10), todos por la tabla `avisos` + `crear_aviso()` (SQL 023) → `notificar` `{aviso_id}`:
     "Es hora de salir" (cron `aviso-hora-de-salir`), "Cambió tu viaje" (horario/origen/destino), "Se anuló tu
     viaje" (también si se lo pasan a otro o queda sin chofer; trigger `viajes_avisar_cambios`). Más alertas
-    "no salió" / "sin aceptar" en gestión y advertencia al "Terminar el día". Sin probar en el celular todavía.
+    "no salió" / "sin aceptar" en gestión y advertencia al "Terminar el día". Los avisos en la app los probó
+    el usuario el 6/10: andan bien.
 - Pendiente antes de usarla en serio: cargar los choferes reales (fotos de autos en `Descargas\remises`), instalar la
   app en cada celular (permisos: ubicación "todo el tiempo", batería sin restricciones, notificaciones).
-- Después: Etapa 3 (plata y clientes: cuenta corriente de choferes con comisiones, resúmenes, clientes y saldos).
+- **Siguiente: Etapa 3** (plata y clientes). Arranque, contexto y preguntas pendientes en `etapa-3-gestion.md`.
+  Después: pasada de UX/UI (que quede lindo y con menos toques), idealmente con unos días de uso real.
