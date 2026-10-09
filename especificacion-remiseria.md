@@ -328,6 +328,14 @@ Hoy la ubicación "desaparece" por varios minutos. Hay que diseñar para que **n
   - A la **hora de asignación** (ej. 14:00 para presentarse 14:30), al chofer que lo aceptó le suena **"🚗 Es hora de salir"** (app y navegador), **aunque esté fuera de servicio**. Queda anotado en el historial del viaje. Si gestión cambia la hora o el chofer, se vuelve a avisar.
   - En gestión, el **cartel rojo** de arriba (y la lista y el calendario, en rojo) muestra, además de los viajes sin chofer: **"⏰ no salió"** (llegó la hora y el chofer no tocó "Salir a hacer el viaje") y **"⏳ sin aceptar"** (asignación a mano o de chofer fijo sin aceptar al llegar la hora). Con botón para **llamar al chofer** y para pasárselo a otro. Las ofertas automáticas de la cola no entran.
   - Si el chofer toca **"Terminar el día"** con viajes pendientes, la app se los muestra y **lo deja terminar igual**; el aviso de la hora le suena igual.
+- **(2026-10-09) Etapa 3: la app reemplaza al formulario de Google y la planilla sigue siendo la principal para la plata.**
+  Hoy cada chofer carga sus viajes en un formulario de Google que llena la planilla de la remisería (Google Sheets), y el
+  dueño anota ahí los pagos y lleva las cuentas de choferes y clientes. Pasar la planilla a la app queda para muy a futuro.
+  - Cuando se carga el pago de un viaje en la app, la app escribe sola la misma fila que el formulario en la planilla. El resto
+    de la planilla (hoja de cada chofer, cuenta corriente de clientes, comisiones, facturación) sigue funcionando igual.
+  - En la planilla, **"Efectivo" = cobró el chofer** (en efectivo o por transferencia) y **"Cuenta Corriente" = cobra gestión**.
+  - Las correcciones de un viaje conviene hacerlas en la app (la app corrige la fila de la planilla). El dueño hoy hace todo en
+    la planilla; se puede cambiar.
 - **(2026-10-06) Link del pasajero:** la foto del auto se toca y se ve a **pantalla completa**. Además muestra el **DNI completo** del chofer y su **alias** para transferencias (con botón **Copiar**). DNI y alias se cargan en la ficha del chofer (solo admin) y van en una tabla aparte (`choferes_privado`): los ven gestión, el propio chofer y el pasajero por el link, **nunca los otros choferes**.
 - **(2026-10-05) Avisos al chofer cuando gestión toca un viaje suyo** (desde que se lo asignan, aunque no lo haya aceptado, hasta que lo finaliza, incluso con el viaje en curso):
   - **"🔄 Cambió tu viaje"** si cambia el **horario** (presentación o asignación) o el **origen / destino**, con lo que cambió. **No lo tiene que volver a aceptar.** Los cambios de cliente u observaciones no avisan.

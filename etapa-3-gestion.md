@@ -39,17 +39,39 @@
 4. **Cuentas corrientes de clientes y empresas**: los viajes "a cuenta" suman deuda, gestión registra los pagos,
    saldo e historial por cliente.
 
-## Lo primero: las planillas de la remisería (pregunta pendiente, sin respuesta todavía)
-El usuario quiere, en un principio, **atar la gestión a las planillas que usa hoy la remisería** y que la app cargue
-los números ahí. Antes de diseñar nada, preguntarle:
-1. ¿Es **Google Sheets** o **Excel**? Si es Excel, ¿dónde está guardado (una compu, OneDrive…)?
-2. ¿**Para qué** la usan: cada viaje, la cuenta de cada chofer, las cuentas corrientes de clientes? ¿Quién la llena y cada cuánto?
-3. Que pase una **copia** (con datos cambiados o pocas filas): si es Google Sheets, Archivo → Descargar → Microsoft
-   Excel (.xlsx), y dejarla en la carpeta del proyecto o en Descargas.
+## La planilla de la remisería (vista el 9/10/2026)
+Es un **Google Sheets** ("Senda Segura Formulario 2 (respuestas)"; hay una copia .xlsx en `Descargas`, **con datos
+reales: no copiarla al repo, que es público**). Los choferes cargan **cada viaje en un formulario de Google** y el dueño
+(el papá del usuario) revisa y anota los pagos a mano. Está muy bien armada; pasarla a la app es **muy a futuro**.
+- **"Respuestas de formulario 1"** (lo que llena el formulario, ~50.000 filas desde 2023): A Marca temporal, B Chofer,
+  C Fecha, D Cliente (texto libre; muchas veces un n.º de lote), E Origen, F Destino, G Forma Pago (`Efectivo` o
+  `Cuenta Corriente`), H Cliente Cuenta Corriente (nombre de la lista), I Importe, J Demora, K Peaje, L Gas/Nafta.
+  Todo lo demás se calcula desde acá con `SUMIFS` por nombre de chofer (B) y fecha (C).
+- **Una hoja por chofer** (A2 = el nombre tal cual aparece en B; a veces es auto + chofer, ej. "Cronos Gris X"): una fila por
+  día con viajes, importe, demora, peaje, total sin peaje (= importe + demora), comisión (= total sin peaje × %; **el peaje no
+  paga comisión**), gas/nafta, **"Efectivo"** (única columna manual: lo que se pagan; + el dueño le pagó al chofer o le cobra
+  algo, − el chofer le pagó al dueño), cuenta corriente (importe + demora + peaje de sus viajes a cuenta) y saldo
+  (= Efectivo + comisión − cuenta corriente + saldo anterior; **positivo = el chofer le debe a la remisería**).
+  Casos especiales: autos de otro dueño (lo que queda después de comisión y nafta se reparte 50/50 con el dueño del auto),
+  un auto con 15% de comisión, y choferes que cobran el 2% de lo que factura otro chofer (referidos).
+- **"Cuenta Corriente"**: dos columnas por cliente/empresa: "Facturación" (sale sola de los viajes con ese nombre en H) y
+  "Pagos" (manual). Fila 1 = saldo de cada uno (con algunos ajustes fijos en la fórmula). ~33 clientes, incluido "Otro".
+- **"Comisiones"** (% por chofer), **"Facturacion por dia"**, **"Facturacion Mensual"** (comisiones en pesos y en dólar
+  blue) y **"TC"** (cotización del blue).
 
-Con eso, proponer cómo conectarla: Google Sheets → la app escribe sola (función de Supabase con una cuenta de servicio
-de Google); Excel en OneDrive → también se puede (Microsoft Graph); Excel solo en una compu → botón para bajar los
-números. Y definir con él si la planilla sigue siendo "la principal" o pasa a ser una copia de lo que tiene la app.
+**Decidido (9/10):** la **app reemplaza al formulario** y la planilla sigue siendo **la principal para la plata**: al cargar el
+pago, la app escribe la misma fila en "Respuestas de formulario 1". Ver 10 bis de la especificación.
+
+Plan técnico pensado (a confirmar detalles con el usuario):
+- Función de Supabase `planilla` con la cuenta de servicio de Google que ya existe (`FIREBASE_CUENTA`, proyecto
+  `senda-segura`): hay que activar la Google Sheets API en ese proyecto y compartir la planilla con el `client_email` como
+  editor. ID de la planilla en un secret (`PLANILLA_ID`), no en el repo.
+- Cola en la base (viajes a pasar a la planilla) con disparador al cargar/corregir el pago + reintento por cron; columna M
+  "N.º viaje app" en la hoja de respuestas para encontrar la fila al corregir.
+- En la app: demora, peaje y gas/nafta al cargar el pago; "nombre en la planilla" en la ficha del chofer; cuentas corrientes
+  con el mismo nombre que en la planilla.
+- **Probar con una copia de la planilla** (Archivo → Hacer una copia), nunca escribir pruebas en la de verdad.
+- Durante el cambio conviven: los choferes con la app dejan de usar el formulario; los demás siguen con el formulario.
 
 ## Ideas anotadas para esta etapa (a definir, ver 8 quater)
 - **Pantalla final en el link del pasajero**: al terminar el viaje, "Viaje terminado", el precio y el alias al que
