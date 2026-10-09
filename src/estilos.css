@@ -254,6 +254,9 @@ a.boton { display: block; text-align: center; text-decoration: none; }
 
 .form-pago { display: flex; flex-direction: column; gap: 12px; }
 .form-pago input { font-size: 1.4rem; font-weight: 700; }
+.extras-pago { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+.extras-pago label { font-size: 0.95rem; }
+.extras-pago input { width: 100%; min-width: 0; font-size: 1.1rem; }
 .formas-pago { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
 .formas-pago button {
   font: inherit;
@@ -407,6 +410,7 @@ textarea {
   font-weight: 700;
   text-align: left;
 }
+.aviso-planilla { background: #dc2626; }
 .viaje-arriba, .viaje-abajo { display: flex; justify-content: space-between; align-items: center; gap: 10px; }
 .viaje-hora { font-size: 1.3rem; font-weight: 700; }
 .viaje-hora small { font-size: 0.85rem; font-weight: 400; color: #6b7280; }

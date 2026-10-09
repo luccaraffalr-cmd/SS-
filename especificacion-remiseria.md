@@ -336,6 +336,16 @@ Hoy la ubicación "desaparece" por varios minutos. Hay que diseñar para que **n
   - En la planilla, **"Efectivo" = cobró el chofer** (en efectivo o por transferencia) y **"Cuenta Corriente" = cobra gestión**.
   - Las correcciones de un viaje conviene hacerlas en la app (la app corrige la fila de la planilla). El dueño hoy hace todo en
     la planilla; se puede cambiar.
+  - La app sigue con sus **4 formas de pago**: efectivo y transferencia al chofer → "Efectivo"; cuenta corriente y transferencia
+    al dueño → "Cuenta Corriente". **Pendiente** (lo charla el usuario con el dueño): qué va en "Cliente Cuenta Corriente"
+    cuando el pasajero le transfiere al dueño; por ahora se escribe "Transferencia al dueño".
+  - Como en el formulario, al cargar el pago se pueden poner **demora** (paga comisión), **peaje** (sin comisión) y
+    **nafta/gas** (lo que cargó el chofer). Lo que paga el pasajero = importe + demora + peaje.
+  - **Un nombre por chofer** en la planilla ("Nombre en la planilla" en su ficha; vacío = el nombre del usuario).
+  - Los clientes de cuenta corriente de la app tienen **el mismo nombre** que las columnas de la hoja "Cuenta Corriente".
+  - Como la planilla lleva las cuentas, **la cuenta corriente de los choferes, el resumen por chofer y las cuentas de los
+    clientes dentro de la app quedan para cuando se pase la planilla a la app**. La Etapa 3 queda en: conexión con la
+    planilla y clientes guardados.
 - **(2026-10-06) Link del pasajero:** la foto del auto se toca y se ve a **pantalla completa**. Además muestra el **DNI completo** del chofer y su **alias** para transferencias (con botón **Copiar**). DNI y alias se cargan en la ficha del chofer (solo admin) y van en una tabla aparte (`choferes_privado`): los ven gestión, el propio chofer y el pasajero por el link, **nunca los otros choferes**.
 - **(2026-10-05) Avisos al chofer cuando gestión toca un viaje suyo** (desde que se lo asignan, aunque no lo haya aceptado, hasta que lo finaliza, incluso con el viaje en curso):
   - **"🔄 Cambió tu viaje"** si cambia el **horario** (presentación o asignación) o el **origen / destino**, con lo que cambió. **No lo tiene que volver a aceptar.** Los cambios de cliente u observaciones no avisan.

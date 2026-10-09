@@ -20,10 +20,13 @@ export default function Viajes() {
   const [ahora, setAhora] = useState(Date.now())
   const [errorCarga, setErrorCarga] = useState('')
   const [pagosPendientes, setPagosPendientes] = useState(0) // de todas las fechas
+  const [sinPlanilla, setSinPlanilla] = useState([]) // n.º de los viajes que no se pudieron pasar a la planilla
 
   const cargar = useCallback(async () => {
     supabase.from('viajes').select('id', { count: 'exact', head: true }).eq('estado', 'pago_pendiente')
       .then(({ count }) => setPagosPendientes(count ?? 0))
+    supabase.from('planilla_envios').select('viaje_id').eq('pendiente', true).not('error', 'is', null).order('viaje_id')
+      .then(({ data }) => setSinPlanilla((data ?? []).map((e) => e.viaje_id)))
 
     let consulta = supabase.from('viajes').select(CONSULTA_VIAJES)
     if (filtroFecha) {
@@ -65,6 +68,11 @@ export default function Viajes() {
     return () => { clearInterval(reloj); clearInterval(revisar) }
   }, [])
 
+  async function abrirViaje(id) {
+    const { data } = await supabase.from('viajes').select(CONSULTA_VIAJES).eq('id', id).single()
+    if (data) setEditando(data)
+  }
+
   if (editando) {
     return <FormViaje viaje={editando === 'nuevo' ? null : editando} onListo={() => { setEditando(null); cargar() }} />
   }
@@ -101,6 +109,12 @@ export default function Viajes() {
       {pagosPendientes > 0 && (
         <button className="aviso-pagos" onClick={() => { setFiltroFecha(''); setFiltroEstado('pago_pendiente'); setFiltroChofer('') }}>
           ⏳ {pagosPendientes} {pagosPendientes === 1 ? 'viaje' : 'viajes'} con pago pendiente — tocá para verlos
+        </button>
+      )}
+      {sinPlanilla.length > 0 && (
+        <button className="aviso-pagos aviso-planilla" onClick={() => abrirViaje(sinPlanilla[0])}>
+          ⚠️ {sinPlanilla.length === 1 ? 'El viaje' : `${sinPlanilla.length} viajes`} #{sinPlanilla.slice(0, 5).join(', #')}
+          {sinPlanilla.length > 5 && '…'} no se {sinPlanilla.length === 1 ? 'pudo' : 'pudieron'} pasar a la planilla — tocá para ver
         </button>
       )}
       {botones}

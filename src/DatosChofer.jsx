@@ -21,7 +21,7 @@ export default function DatosChofer({ choferId }) {
       const c = ch.data ?? {}
       setDatos({
         auto_modelo: c.auto_modelo ?? '', auto_color: c.auto_color ?? '', patente: c.patente ?? '',
-        foto_auto: c.foto_auto ?? null, oculto: c.oculto ?? false,
+        foto_auto: c.foto_auto ?? null, oculto: c.oculto ?? false, nombre_planilla: c.nombre_planilla ?? '',
         dni: pr.data?.dni ?? '', alias: pr.data?.alias ?? '',
       })
       setComision(String(co.data?.porcentaje ?? 20))
@@ -48,6 +48,7 @@ export default function DatosChofer({ choferId }) {
         auto_color: datos.auto_color.trim() || null,
         patente: datos.patente.trim().toUpperCase() || null,
         oculto: datos.oculto,
+        nombre_planilla: datos.nombre_planilla.trim() || null,
       }),
       supabase.from('comisiones').upsert({ chofer_id: choferId, porcentaje }),
       // DNI y alias: tabla aparte, que los otros choferes no pueden ver (sí el pasajero, en su link).
@@ -116,6 +117,14 @@ export default function DatosChofer({ choferId }) {
         <input value={datos.alias} onChange={cambiar('alias')} autoCapitalize="none" autoCorrect="off"
           placeholder="ej: juan.perez.mp" />
         <small className="ayuda">El DNI y el alias los ve el pasajero en el link de seguimiento. Los otros choferes no.</small>
+      </label>
+      <label>
+        Nombre en la planilla
+        <input value={datos.nombre_planilla} onChange={cambiar('nombre_planilla')} placeholder="ej: Pérez Juan" />
+        <small className="ayuda">
+          Tal cual lo elegía en el formulario (columna "Chofer" de la planilla): con ese nombre se anotan sus viajes.
+          Si lo dejás vacío, se usa el nombre del usuario.
+        </small>
       </label>
       <label>
         Comisión (%)

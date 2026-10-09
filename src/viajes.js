@@ -20,6 +20,11 @@ export function dinero(n) {
   return '$ ' + Number(n).toLocaleString('es-AR', { maximumFractionDigits: 2 })
 }
 
+// Lo que pagó el pasajero: importe + demora + peaje (la nafta es un gasto del chofer, no se le cobra).
+export function totalCobrado(v) {
+  return Number(v.importe ?? 0) + Number(v.demora ?? 0) + Number(v.peaje ?? 0)
+}
+
 // Convierte lo que escribe la persona ("12.500", "12500,50") en número; null si no es válido.
 export function leerImporte(texto) {
   const limpio = String(texto).trim().replace(/\$/g, '').replace(/\s/g, '')

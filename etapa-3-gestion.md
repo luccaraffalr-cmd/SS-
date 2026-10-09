@@ -60,9 +60,14 @@ reales: no copiarla al repo, que es público**). Los choferes cargan **cada viaj
   blue) y **"TC"** (cotización del blue).
 
 **Decidido (9/10):** la **app reemplaza al formulario** y la planilla sigue siendo **la principal para la plata**: al cargar el
-pago, la app escribe la misma fila en "Respuestas de formulario 1". Ver 10 bis de la especificación.
+pago, la app escribe la misma fila en "Respuestas de formulario 1". Ver 10 bis de la especificación (formas de pago, un
+nombre por chofer, qué queda de la etapa).
 
-Plan técnico pensado (a confirmar detalles con el usuario):
+Hecho (9/10, falta probar con la copia de la planilla): SQL `025_planilla.sql` (al pegarlo se le agregan las cuentas
+corrientes con los nombres de la planilla, que no van al repo), función `planilla`, demora/peaje/nafta en `FormPago`,
+"Nombre en la planilla" en `DatosChofer`, `EstadoPlanilla` en el viaje y aviso rojo en Viajes si algo no se pudo pasar.
+
+Cómo está hecho:
 - Función de Supabase `planilla` con la cuenta de servicio de Google que ya existe (`FIREBASE_CUENTA`, proyecto
   `senda-segura`): hay que activar la Google Sheets API en ese proyecto y compartir la planilla con el `client_email` como
   editor. ID de la planilla en un secret (`PLANILLA_ID`), no en el repo.
@@ -86,5 +91,6 @@ Plan técnico pensado (a confirmar detalles con el usuario):
 - Anotar cada decisión en la sección 10 bis de la especificación.
 - Probar en local (http://localhost:5173) antes de publicar; las pantallas nuevas se pueden verificar dibujando los
   componentes con datos de ejemplo en el navegador de prueba (sin sesión no hay datos por la seguridad de la base).
-- Orden sugerido: planillas (entender) → cuenta corriente de choferes → resumen por chofer → clientes guardados →
-  cuentas corrientes de clientes → conexión con la planilla → idea del alias en el link.
+- Orden (cambiado el 9/10): conexión con la planilla → clientes guardados. La cuenta corriente de choferes, el resumen y
+  las cuentas de clientes en la app quedan para cuando se pase la planilla a la app (muy a futuro). La idea del alias en el
+  link necesita saber el saldo del chofer: se podría leer de su hoja en la planilla.

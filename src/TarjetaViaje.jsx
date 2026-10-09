@@ -1,4 +1,4 @@
-import { FORMAS_PAGO, NOMBRE_ESTADO_VIAJE, dinero, fechaCorta, hora, problemaDelViaje } from './viajes.js'
+import { FORMAS_PAGO, NOMBRE_ESTADO_VIAJE, dinero, fechaCorta, hora, problemaDelViaje, totalCobrado } from './viajes.js'
 
 // Datos que necesita la tarjeta (se agregan al select de viajes).
 export const CONSULTA_VIAJES = '*, chofer:perfiles!viajes_chofer_id_fkey(nombre, telefono),'
@@ -58,7 +58,7 @@ export default function TarjetaViaje({ v, ahora, mostrarFecha, onAbrir }) {
           <span>{v.cliente_nombre}</span>
           {v.estado === 'finalizado' && (
             <span className="importe">
-              {dinero(v.importe)} · {(v.cuenta?.nombre || v.cuenta_otro)
+              {dinero(totalCobrado(v))} · {(v.cuenta?.nombre || v.cuenta_otro)
                 ? `Cta. cte. ${v.cuenta?.nombre ?? v.cuenta_otro}` : FORMAS_PAGO[v.forma_pago]}
             </span>
           )}

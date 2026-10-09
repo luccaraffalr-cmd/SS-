@@ -5,7 +5,8 @@ import ElegirChofer, { useChoferesParaAsignar } from './ElegirChofer.jsx'
 import FormPago from './FormPago.jsx'
 import HistorialViaje from './HistorialViaje.jsx'
 import CompartirViaje from './CompartirViaje.jsx'
-import { FORMAS_PAGO, dinero, fechaCorta } from './viajes.js'
+import EstadoPlanilla from './EstadoPlanilla.jsx'
+import { FORMAS_PAGO, dinero, fechaCorta, totalCobrado } from './viajes.js'
 import { cuandoSeOfrece } from './TarjetaViaje.jsx'
 
 // Explicación en palabras de en qué anda la asignación del viaje.
@@ -73,8 +74,8 @@ export default function FormViaje({ viaje, onListo }) {
   const [corrigiendoPago, setCorrigiendoPago] = useState(false)
   const hecho = !esNuevo && ['pago_pendiente', 'finalizado'].includes(viaje.estado)
 
-  async function corregirPago(importe, forma_pago, cuenta, otro) {
-    const { error } = await supabase.rpc('corregir_pago', { viaje: viaje.id, importe, forma_pago, cuenta, otro })
+  async function corregirPago(importe, forma_pago, cuenta, otro, extras) {
+    const { error } = await supabase.rpc('corregir_pago', { viaje: viaje.id, importe, forma_pago, cuenta, otro, ...extras })
     if (error) return 'No se pudo guardar: ' + error.message
     onListo()
   }
@@ -241,12 +242,22 @@ export default function FormViaje({ viaje, onListo }) {
           {viaje.estado === 'pago_pendiente'
             ? <p className="aviso sin-margen">⏳ {viaje.chofer?.nombre ?? 'El chofer'} todavía no cargó el pago.</p>
             : <p className="sin-margen">
-                <strong className="importe">{dinero(viaje.importe)}</strong> · {FORMAS_PAGO[viaje.forma_pago]}
+                <strong className="importe">{dinero(totalCobrado(viaje))}</strong> · {FORMAS_PAGO[viaje.forma_pago]}
                 {(viaje.cuenta?.nombre || viaje.cuenta_otro) && <>: <strong>{viaje.cuenta?.nombre ?? viaje.cuenta_otro}</strong></>}
+                {(viaje.demora || viaje.peaje || viaje.nafta) && (
+                  <small className="ayuda"><br />
+                    Viaje {dinero(viaje.importe)}
+                    {viaje.demora && <> + demora {dinero(viaje.demora)}</>}
+                    {viaje.peaje && <> + peaje {dinero(viaje.peaje)}</>}
+                    {viaje.nafta && <> · Nafta/gas que cargó: {dinero(viaje.nafta)}</>}
+                  </small>
+                )}
               </p>}
+          {viaje.estado === 'finalizado' && <EstadoPlanilla viajeId={viaje.id} />}
           {corrigiendoPago ? (
             <FormPago importeInicial={viaje.importe} formaInicial={viaje.forma_pago}
               cuentaInicial={viaje.cuenta_id} otroInicial={viaje.cuenta_otro}
+              demoraInicial={viaje.demora} peajeInicial={viaje.peaje} naftaInicial={viaje.nafta}
               textoBoton="Guardar (queda registrado)" onGuardar={corregirPago} onCancelar={() => setCorrigiendoPago(false)} />
           ) : (
             <button type="button" className="boton secundario" onClick={() => setCorrigiendoPago(true)}>

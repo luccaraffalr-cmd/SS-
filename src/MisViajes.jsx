@@ -66,8 +66,8 @@ export default function MisViajes({ perfil }) {
     cargar()
   }
 
-  async function cargarPagoPendiente(viaje, importe, forma_pago, cuenta, otro) {
-    const { error } = await supabase.rpc('cargar_pago', { viaje, importe, forma_pago, cuenta, otro })
+  async function cargarPagoPendiente(viaje, importe, forma_pago, cuenta, otro, extras) {
+    const { error } = await supabase.rpc('cargar_pago', { viaje, importe, forma_pago, cuenta, otro, ...extras })
     if (error) return textoError(error)
     setCargandoPago(null)
     cargar()
@@ -152,7 +152,8 @@ export default function MisViajes({ perfil }) {
           )}
           {finalizando === 'pago' && (
             <FormPago textoBoton="Finalizar viaje"
-              onGuardar={(importe, forma_pago, cuenta, otro) => finalizar(actual.id, 'pago', { importe, forma_pago, cuenta, otro })}
+              onGuardar={(importe, forma_pago, cuenta, otro, extras) =>
+                finalizar(actual.id, 'pago', { importe, forma_pago, cuenta, otro, ...extras })}
               onCancelar={() => setFinalizando('elegir')} />
           )}
           {finalizando === 'fallido' && (
@@ -181,7 +182,7 @@ export default function MisViajes({ perfil }) {
               <span>{v.origen}{v.destino ? ' → ' + v.destino : ''}</span>
               {cargandoPago === v.id ? (
                 <FormPago textoBoton="Guardar pago"
-                  onGuardar={(importe, forma, cuenta, otro) => cargarPagoPendiente(v.id, importe, forma, cuenta, otro)}
+                  onGuardar={(importe, forma, cuenta, otro, extras) => cargarPagoPendiente(v.id, importe, forma, cuenta, otro, extras)}
                   onCancelar={() => setCargandoPago(null)} />
               ) : (
                 <button className="boton verde" onClick={() => setCargandoPago(v.id)}>💵 Cargar pago</button>
