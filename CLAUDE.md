@@ -13,7 +13,8 @@
 - Vite + React (JavaScript) + `@supabase/supabase-js`. Estilos en `src/estilos.css`. Pensado para celular.
 - Supabase: proyecto `yomjqdbaatydpvazkvvg`. Claves públicas en `.env` (commiteado; solo claves públicas).
   Secretos (VAPID de notificaciones) están en los secrets de Supabase, nunca en el repo.
-- Funciones de Supabase: `supabase/functions/usuarios` (crear usuarios / cambiar contraseña) y `notificar` (push).
+- Funciones de Supabase: `supabase/functions/usuarios` (crear usuarios / cambiar contraseña), `notificar` (push) y
+  `planilla` (escribe los viajes en la planilla de Google Sheets; usa la misma cuenta de servicio `FIREBASE_CUENTA`).
 - Notificaciones push web: `public/sw.js`, `src/notificaciones.js`; se disparan al insertar en `ofertas`.
 - Netlify: https://fastidious-cocada-43719b.netlify.app (publica solo al hacer push a `main`).
 
@@ -68,5 +69,9 @@
     el usuario el 6/10: andan bien.
 - Pendiente antes de usarla en serio: cargar los choferes reales (fotos de autos en `Descargas\remises`), instalar la
   app en cada celular (permisos: ubicación "todo el tiempo", batería sin restricciones, notificaciones).
-- **Siguiente: Etapa 3** (plata y clientes). Arranque, contexto y preguntas pendientes en `etapa-3-gestion.md`.
-  Después: pasada de UX/UI (que quede lindo y con menos toques), idealmente con unos días de uso real.
+- **Etapa 3** (contexto y estado en `etapa-3-gestion.md`): la app **reemplaza al formulario de Google** y escribe cada viaje
+  en la planilla de la remisería (Google Sheets), que sigue siendo la principal para la plata. Hecho y probado el 13/10 con
+  una **copia** de la planilla (SQL 025, función `planilla`, secret `PLANILLA_ID`); falta pasar a la de verdad (pasos en
+  `etapa-3-gestion.md`) y publicar en Netlify. **El repo es público**: nada de la planilla (nombres, montos) va al repo.
+  Siguiente: clientes guardados. Después: pasada de UX/UI (que quede lindo y con menos toques), idealmente con unos días
+  de uso real.

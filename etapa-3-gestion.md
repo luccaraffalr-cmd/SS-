@@ -6,7 +6,7 @@
 > que mandan sobre el resto).
 
 ## Estado al 6/10/2026
-- Etapas 1 y 2 hechas. **SQL aplicados hasta el 024.** El próximo es `supabase/sql/025_…`.
+- Etapas 1 y 2 hechas. **SQL aplicados hasta el 025** (13/10). El próximo es `supabase/sql/026_…`.
 - Funciones `usuarios` y `notificar` ya subidas a Supabase. Los avisos al chofer en la app (Firebase) los probó el
   usuario y **andan bien**.
 - **Falta publicar en Netlify** (el usuario lo quiere hacer todo junto, cuando decida): contraseña propia al primer
@@ -63,9 +63,21 @@ reales: no copiarla al repo, que es público**). Los choferes cargan **cada viaj
 pago, la app escribe la misma fila en "Respuestas de formulario 1". Ver 10 bis de la especificación (formas de pago, un
 nombre por chofer, qué queda de la etapa).
 
-Hecho (9/10, falta probar con la copia de la planilla): SQL `025_planilla.sql` (al pegarlo se le agregan las cuentas
-corrientes con los nombres de la planilla, que no van al repo), función `planilla`, demora/peaje/nafta en `FormPago`,
-"Nombre en la planilla" en `DatosChofer`, `EstadoPlanilla` en el viaje y aviso rojo en Viajes si algo no se pudo pasar.
+Hecho (9/10): SQL `025_planilla.sql` (aplicado el 13/10; al pegarlo se le agregaron las 32 cuentas corrientes con los
+nombres de la planilla, que no van al repo), función `planilla` (subida), demora/peaje/nafta en `FormPago`, "Nombre en la
+planilla" en `DatosChofer`, `EstadoPlanilla` en el viaje y aviso rojo en Viajes si algo no se pudo pasar.
+**Probado el 13/10 con la copia** ("PRUEBA app - Senda Segura"; `PLANILLA_ID` apunta a la copia): viaje #154 de `p2` con
+nombre en la planilla "Alejandro". Se agregó la fila (52827) y la columna M "N.º viaje app" (la hoja tenía solo A–L: la función
+agrega la columna sola), la corrección actualizó la misma fila, y la hoja "Alejandro" y "Cuenta Corriente" (Priva) lo sumaron
+bien. Fechas y números quedan como los del formulario. La planilla está en locale es_MX.
+
+**Para pasar a la planilla de verdad** (cuando los choferes empiecen a usar la app en serio):
+1. Borrarle "Alejandro" del "Nombre en la planilla" a `p2` (y no usar choferes de prueba después del cambio).
+2. Que el usuario comparta la planilla de verdad con `firebase-adminsdk-fbsvc@senda-segura.iam.gserviceaccount.com` (editor).
+3. `npx.cmd supabase secrets set PLANILLA_ID=<id de la de verdad> --project-ref yomjqdbaatydpvazkvvg`. Los viajes que ya
+   se anotaron en la copia no pasan a la de verdad (la función lo controla con `planilla_envios.planilla`).
+4. Publicar en Netlify (las pantallas nuevas) y avisar a cada chofer que deje de usar el formulario.
+5. Pendiente del dueño: qué va en "Cliente Cuenta Corriente" para "Transferencia al dueño" (hoy: "Transferencia al dueño").
 
 Cómo está hecho:
 - Función de Supabase `planilla` con la cuenta de servicio de Google que ya existe (`FIREBASE_CUENTA`, proyecto
