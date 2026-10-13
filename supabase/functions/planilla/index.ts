@@ -164,6 +164,7 @@ class Planilla {
     let columna = encabezados.findIndex((t: unknown) => String(t).trim() === ENCABEZADO_NUMERO)
     if (columna < 0) {
       columna = Math.max(12, encabezados.length)
+      await p.asegurarColumnas(columna + 1) // la hoja del formulario viene con las columnas justas (A a L)
       await p.escribir(rango(`${letra(columna)}1`), [[ENCABEZADO_NUMERO]])
     }
     p.columnaNumero = columna
@@ -194,6 +195,28 @@ class Planilla {
     const numero = Number(/!\D+(\d+)/.exec(r.updates?.updatedRange ?? '')?.[1])
     if (numero) this.filas.set(viajeId, numero)
     return { numero, corregida: false }
+  }
+
+  // Si la hoja tiene menos columnas que las que hacen falta, le agrega las que faltan al final.
+  async asegurarColumnas(cantidad: number) {
+    const r = await fetch(`https://sheets.googleapis.com/v4/spreadsheets/${this.id}?fields=sheets.properties(sheetId,title,gridProperties.columnCount)`,
+      { headers: { Authorization: 'Bearer ' + this.permiso } })
+    const datos = await r.json().catch(() => ({}))
+    if (!r.ok) throw new Error(explicarError(r.status, datos?.error?.message ?? ''))
+    // deno-lint-ignore no-explicit-any
+    const hoja = datos.sheets?.find((h: any) => h.properties.title === HOJA)?.properties
+    if (!hoja) throw new Error(`La planilla no tiene la hoja "${HOJA}".`)
+    const faltan = cantidad - (hoja.gridProperties?.columnCount ?? 0)
+    if (faltan <= 0) return
+    const r2 = await fetch(`https://sheets.googleapis.com/v4/spreadsheets/${this.id}:batchUpdate`, {
+      method: 'POST',
+      headers: { Authorization: 'Bearer ' + this.permiso, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ requests: [{ appendDimension: { sheetId: hoja.sheetId, dimension: 'COLUMNS', length: faltan } }] }),
+    })
+    if (!r2.ok) {
+      const error = await r2.json().catch(() => ({}))
+      throw new Error(explicarError(r2.status, error?.error?.message ?? ''))
+    }
   }
 
   private async leer(a1: string) {
