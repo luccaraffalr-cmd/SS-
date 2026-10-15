@@ -21,6 +21,8 @@ export default function Viajes() {
   const [errorCarga, setErrorCarga] = useState('')
   const [pagosPendientes, setPagosPendientes] = useState(0) // de todas las fechas
   const [sinPlanilla, setSinPlanilla] = useState([]) // n.º de los viajes que no se pudieron pasar a la planilla
+  const [diaCalendario, setDiaCalendario] = useState(fechaLocal()) // día elegido en el calendario (se recuerda al volver)
+  const [fechaNueva, setFechaNueva] = useState(null) // viaje nuevo cargado desde un día del calendario
 
   const cargar = useCallback(async () => {
     supabase.from('viajes').select('id', { count: 'exact', head: true }).eq('estado', 'pago_pendiente')
@@ -74,7 +76,8 @@ export default function Viajes() {
   }
 
   if (editando) {
-    return <FormViaje viaje={editando === 'nuevo' ? null : editando} onListo={() => { setEditando(null); cargar() }} />
+    return <FormViaje viaje={editando === 'nuevo' ? null : editando} fechaInicial={editando === 'nuevo' ? fechaNueva : null}
+      onListo={() => { setEditando(null); cargar() }} />
   }
   if (vista === 'fijos') return <ViajesFijos onVolver={() => setVista('lista')} />
 
@@ -86,7 +89,7 @@ export default function Viajes() {
   )
   const botones = (
     <div className="dos-columnas">
-      <button className="boton" onClick={() => setEditando('nuevo')}>+ Nuevo viaje</button>
+      <button className="boton" onClick={() => { setFechaNueva(null); setEditando('nuevo') }}>+ Nuevo viaje</button>
       <button className="boton secundario sin-margen-arriba" onClick={() => setVista('fijos')}>🔁 Viajes fijos</button>
     </div>
   )
@@ -97,7 +100,8 @@ export default function Viajes() {
         <h1>Viajes</h1>
         {selectorVista}
         {botones}
-        <Calendario ahora={ahora} onAbrir={setEditando} />
+        <Calendario ahora={ahora} onAbrir={setEditando} elegido={diaCalendario} onElegir={setDiaCalendario}
+          onNuevo={(fecha) => { setFechaNueva(fecha); setEditando('nuevo') }} />
       </main>
     )
   }

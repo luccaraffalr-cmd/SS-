@@ -103,6 +103,8 @@ Cómo está hecho:
 - Anotar cada decisión en la sección 10 bis de la especificación.
 - Probar en local (http://localhost:5173) antes de publicar; las pantallas nuevas se pueden verificar dibujando los
   componentes con datos de ejemplo en el navegador de prueba (sin sesión no hay datos por la seguridad de la base).
-- Orden (cambiado el 9/10): conexión con la planilla → clientes guardados. La cuenta corriente de choferes, el resumen y
-  las cuentas de clientes en la app quedan para cuando se pase la planilla a la app (muy a futuro). La idea del alias en el
-  link necesita saber el saldo del chofer: se podría leer de su hoja en la planilla.
+- Orden (cambiado el 9 y el 14/10): conexión con la planilla (hecha). **Clientes guardados: descartado.** La cuenta corriente
+  de choferes, el resumen y las cuentas de clientes en la app quedan para cuando se pase la planilla a la app (muy a futuro).
+  La idea del alias en el link necesita saber el saldo del chofer: se podría leer de su hoja en la planilla.
+- **Uso en paralelo (14/10):** la app se empieza a usar de verdad escribiendo en la **copia**, mientras siguen el formulario y
+  la planilla de verdad. Se pasa a la de verdad cuando esté probado (pasos de arriba). Para eso hay que publicar en Netlify.

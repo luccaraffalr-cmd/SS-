@@ -73,5 +73,8 @@
   en la planilla de la remisería (Google Sheets), que sigue siendo la principal para la plata. Hecho y probado el 13/10 con
   una **copia** de la planilla (SQL 025, función `planilla`, secret `PLANILLA_ID`); falta pasar a la de verdad (pasos en
   `etapa-3-gestion.md`) y publicar en Netlify. **El repo es público**: nada de la planilla (nombres, montos) va al repo.
-  Siguiente: clientes guardados. Después: pasada de UX/UI (que quede lindo y con menos toques), idealmente con unos días
-  de uso real.
+  Decidido 14/10: se empieza a usar la app **en paralelo** con el sistema actual, escribiendo en la copia; clientes guardados
+  descartado.
+- **Calendario como el de Samsung** (14/10, falta publicar): cada día muestra sus viajes, se desliza para cambiar de mes y
+  se carga un viaje desde un día. Pedidos nuevos del dueño, a definir: viaje para varios días elegidos y viajes fijos por un
+  tiempo (con fecha de fin). Después: pasada de UX/UI (que quede lindo y con menos toques), idealmente con unos días de uso real.

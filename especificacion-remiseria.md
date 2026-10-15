@@ -344,8 +344,20 @@ Hoy la ubicación "desaparece" por varios minutos. Hay que diseñar para que **n
   - **Un nombre por chofer** en la planilla ("Nombre en la planilla" en su ficha; vacío = el nombre del usuario).
   - Los clientes de cuenta corriente de la app tienen **el mismo nombre** que las columnas de la hoja "Cuenta Corriente".
   - Como la planilla lleva las cuentas, **la cuenta corriente de los choferes, el resumen por chofer y las cuentas de los
-    clientes dentro de la app quedan para cuando se pase la planilla a la app**. La Etapa 3 queda en: conexión con la
-    planilla y clientes guardados.
+    clientes dentro de la app quedan para cuando se pase la planilla a la app**.
+- **(2026-10-14) Más de la Etapa 3:**
+  - **Se descartan los clientes guardados** (el usuario no los ve necesarios).
+  - Las formas de pago quedan como están (el dueño no definió nada para "Transferencia al dueño").
+  - **La app se empieza a usar de verdad escribiendo en la copia de la planilla**, en paralelo con el sistema actual
+    (formulario + planilla de verdad). Cuando esté todo probado, se pasa a la planilla de verdad.
+- **(2026-10-14) Calendario como el de Samsung** (pedido del dueño):
+  - En el mes, **cada día muestra sus viajes**: hora y origen, 2 por día y "+N" si hay más. En rojo, los que necesitan
+    atención (sin chofer, sin aceptar, no salió). Los anulados no se muestran.
+  - Se pasa de mes **deslizando con el dedo** (las flechas siguen).
+  - Al tocar un día se ven sus viajes y está el botón **"+ Nuevo viaje para el …"**, que abre el viaje nuevo con esa fecha
+    (programado si no es hoy). Para días que ya pasaron no aparece.
+  - **Pedidos nuevos del dueño, a definir:** (1) cargar un viaje para **varios días elegidos** (ej. jueves 15, el lunes y el
+    viernes siguientes, y nada más); (2) **viajes fijos por un tiempo** (ej. todos los días de esta semana y después no más).
 - **(2026-10-06) Link del pasajero:** la foto del auto se toca y se ve a **pantalla completa**. Además muestra el **DNI completo** del chofer y su **alias** para transferencias (con botón **Copiar**). DNI y alias se cargan en la ficha del chofer (solo admin) y van en una tabla aparte (`choferes_privado`): los ven gestión, el propio chofer y el pasajero por el link, **nunca los otros choferes**.
 - **(2026-10-05) Avisos al chofer cuando gestión toca un viaje suyo** (desde que se lo asignan, aunque no lo haya aceptado, hasta que lo finaliza, incluso con el viaje en curso):
   - **"🔄 Cambió tu viaje"** si cambia el **horario** (presentación o asignación) o el **origen / destino**, con lo que cambió. **No lo tiene que volver a aceptar.** Los cambios de cliente u observaciones no avisan.

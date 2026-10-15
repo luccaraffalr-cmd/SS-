@@ -41,19 +41,21 @@ function textoSituacion(v) {
 const ANTICIPACION_POR_DEFECTO = 30
 const ANTICIPACIONES_RAPIDAS = [10, 20, 30, 45]
 
-// Alta y edición de un viaje (gestión).
-export default function FormViaje({ viaje, onListo }) {
+// Alta y edición de un viaje (gestión). fechaInicial ("2026-10-15"): viaje nuevo cargado desde un día del calendario;
+// si no es hoy, arranca como programado para ese día.
+export default function FormViaje({ viaje, fechaInicial, onListo }) {
   const esNuevo = !viaje
   const [datos, setDatos] = useState(() => {
     const presentacion = viaje?.hora_presentacion ? new Date(viaje.hora_presentacion) : null
+    const otroDia = !!fechaInicial && fechaInicial !== fechaLocal()
     return {
-      tipo: viaje?.tipo ?? 'inmediato',
+      tipo: viaje?.tipo ?? (otroDia ? 'programado' : 'inmediato'),
       cliente_nombre: viaje?.cliente_nombre ?? '',
       cliente_telefono: viaje?.cliente_telefono ?? '',
       origen: viaje?.origen ?? '',
       destino: viaje?.destino ?? '',
       observaciones: viaje?.observaciones ?? '',
-      fecha: presentacion ? fechaLocal(presentacion) : fechaLocal(),
+      fecha: presentacion ? fechaLocal(presentacion) : (fechaInicial ?? fechaLocal()),
       hora: presentacion ? hora(presentacion) : '',
       anticipacion: presentacion
         ? String(Math.round((presentacion - new Date(viaje.hora_asignacion)) / 60000))
