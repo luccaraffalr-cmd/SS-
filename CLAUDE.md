@@ -76,5 +76,8 @@
   Decidido 14/10: se empieza a usar la app **en paralelo** con el sistema actual, escribiendo en la copia; clientes guardados
   descartado.
 - **Calendario como el de Samsung** (14/10, falta publicar): cada día muestra sus viajes, se desliza para cambiar de mes y
-  se carga un viaje desde un día. Pedidos nuevos del dueño, a definir: viaje para varios días elegidos y viajes fijos por un
-  tiempo (con fecha de fin). Después: pasada de UX/UI (que quede lindo y con menos toques), idealmente con unos días de uso real.
+  se carga un viaje desde un día.
+- **Viajes que se repiten** (15/10, SQL 026, falta probar con datos reales y publicar): "Nuevo viaje" → Repetir (días sueltos o
+  todas las semanas con desde/hasta), guardados como series en `viajes_fijos`; al cambiar o anular uno se pregunta si es
+  solo ese o todos los que faltan (`cambiar_serie`, `anular_serie`). Después: pasada de UX/UI (que quede lindo y con menos
+  toques), idealmente con unos días de uso real.

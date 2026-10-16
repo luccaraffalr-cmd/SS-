@@ -1,6 +1,8 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { supabase } from './supabase.js'
-import { NOMBRE_ESTADO_VIAJE, fechaLocal, hora, problemaDelViaje, unirFechaHora } from './viajes.js'
+import { NOMBRE_ESTADO_VIAJE, deFechaLocal, fechaLocal, hora, problemaDelViaje, unirFechaHora } from './viajes.js'
+import ElegirFechas from './ElegirFechas.jsx'
+import { SEMANA, textoFechas, textoSerie } from './ViajesFijos.jsx'
 import ElegirChofer, { useChoferesParaAsignar } from './ElegirChofer.jsx'
 import FormPago from './FormPago.jsx'
 import HistorialViaje from './HistorialViaje.jsx'
@@ -76,6 +78,32 @@ export default function FormViaje({ viaje, fechaInicial, onListo }) {
   const [corrigiendoPago, setCorrigiendoPago] = useState(false)
   const hecho = !esNuevo && ['pago_pendiente', 'finalizado'].includes(viaje.estado)
 
+  // Viaje nuevo que se repite (decidido el 15/10/2026): 'no' | 'sueltos' (días elegidos) | 'semanal' (con desde/hasta).
+  // Se guarda como una serie (tabla viajes_fijos) y el servidor carga cada viaje.
+  const [repetir, setRepetir] = useState('no')
+  const [fechasSueltas, setFechasSueltas] = useState([])
+  const [semana, setSemana] = useState({ dias: [], desde: '', hasta: '' })
+  // Viaje de una serie: al guardar o anular se pregunta si es solo este o todos los que faltan.
+  const [serie, setSerie] = useState(null)
+  const [preguntaSerie, setPreguntaSerie] = useState(null) // la fila a guardar mientras se pregunta
+  const deUnaSerie = !esNuevo && !!viaje.viaje_fijo_id && sePuedeAnular
+  useEffect(() => {
+    if (!viaje?.viaje_fijo_id) return
+    supabase.from('viajes_fijos').select('*').eq('id', viaje.viaje_fijo_id).maybeSingle().then(({ data }) => setSerie(data))
+  }, [viaje?.viaje_fijo_id])
+
+  function elegirRepetir(modo) {
+    setRepetir(modo)
+    if (modo === 'sueltos' && fechasSueltas.length === 0 && datos.fecha >= fechaLocal()) setFechasSueltas([datos.fecha])
+    if (modo === 'semanal' && semana.dias.length === 0) {
+      setSemana({ dias: [deFechaLocal(datos.fecha).getDay()], desde: datos.fecha, hasta: '' })
+    }
+  }
+
+  function alternarDiaSemana(d) {
+    setSemana({ ...semana, dias: semana.dias.includes(d) ? semana.dias.filter((x) => x !== d) : [...semana.dias, d] })
+  }
+
   async function corregirPago(importe, forma_pago, cuenta, otro, extras) {
     const { error } = await supabase.rpc('corregir_pago', { viaje: viaje.id, importe, forma_pago, cuenta, otro, ...extras })
     if (error) return 'No se pudo guardar: ' + error.message
@@ -99,10 +127,11 @@ export default function FormViaje({ viaje, fechaInicial, onListo }) {
     else onListo()
   }
 
-  async function anular() {
+  // funcion: 'anular_viaje' (solo este) o 'anular_serie' (este y los que siguen de la serie).
+  async function anular(funcion = 'anular_viaje') {
     setError('')
     setEnviando(true)
-    const { error } = await supabase.rpc('anular_viaje', { viaje: viaje.id })
+    const { error } = await supabase.rpc(funcion, { viaje: viaje.id })
     setEnviando(false)
     if (error) setError('No se pudo anular: ' + error.message)
     else onListo()
@@ -116,6 +145,7 @@ export default function FormViaje({ viaje, fechaInicial, onListo }) {
   async function guardar(e) {
     e.preventDefault()
     setError('')
+    if (esNuevo && esProgramado && repetir !== 'no') return guardarSerieNueva()
     if (esProgramado) {
       if (!presentacion) return setError('Falta la fecha u hora de presentación.')
       if (!Number.isInteger(minutos) || minutos < 0 || minutos > 24 * 60) {
@@ -139,6 +169,12 @@ export default function FormViaje({ viaje, fechaInicial, onListo }) {
     // cola no lo tome) y enseguida se le asigna a ese chofer, que lo tiene que aceptar.
     if (esNuevo && choferElegido) fila.espera_gestion = true
 
+    if (deUnaSerie) return setPreguntaSerie(fila) // "¿solo este o todos los que faltan?"
+    await guardarFila(fila)
+  }
+
+  async function guardarFila(fila) {
+    setError('')
     setEnviando(true)
     let error
     if (esNuevo) {
@@ -155,6 +191,67 @@ export default function FormViaje({ viaje, fechaInicial, onListo }) {
     else onListo()
   }
 
+  // Viaje nuevo que se repite: se guarda la serie y el servidor carga los viajes.
+  // Con chofer elegido, a cada viaje se le ofrece a ese chofer 7 días antes (como un viaje fijo con chofer fijo).
+  async function guardarSerieNueva() {
+    const hoy = fechaLocal()
+    if (!datos.hora) return setError('Falta la hora de presentación.')
+    if (!Number.isInteger(minutos) || minutos < 0 || minutos > 24 * 60) {
+      return setError('La anticipación tiene que ser un número de minutos (0 o más).')
+    }
+    const base = {
+      hora: datos.hora,
+      anticipacion: minutos,
+      origen: datos.origen.trim(),
+      destino: datos.destino.trim() || null,
+      cliente_nombre: datos.cliente_nombre.trim() || null,
+      cliente_telefono: datos.cliente_telefono.trim() || null,
+      observaciones: datos.observaciones.trim() || null,
+      chofer_id: choferElegido || null,
+    }
+    let fila
+    if (repetir === 'sueltos') {
+      if (fechasSueltas.length === 0) return setError('Tocá en el calendario los días del viaje.')
+      if (fechasSueltas[0] < hoy) return setError('Elegiste un día que ya pasó.')
+      if (fechasSueltas.includes(hoy) && unirFechaHora(hoy, datos.hora) <= new Date()) {
+        return setError('Para hoy, esa hora ya pasó. Sacá el día de hoy o cambiá la hora.')
+      }
+      fila = { ...base, dias: [], fechas: fechasSueltas, desde: fechasSueltas[0] }
+    } else {
+      if (semana.dias.length === 0) return setError('Elegí los días de la semana.')
+      if (!semana.desde) return setError('Falta la fecha "desde".')
+      if (semana.hasta && semana.hasta < semana.desde) {
+        return setError('La fecha "hasta" tiene que ser igual o posterior a "desde".')
+      }
+      fila = { ...base, dias: semana.dias.slice().sort(), desde: semana.desde, hasta: semana.hasta || null }
+    }
+    setEnviando(true)
+    const { error } = await supabase.from('viajes_fijos').insert(fila)
+    setEnviando(false)
+    if (error) setError('No se pudo guardar: ' + error.message)
+    else onListo()
+  }
+
+  // "Todos los que faltan": este viaje (por si ya salió, que a esos la serie no los toca) y la serie entera.
+  async function guardarTodaLaSerie() {
+    const fila = preguntaSerie
+    setError('')
+    setEnviando(true)
+    let { error } = await supabase.from('viajes').update(fila).eq('id', viaje.id)
+    if (!error) {
+      ({ error } = await supabase.rpc('cambiar_serie', {
+        viaje: viaje.id, p_hora: datos.hora, p_anticipacion: minutos, p_origen: fila.origen, p_destino: fila.destino,
+        p_cliente_nombre: fila.cliente_nombre, p_cliente_telefono: fila.cliente_telefono, p_observaciones: fila.observaciones,
+      }))
+    }
+    setEnviando(false)
+    if (error) setError('No se pudo guardar: ' + error.message)
+    else onListo()
+  }
+  // Cambiar la fecha o pasarlo a inmediato es solo para este viaje.
+  const cambioLaFecha = !esNuevo && !!viaje.hora_presentacion && datos.fecha !== fechaLocal(new Date(viaje.hora_presentacion))
+  const puedeCambiarTodos = esProgramado && !cambioLaFecha
+
   return (
     <main className="pantalla">
       <h1>{esNuevo ? 'Nuevo viaje' : `Viaje #${viaje.id}`}</h1>
@@ -165,7 +262,10 @@ export default function FormViaje({ viaje, fechaInicial, onListo }) {
         </p>
       )}
       {!esNuevo && viaje.viaje_fijo_id && (
-        <p className="aviso">🔁 Este viaje sale de un <strong>viaje fijo</strong>. Si lo cambiás o anulás acá, solo cambia este día.</p>
+        <p className="aviso">
+          🔁 Este viaje se repite{serie && <>: <strong>{textoSerie(serie)}</strong></>}.
+          {deUnaSerie && ' Al guardar cambios o anularlo, te pregunto si es solo este o todos los que faltan.'}
+        </p>
       )}
       <form className="tarjeta" onSubmit={guardar}>
         <div className="selector-tipo">
@@ -177,8 +277,53 @@ export default function FormViaje({ viaje, fechaInicial, onListo }) {
 
         {esProgramado && (
           <div className="bloque-programado">
+            {esNuevo && (
+              <div>
+                <p className="etiqueta-campo">Repetir</p>
+                <div className="selector-tipo selector-repetir">
+                  <button type="button" className={repetir === 'no' ? 'activo' : ''} onClick={() => elegirRepetir('no')}>No</button>
+                  <button type="button" className={repetir === 'sueltos' ? 'activo' : ''}
+                    onClick={() => elegirRepetir('sueltos')}>Días sueltos</button>
+                  <button type="button" className={repetir === 'semanal' ? 'activo' : ''}
+                    onClick={() => elegirRepetir('semanal')}>Todas las semanas</button>
+                </div>
+              </div>
+            )}
+            {repetir === 'sueltos' && (
+              <>
+                <small className="ayuda sin-margen">Tocá los días del viaje (se marcan en negro).</small>
+                <ElegirFechas fechas={fechasSueltas} onCambiar={setFechasSueltas} />
+                {fechasSueltas.length > 0 && (
+                  <p className="resumen-serie">
+                    Se {fechasSueltas.length === 1 ? 'carga 1 viaje' : `cargan ${fechasSueltas.length} viajes`}: {textoFechas(fechasSueltas)}
+                  </p>
+                )}
+              </>
+            )}
+            {repetir === 'semanal' && (
+              <>
+                <div className="dias-semana">
+                  {SEMANA.map(([d, texto]) => (
+                    <button key={d} type="button" className={semana.dias.includes(d) ? 'activo' : ''}
+                      onClick={() => alternarDiaSemana(d)}>{texto}</button>
+                  ))}
+                </div>
+                <div className="dos-columnas">
+                  <label>Desde<input type="date" value={semana.desde} min={fechaLocal()}
+                    onChange={(e) => setSemana({ ...semana, desde: e.target.value })} /></label>
+                  <label>Hasta (opcional)<input type="date" value={semana.hasta} min={semana.desde}
+                    onChange={(e) => setSemana({ ...semana, hasta: e.target.value })} /></label>
+                </div>
+                {semana.dias.length > 0 && (
+                  <p className="resumen-serie">
+                    {textoSerie({ dias: semana.dias, desde: semana.desde, hasta: semana.hasta })}
+                    {!semana.hasta && ' (sin fecha de fin)'}
+                  </p>
+                )}
+              </>
+            )}
             <div className="dos-columnas">
-              <label>Fecha<input type="date" value={datos.fecha} onChange={cambiar('fecha')} required /></label>
+              {repetir === 'no' && <label>Fecha<input type="date" value={datos.fecha} onChange={cambiar('fecha')} required /></label>}
               <label>Hora de presentación<input type="time" value={datos.hora} onChange={cambiar('hora')} required /></label>
             </div>
             <label>
@@ -191,11 +336,14 @@ export default function FormViaje({ viaje, fechaInicial, onListo }) {
                   onClick={() => setDatos({ ...datos, anticipacion: String(m) })}>{m} min</button>
               ))}
             </div>
-            {asignacion && (
+            {asignacion && repetir === 'no' && (
               <p className="aviso sin-margen">
                 El chofer se asigna a las <strong>{hora(asignacion)}</strong>
                 {fechaLocal(asignacion) !== fechaLocal(presentacion) && ' (del día anterior)'}.
               </p>
+            )}
+            {repetir !== 'no' && Number.isInteger(minutos) && (
+              <p className="aviso sin-margen">En cada viaje, el chofer se asigna <strong>{minutos} minutos antes</strong>.</p>
             )}
           </div>
         )}
@@ -213,7 +361,10 @@ export default function FormViaje({ viaje, fechaInicial, onListo }) {
           <label>
             Chofer (opcional)
             <ElegirChofer valor={choferElegido} onCambiar={setChoferElegido} choferes={choferes} />
-            <small className="ayuda">Solo si el cliente pidió un chofer en particular. Si no, se asigna solo.</small>
+            <small className="ayuda">
+              Solo si el cliente pidió un chofer en particular. Si no, se asigna solo.
+              {esProgramado && repetir !== 'no' && ' Como se repite, cada viaje se le ofrece a este chofer 7 días antes y lo tiene que aceptar.'}
+            </small>
           </label>
         )}
 
@@ -223,10 +374,32 @@ export default function FormViaje({ viaje, fechaInicial, onListo }) {
           </p>
         )}
         {error && <p className="aviso error">{error}</p>}
-        <button className="boton" disabled={enviando}>
-          {enviando ? 'Guardando…' : esNuevo ? 'Cargar viaje' : 'Guardar cambios'}
-        </button>
-        <button type="button" className="boton secundario" onClick={onListo}>Volver</button>
+        {preguntaSerie ? (
+          <div className="botonera">
+            <p className="sin-margen"><strong>Este viaje se repite.</strong> ¿Qué querés cambiar?</p>
+            <button type="button" className="boton" disabled={enviando} onClick={() => guardarFila(preguntaSerie)}>
+              Solo este viaje
+            </button>
+            {puedeCambiarTodos ? (
+              <button type="button" className="boton" disabled={enviando} onClick={guardarTodaLaSerie}>
+                Todos los que faltan
+              </button>
+            ) : (
+              <small className="ayuda">
+                {esProgramado ? 'Cambiaste la fecha' : 'Lo pasaste a inmediato'}: eso se puede hacer solo para este viaje.
+              </small>
+            )}
+            <button type="button" className="boton secundario" onClick={() => setPreguntaSerie(null)}>Volver</button>
+          </div>
+        ) : (
+          <>
+            <button className="boton" disabled={enviando}>
+              {enviando ? 'Guardando…' : !esNuevo ? 'Guardar cambios'
+                : esProgramado && repetir !== 'no' ? 'Cargar viajes' : 'Cargar viaje'}
+            </button>
+            <button type="button" className="boton secundario" onClick={onListo}>Volver</button>
+          </>
+        )}
       </form>
 
       {!esNuevo && viaje.estado === 'fallido' && (
@@ -312,7 +485,18 @@ export default function FormViaje({ viaje, fechaInicial, onListo }) {
                   <> <strong>{viaje.chofer.nombre}</strong> vuelve al puesto 1 de la cola.</>}
                 {conChofer && <> A {viaje.chofer.nombre} le llega un aviso.</>}
               </p>
-              <button type="button" className="boton peligro" disabled={enviando} onClick={anular}>Sí, anular</button>
+              {deUnaSerie ? (
+                <>
+                  <button type="button" className="boton peligro" disabled={enviando} onClick={() => anular()}>
+                    Anular solo este viaje
+                  </button>
+                  <button type="button" className="boton peligro" disabled={enviando} onClick={() => anular('anular_serie')}>
+                    Anular este y los que siguen
+                  </button>
+                </>
+              ) : (
+                <button type="button" className="boton peligro" disabled={enviando} onClick={() => anular()}>Sí, anular</button>
+              )}
               <button type="button" className="boton secundario" onClick={() => setConfirmandoAnular(false)}>No, dejarlo</button>
             </>
           )}

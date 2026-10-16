@@ -1,11 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { supabase } from './supabase.js'
 import TarjetaViaje, { CONSULTA_VIAJES } from './TarjetaViaje.jsx'
-import { fechaCorta, fechaLocal, hora, problemaDelViaje } from './viajes.js'
-
-const MESES = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre',
-  'Octubre', 'Noviembre', 'Diciembre']
-const DIAS = ['Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb', 'Dom']
+import { DIAS_GRILLA, MESES, deFechaLocal, diasDeLaGrilla, fechaCorta, fechaLocal, hora, problemaDelViaje } from './viajes.js'
 const NOMBRE_DIA = ['domingo', 'lunes', 'martes', 'miércoles', 'jueves', 'viernes', 'sábado']
 const RENGLONES_POR_DIA = 2 // en el celular cada día mide ~45 px: cada viaje va en dos líneas (hora y origen)
 
@@ -13,19 +9,12 @@ const RENGLONES_POR_DIA = 2 // en el celular cada día mide ~45 px: cada viaje v
 const momentoDelViaje = (v) => new Date(v.hora_presentacion ?? v.hora_asignacion)
 const diaDelViaje = (v) => fechaLocal(momentoDelViaje(v))
 
-// Las 6 semanas que muestra la grilla del mes (empieza en lunes).
-function diasDeLaGrilla(mes) {
-  const primero = new Date(mes.getFullYear(), mes.getMonth(), 1)
-  const corrimiento = (primero.getDay() + 6) % 7 // lunes = 0
-  return Array.from({ length: 42 }, (_, i) => new Date(mes.getFullYear(), mes.getMonth(), 1 - corrimiento + i))
-}
-
 // Gestión: calendario del mes, como el de Samsung (decidido el 14/10/2026): cada día muestra sus viajes (hora y origen),
 // se pasa de mes deslizando con el dedo, y al tocar un día se ven sus viajes y se puede cargar uno nuevo para ese día.
 // El día elegido lo guarda Viajes (elegido / onElegir), así al volver de un viaje sigue en el mismo mes.
 export default function Calendario({ ahora, onAbrir, onNuevo, elegido, onElegir: setElegido }) {
   const [mes, setMes] = useState(() => {
-    const d = new Date(elegido + 'T12:00')
+    const d = deFechaLocal(elegido)
     return new Date(d.getFullYear(), d.getMonth(), 1)
   })
   const [viajes, setViajes] = useState(null)
@@ -90,7 +79,7 @@ export default function Calendario({ ahora, onAbrir, onNuevo, elegido, onElegir:
 
   const hoy = fechaLocal()
   const delDia = porDia[elegido] ?? []
-  const fechaElegida = new Date(elegido + 'T12:00')
+  const fechaElegida = deFechaLocal(elegido)
 
   return (
     <>
@@ -102,7 +91,7 @@ export default function Calendario({ ahora, onAbrir, onNuevo, elegido, onElegir:
       {error && <p className="aviso error">No se pudieron cargar los viajes: {error}</p>}
 
       <div className="calendario">
-        {DIAS.map((d) => <span key={d} className="calendario-dia-semana">{d}</span>)}
+        {DIAS_GRILLA.map((d) => <span key={d} className="calendario-dia-semana">{d}</span>)}
       </div>
       <div className="calendario-marco">
         <div key={mes.getTime()} className={'calendario calendario-mes ' + entrada}

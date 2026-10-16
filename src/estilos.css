@@ -525,6 +525,23 @@ textarea {
 .calendario-dia.hoy { border-color: #1f2937; }
 .calendario-dia.elegido { background: #1f2937; color: #fff; }
 .calendario-dia.elegido .mas { color: #d1d5db; }
+/* Elegir días sueltos (viaje que se repite) */
+.elegir-fechas .calendario-arriba { margin-top: 0; }
+.dia-chico {
+  padding: 9px 0;
+  border: 2px solid transparent;
+  border-radius: 8px;
+  background: #f3f4f6;
+  font: inherit;
+  color: inherit;
+}
+.dia-chico.otro-mes { opacity: 0.45; }
+.dia-chico.hoy { border-color: #1f2937; }
+.dia-chico.marcado { background: #1f2937; color: #fff; font-weight: 700; }
+.dia-chico:disabled { opacity: 0.25; }
+.selector-repetir { grid-template-columns: repeat(3, 1fr); gap: 6px; }
+.selector-repetir button { padding: 10px 4px; font-size: 0.9rem; }
+.resumen-serie { margin: 0; padding: 10px 12px; border-radius: 10px; background: #dbeafe; color: #1e3a8a; }
 .etiqueta-campo { margin: 0 0 6px; font-weight: 600; }
 .dias-semana { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; }
 .dias-semana button {

@@ -356,8 +356,17 @@ Hoy la ubicación "desaparece" por varios minutos. Hay que diseñar para que **n
   - Se pasa de mes **deslizando con el dedo** (las flechas siguen).
   - Al tocar un día se ven sus viajes y está el botón **"+ Nuevo viaje para el …"**, que abre el viaje nuevo con esa fecha
     (programado si no es hoy). Para días que ya pasaron no aparece.
-  - **Pedidos nuevos del dueño, a definir:** (1) cargar un viaje para **varios días elegidos** (ej. jueves 15, el lunes y el
-    viernes siguientes, y nada más); (2) **viajes fijos por un tiempo** (ej. todos los días de esta semana y después no más).
+- **(2026-10-15) Viajes que se repiten** (pedido del dueño). Se cargan desde **"Nuevo viaje" → Repetir** (programados):
+  - **No** (como siempre), **Días sueltos** (se tocan los días en un calendario chico, ej. jue 15, lun 19 y vie 23, y nada más)
+    o **Todas las semanas** (días de la semana + **desde** y **hasta**; sin "hasta" no termina, como los viajes fijos de antes).
+  - Cada serie se guarda como un viaje fijo (se ve y se cambia en "🔁 Viajes fijos"; las terminadas dicen "Terminado"). El
+    servidor carga los viajes: los días sueltos, todos; los semanales, los de las próximas 4 semanas.
+  - **Agrupados:** al guardar cambios de un viaje de una serie, la app pregunta **"Solo este viaje" o "Todos los que faltan"**
+    (todos los que todavía no salieron, aunque se hubieran cambiado a mano; los anulados quedan anulados). Cambiar la fecha o
+    pasarlo a inmediato es solo para ese viaje. Al anular: **"Anular solo este viaje" o "Anular este y los que siguen"** (la
+    serie termina el día anterior; si no le queda ningún día, queda pausada).
+  - Con chofer elegido, a cada viaje de la serie se le ofrece a ese chofer 7 días antes y lo tiene que aceptar (como el chofer
+    fijo).
 - **(2026-10-06) Link del pasajero:** la foto del auto se toca y se ve a **pantalla completa**. Además muestra el **DNI completo** del chofer y su **alias** para transferencias (con botón **Copiar**). DNI y alias se cargan en la ficha del chofer (solo admin) y van en una tabla aparte (`choferes_privado`): los ven gestión, el propio chofer y el pasajero por el link, **nunca los otros choferes**.
 - **(2026-10-05) Avisos al chofer cuando gestión toca un viaje suyo** (desde que se lo asignan, aunque no lo haya aceptado, hasta que lo finaliza, incluso con el viaje en curso):
   - **"🔄 Cambió tu viaje"** si cambia el **horario** (presentación o asignación) o el **origen / destino**, con lo que cambió. **No lo tiene que volver a aceptar.** Los cambios de cliente u observaciones no avisan.

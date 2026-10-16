@@ -68,6 +68,21 @@ export function fechaCorta(fecha) {
   return `${dia} ${d.getDate()}/${d.getMonth() + 1}`
 }
 
+export const MESES = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre',
+  'Octubre', 'Noviembre', 'Diciembre']
+
+export const DIAS_GRILLA = ['Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb', 'Dom']
+
+// Las 6 semanas que muestra la grilla de un mes (empieza en lunes).
+export function diasDeLaGrilla(mes) {
+  const primero = new Date(mes.getFullYear(), mes.getMonth(), 1)
+  const corrimiento = (primero.getDay() + 6) % 7 // lunes = 0
+  return Array.from({ length: 42 }, (_, i) => new Date(mes.getFullYear(), mes.getMonth(), 1 - corrimiento + i))
+}
+
+// "2026-10-15" → fecha a mediodía (para no correrse de día por la zona horaria).
+export const deFechaLocal = (texto) => new Date(texto + 'T12:00')
+
 // Une un "2026-09-28" y un "15:00" (hora local) en una fecha.
 export function unirFechaHora(fecha, horaTexto) {
   const [a, m, d] = fecha.split('-').map(Number)
