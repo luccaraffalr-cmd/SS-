@@ -60,8 +60,12 @@
 - App Android: ubicación automática (Empezar a trabajar → Terminar el día), revisión de permisos, avisos por Firebase.
   Se mide la confiabilidad con el uso real (`historial_ubicacion` guarda 7 días).
 - Hecho también: viajes fijos (`019`) y calendario en Viajes.
-- **Hecho, falta publicar en Netlify** (el usuario quiere publicar todo junto; funciones `usuarios` y `notificar`
-  ya subidas a Supabase y SQL 022–023 aplicados el 6/10):
+- **Publicado en Netlify el 19/10/2026** (todo lo de abajo; SQL hasta el 026 aplicados). Ese día la publicación se canceló
+  sola por la regla `ignore` de `netlify.toml` (sin caché, no tenía con qué comparar): ya está arreglada. Si una publicación
+  no aparece, mirar el log en https://app.netlify.com/projects/fastidious-cocada-43719b/deploys (se ve sin entrar).
+  **Falta el APK nuevo** (botón atrás, `Descargas\Remiseria.apk`, ya armado): el usuario tiene pendiente decir qué más
+  meter en ese APK (actualizarse sola, ubicación tras reiniciar, sonido propio, ícono/nombre, ubicación que ahorra batería).
+- Hecho y publicado el 19/10 (funciones `usuarios`, `notificar` y `planilla` en Supabase):
   - Contraseña propia al primer ingreso (SQL 022, `ElegirClave.jsx`).
   - Link del pasajero: foto a pantalla completa, DNI y alias del chofer (SQL 024, tabla `choferes_privado`).
   - Avisos al chofer (2 y 5/10), todos por la tabla `avisos` + `crear_aviso()` (SQL 023) → `notificar` `{aviso_id}`:
