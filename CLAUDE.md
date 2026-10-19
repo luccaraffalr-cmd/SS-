@@ -60,6 +60,10 @@
 - App Android: ubicación automática (Empezar a trabajar → Terminar el día), revisión de permisos, avisos por Firebase.
   Se mide la confiabilidad con el uso real (`historial_ubicacion` guarda 7 días).
 - Hecho también: viajes fijos (`019`) y calendario en Viajes.
+- **19/10, después de publicar:** SQL 027 aplicado (números de viaje: crear_viajes_fijos ya no gasta números; renumerados
+  desde el 1, FKs a viajes con on update cascade). Se borraron todos los viajes pasados (arranque de cero; quedaron los
+  futuros) y las filas de la app en la copia de la planilla; a p2 se le sacó "Alejandro". Falta publicar: viajes sin
+  cargar como cartel desplegable abajo de todo en la pantalla del chofer (`ViajesSinCargar.jsx`).
 - **Publicado en Netlify el 19/10/2026** (todo lo de abajo; SQL hasta el 026 aplicados). Ese día la publicación se canceló
   sola por la regla `ignore` de `netlify.toml` (sin caché, no tenía con qué comparar): ya está arreglada. Si una publicación
   no aparece, mirar el log en https://app.netlify.com/projects/fastidious-cocada-43719b/deploys (se ve sin entrar).

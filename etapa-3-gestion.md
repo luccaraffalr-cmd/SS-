@@ -6,7 +6,7 @@
 > que mandan sobre el resto).
 
 ## Estado al 6/10/2026
-- Etapas 1 y 2 hechas. **SQL aplicados hasta el 025** (13/10). El próximo es `supabase/sql/026_…`.
+- Etapas 1 y 2 hechas. **SQL aplicados hasta el 027** (19/10). El próximo es `supabase/sql/028_…`.
 - Funciones `usuarios` y `notificar` ya subidas a Supabase. Los avisos al chofer en la app (Firebase) los probó el
   usuario y **andan bien**.
 - **Falta publicar en Netlify** (el usuario lo quiere hacer todo junto, cuando decida): contraseña propia al primer
@@ -72,7 +72,7 @@ agrega la columna sola), la corrección actualizó la misma fila, y la hoja "Ale
 bien. Fechas y números quedan como los del formulario. La planilla está en locale es_MX.
 
 **Para pasar a la planilla de verdad** (cuando los choferes empiecen a usar la app en serio):
-1. Borrarle "Alejandro" del "Nombre en la planilla" a `p2` (y no usar choferes de prueba después del cambio).
+1. ~~Borrarle "Alejandro" del "Nombre en la planilla" a `p2`~~ (hecho el 19/10). No usar choferes de prueba después del cambio.
 2. Que el usuario comparta la planilla de verdad con `firebase-adminsdk-fbsvc@senda-segura.iam.gserviceaccount.com` (editor).
 3. `npx.cmd supabase secrets set PLANILLA_ID=<id de la de verdad> --project-ref yomjqdbaatydpvazkvvg`. Los viajes que ya
    se anotaron en la copia no pasan a la de verdad (la función lo controla con `planilla_envios.planilla`).

@@ -356,6 +356,10 @@ Hoy la ubicación "desaparece" por varios minutos. Hay que diseñar para que **n
   - Se pasa de mes **deslizando con el dedo** (las flechas siguen).
   - Al tocar un día se ven sus viajes y está el botón **"+ Nuevo viaje para el …"**, que abre el viaje nuevo con esa fecha
     (programado si no es hoy). Para días que ya pasaron no aparece.
+- **(2026-10-19) Arranque de cero de los viajes:** se borraron todos los viajes que ya habían pasado (también los sin
+  chofer y los que nadie tomó, y sus filas en la copia de la planilla); quedaron solo los futuros. Los números de viaje
+  saltaban de a miles (los viajes fijos gastaban un número cada 10 minutos aunque no crearan nada): se arregló y los
+  viajes se renumeraron desde el 1 (SQL 027). El link del pasajero no depende del número.
 - **(2026-10-19) Viajes sin cargar el pago (chofer):** ya no aparecen abiertos en el medio de la pantalla. Abajo de todo
   (antes de "Cerrar sesión") hay un cartel naranja que se despliega, como el de viajes sin chofer: **"⏳ N viajes sin
   cargar"**; al tocarlo se ven cuáles son, cada uno con su botón **"Cargar pago"**.
