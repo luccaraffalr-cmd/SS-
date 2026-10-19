@@ -244,6 +244,12 @@ a.boton { display: block; text-align: center; text-decoration: none; }
 .asignar-rapido select { min-width: 0; }
 .asignar-rapido .boton { padding: 10px 14px; }
 
+/* Viajes sin cargar el pago (chofer): cartel naranja que se despliega, abajo de todo */
+.desplegable-sin-cargar { margin-top: 16px; border-radius: 12px; overflow: hidden; }
+.desplegable-sin-cargar .alerta-sin-chofer { background: #d97706; animation: none; }
+.lista-sin-cargar { display: flex; flex-direction: column; gap: 8px; padding: 10px; background: #fffbeb; }
+.lista-sin-cargar .proximo { background: #fff; }
+
 /* Cartel para los choferes */
 .alerta-chofer { margin: -8px 0 16px; border-radius: 12px; overflow: hidden; }
 .lista-alerta { list-style: none; margin: 0; padding: 10px 14px; display: flex; flex-direction: column; gap: 8px; background: #fef2f2; }

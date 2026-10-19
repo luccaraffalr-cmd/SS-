@@ -4,6 +4,7 @@ import { urlFotoAuto } from './fotos.js'
 import { NOMBRE_ESTADO, textoError } from './estados.js'
 import { cuando } from './viajes.js'
 import MisViajes from './MisViajes.jsx'
+import ViajesSinCargar from './ViajesSinCargar.jsx'
 import ActivarNotificaciones from './ActivarNotificaciones.jsx'
 import ProximosViajes, { AlertaSinChoferChofer } from './ViajesEsperando.jsx'
 import UbicacionApp from './UbicacionApp.jsx'
@@ -33,6 +34,7 @@ export default function Chofer({ perfil }) {
   const [error, setError] = useState('')
   const [ocupado, setOcupado] = useState(false)
   const [pendientes, setPendientes] = useState(null) // viajes sin hacer, al querer terminar el día
+  const [sinPago, setSinPago] = useState([]) // viajes hechos sin cargar el pago (los trae MisViajes)
 
   const cargarTablero = useCallback(async () => {
     const { data } = await supabase.from('choferes')
@@ -160,7 +162,7 @@ export default function Chofer({ perfil }) {
       {error && <p className="aviso error">{error}</p>}
 
       {esAppAndroid && <UbicacionApp perfil={perfil} estadoChofer={estado} />}
-      <MisViajes perfil={perfil} />
+      <MisViajes perfil={perfil} onSinPago={setSinPago} />
       <ProximosViajes />
 
       <section className="tarjeta separada">
@@ -188,6 +190,8 @@ export default function Chofer({ perfil }) {
           {chofer.patente && <><br />Patente: {chofer.patente}</>}
         </p>
       </div>
+
+      <ViajesSinCargar viajes={sinPago} />
 
       <button className="boton secundario" onClick={salir}>Cerrar sesión</button>
     </main>

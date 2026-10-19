@@ -7,7 +7,8 @@ import { useAtras } from './atras.js'
 import { pitido } from './notificaciones.js'
 
 // App del chofer: ofertas para aceptar o rechazar, su viaje actual y los próximos.
-export default function MisViajes({ perfil }) {
+// Los viajes sin cargar el pago los muestra ViajesSinCargar abajo de todo: se los pasa con onSinPago.
+export default function MisViajes({ perfil, onSinPago }) {
   const [viajes, setViajes] = useState([]) // ofrecidos y asignados, sin finalizar
   const [ahora, setAhora] = useState(Date.now())
   const [error, setError] = useState('')
@@ -16,12 +17,10 @@ export default function MisViajes({ perfil }) {
   // Al finalizar: null | 'elegir' | 'pago' | 'fallido'
   const [finalizando, setFinalizando] = useState(null)
   const [motivo, setMotivo] = useState('')
-  const [cargandoPago, setCargandoPago] = useState(null) // id del viaje sin pago que está cargando
 
   // El botón atrás del celular hace lo mismo que "Volver".
   useAtras(finalizando !== null, () => setFinalizando(null))
   useAtras(finalizando === 'pago' || finalizando === 'fallido', () => setFinalizando('elegir'))
-  useAtras(cargandoPago !== null, () => setCargandoPago(null))
   useAtras(confirmandoRechazo !== null, () => setConfirmandoRechazo(null))
 
   const cargar = useCallback(async () => {
@@ -73,13 +72,6 @@ export default function MisViajes({ perfil }) {
     cargar()
   }
 
-  async function cargarPagoPendiente(viaje, importe, forma_pago, cuenta, otro, extras) {
-    const { error } = await supabase.rpc('cargar_pago', { viaje, importe, forma_pago, cuenta, otro, ...extras })
-    if (error) return textoError(error)
-    setCargandoPago(null)
-    cargar()
-  }
-
   const ofertas = viajes.filter((v) => v.estado === 'ofrecido')
 
   // Con la app abierta: pitido cuando aparece una oferta nueva.
@@ -94,6 +86,8 @@ export default function MisViajes({ perfil }) {
   const actual = viajes.find((v) => v.estado === 'asignado' && v.iniciado_en)
   const aceptados = viajes.filter((v) => v.estado === 'asignado' && !v.iniciado_en)
   const sinPago = viajes.filter((v) => v.estado === 'pago_pendiente')
+  const clavesSinPago = sinPago.map((v) => v.id).join(',')
+  useEffect(() => { onSinPago?.(sinPago) }, [clavesSinPago]) // eslint-disable-line react-hooks/exhaustive-deps
 
   return (
     <>
@@ -178,26 +172,6 @@ export default function MisViajes({ perfil }) {
               <button className="boton secundario" onClick={() => setFinalizando('elegir')}>Volver</button>
             </div>
           )}
-        </section>
-      )}
-
-      {sinPago.length > 0 && (
-        <section className="tarjeta separada sin-pago">
-          <h2>⏳ Mis viajes sin pago ({sinPago.length})</h2>
-          {sinPago.map((v) => (
-            <div key={v.id} className="proximo">
-              <strong className="viaje-titulo">{v.origen}</strong>
-              {v.destino && <span>→ {v.destino}</span>}
-              <span className="viaje-cuando">{cuando(v)} · #{v.id}</span>
-              {cargandoPago === v.id ? (
-                <FormPago textoBoton="Guardar pago"
-                  onGuardar={(importe, forma, cuenta, otro, extras) => cargarPagoPendiente(v.id, importe, forma, cuenta, otro, extras)}
-                  onCancelar={() => setCargandoPago(null)} />
-              ) : (
-                <button className="boton verde" onClick={() => setCargandoPago(v.id)}>💵 Cargar pago</button>
-              )}
-            </div>
-          ))}
         </section>
       )}
 

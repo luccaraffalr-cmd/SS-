@@ -356,6 +356,9 @@ Hoy la ubicación "desaparece" por varios minutos. Hay que diseñar para que **n
   - Se pasa de mes **deslizando con el dedo** (las flechas siguen).
   - Al tocar un día se ven sus viajes y está el botón **"+ Nuevo viaje para el …"**, que abre el viaje nuevo con esa fecha
     (programado si no es hoy). Para días que ya pasaron no aparece.
+- **(2026-10-19) Viajes sin cargar el pago (chofer):** ya no aparecen abiertos en el medio de la pantalla. Abajo de todo
+  (antes de "Cerrar sesión") hay un cartel naranja que se despliega, como el de viajes sin chofer: **"⏳ N viajes sin
+  cargar"**; al tocarlo se ven cuáles son, cada uno con su botón **"Cargar pago"**.
 - **(2026-10-19) Botón "atrás" del celular o del navegador:** hace lo mismo que los botones "Volver" (cierra el viaje
   abierto, viajes fijos, la ficha de un usuario o de una cuenta, corregir el pago, y los pasos de "Finalicé" del chofer).
   Si no hay nada abierto, sale de la app como siempre. En la app Android hace falta el APK nuevo (19/10).
