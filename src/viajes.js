@@ -20,6 +20,15 @@ export function dinero(n) {
   return '$ ' + Number(n).toLocaleString('es-AR', { maximumFractionDigits: 2 })
 }
 
+// Lo que se ve más grande en cada viaje (pedido del 19/10/2026): el cliente o, si no tiene, el origen. El horario va abajo.
+export const tituloViaje = (v) => v.cliente_nombre || v.origen
+
+// Debajo del título: el recorrido si el título es el cliente; si el título ya es el origen, solo el destino.
+export function recorridoDebajo(v) {
+  if (v.cliente_nombre) return v.origen + (v.destino ? ' → ' + v.destino : '')
+  return v.destino ? '→ ' + v.destino : ''
+}
+
 // Lo que pagó el pasajero: importe + demora + peaje (la nafta es un gasto del chofer, no se le cobra).
 export function totalCobrado(v) {
   return Number(v.importe ?? 0) + Number(v.demora ?? 0) + Number(v.peaje ?? 0)

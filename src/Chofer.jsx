@@ -147,7 +147,7 @@ export default function Chofer({ perfil }) {
           <ul className="lista-pendientes">
             {pendientes.map((v) => (
               <li key={v.id}>
-                {cuando(v)} · {v.origen}
+                <strong>{v.origen}</strong> · {cuando(v)}
                 {v.estado === 'ofrecido' && <small> (todavía no lo aceptaste)</small>}
               </li>
             ))}

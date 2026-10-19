@@ -414,6 +414,10 @@ textarea {
 .viaje-arriba, .viaje-abajo { display: flex; justify-content: space-between; align-items: center; gap: 10px; }
 .viaje-hora { font-size: 1.3rem; font-weight: 700; }
 .viaje-hora small { font-size: 0.85rem; font-weight: 400; color: #6b7280; }
+/* Lo más grande de cada viaje: el cliente o el origen (19/10/2026); el horario va abajo, más chico. */
+.viaje-titulo { font-size: 1.2rem; font-weight: 700; overflow-wrap: anywhere; }
+.viaje-hora-chica { color: #111827; font-size: 1rem; }
+.viaje-cuando { font-size: 0.95rem; color: #374151; }
 .viaje-ruta { font-size: 1.05rem; overflow-wrap: anywhere; }
 .viaje-abajo, .viaje-cliente { font-size: 0.9rem; color: #6b7280; }
 .tarjeta-viaje.urgente .viaje-abajo span:last-child { color: #dc2626; font-weight: 700; }
@@ -518,7 +522,7 @@ textarea {
   font-size: 0.62rem;
   line-height: 1.25;
 }
-.calendario-dia .renglon span { overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+.calendario-dia .renglon b, .calendario-dia .renglon span { overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
 .calendario-dia .renglon.urgente { background: #dc2626; color: #fff; font-weight: 600; }
 .calendario-dia .mas { text-align: center; font-size: 0.65rem; font-weight: 700; color: #6b7280; }
 .calendario-dia.otro-mes { opacity: 0.4; }

@@ -1,15 +1,17 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { supabase } from './supabase.js'
 import TarjetaViaje, { CONSULTA_VIAJES } from './TarjetaViaje.jsx'
-import { DIAS_GRILLA, MESES, deFechaLocal, diasDeLaGrilla, fechaCorta, fechaLocal, hora, problemaDelViaje } from './viajes.js'
+import {
+  DIAS_GRILLA, MESES, deFechaLocal, diasDeLaGrilla, fechaCorta, fechaLocal, hora, problemaDelViaje, tituloViaje,
+} from './viajes.js'
 const NOMBRE_DIA = ['domingo', 'lunes', 'martes', 'miércoles', 'jueves', 'viernes', 'sábado']
-const RENGLONES_POR_DIA = 2 // en el celular cada día mide ~45 px: cada viaje va en dos líneas (hora y origen)
+const RENGLONES_POR_DIA = 2 // en el celular cada día mide ~45 px: cada viaje va en dos líneas (cliente u origen, y hora)
 
 // Cuándo se hace el viaje (la presentación si es programado) y en qué día cae.
 const momentoDelViaje = (v) => new Date(v.hora_presentacion ?? v.hora_asignacion)
 const diaDelViaje = (v) => fechaLocal(momentoDelViaje(v))
 
-// Gestión: calendario del mes, como el de Samsung (decidido el 14/10/2026): cada día muestra sus viajes (hora y origen),
+// Gestión: calendario del mes, como el de Samsung (decidido el 14/10/2026): cada día muestra sus viajes (cliente u origen, y hora),
 // se pasa de mes deslizando con el dedo, y al tocar un día se ven sus viajes y se puede cargar uno nuevo para ese día.
 // El día elegido lo guarda Viajes (elegido / onElegir), así al volver de un viaje sigue en el mismo mes.
 export default function Calendario({ ahora, onAbrir, onNuevo, elegido, onElegir: setElegido }) {
@@ -108,8 +110,8 @@ export default function Calendario({ ahora, onAbrir, onNuevo, elegido, onElegir:
                 {lista.slice(0, RENGLONES_POR_DIA).map((v) => (
                   // En rojo si el viaje necesita atención (sin chofer, sin aceptar o el chofer no salió).
                   <small key={v.id} className={'renglon' + (problemaDelViaje(v, ahora) ? ' urgente' : '')}>
-                    <b>{hora(momentoDelViaje(v)).replace(/^0/, '')}</b>
-                    <span>{v.origen}</span>
+                    <b>{tituloViaje(v)}</b>
+                    <span>{hora(momentoDelViaje(v)).replace(/^0/, '')}</span>
                   </small>
                 ))}
                 {lista.length > RENGLONES_POR_DIA && <small className="mas">+{lista.length - RENGLONES_POR_DIA}</small>}

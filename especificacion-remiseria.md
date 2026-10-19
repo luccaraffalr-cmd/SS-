@@ -356,6 +356,9 @@ Hoy la ubicación "desaparece" por varios minutos. Hay que diseñar para que **n
   - Se pasa de mes **deslizando con el dedo** (las flechas siguen).
   - Al tocar un día se ven sus viajes y está el botón **"+ Nuevo viaje para el …"**, que abre el viaje nuevo con esa fecha
     (programado si no es hoy). Para días que ya pasaron no aparece.
+- **(2026-10-19) Cómo se ve cada viaje:** en todas las listas lo más grande es **el cliente** (o **el origen** si no tiene
+  cliente); abajo, el recorrido y después el horario. En la app del chofer, lo más grande es el origen ("Buscar en"), porque
+  el chofer no ve los datos del cliente en los viajes que no son suyos.
 - **(2026-10-15) Viajes que se repiten** (pedido del dueño). Se cargan desde **"Nuevo viaje" → Repetir** (programados):
   - **No** (como siempre), **Días sueltos** (se tocan los días en un calendario chico, ej. jue 15, lun 19 y vie 23, y nada más)
     o **Todas las semanas** (días de la semana + **desde** y **hasta**; sin "hasta" no termina, como los viajes fijos de antes).

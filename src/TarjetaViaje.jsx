@@ -1,4 +1,6 @@
-import { FORMAS_PAGO, NOMBRE_ESTADO_VIAJE, dinero, fechaCorta, hora, problemaDelViaje, totalCobrado } from './viajes.js'
+import {
+  FORMAS_PAGO, NOMBRE_ESTADO_VIAJE, dinero, fechaCorta, hora, problemaDelViaje, recorridoDebajo, tituloViaje, totalCobrado,
+} from './viajes.js'
 
 // Datos que necesita la tarjeta (se agregan al select de viajes).
 export const CONSULTA_VIAJES = '*, chofer:perfiles!viajes_chofer_id_fkey(nombre, telefono),'
@@ -34,18 +36,21 @@ export default function TarjetaViaje({ v, ahora, mostrarFecha, onAbrir }) {
       + (v.estado === 'pago_pendiente' ? ' pago-pendiente' : '')}
       onClick={onAbrir}>
       <div className="viaje-arriba">
-        <span className="viaje-hora">
+        <span className="viaje-titulo">
           {v.prioritario && ['sin_chofer', 'ofrecido'].includes(v.estado) && '⭐ '}
-          {v.tipo === 'programado' ? hora(v.hora_presentacion) : hora(v.hora_asignacion)}
-          {mostrarFecha && <small> {fechaCorta(v.hora_asignacion)}</small>}
+          {tituloViaje(v)}
         </span>
         <span className={'etiqueta viaje ' + v.estado}>{etiqueta}</span>
       </div>
-      <div className="viaje-ruta">
-        {v.origen}{v.destino ? ' → ' + v.destino : ''}
-      </div>
+      {recorridoDebajo(v) && <div className="viaje-ruta">{recorridoDebajo(v)}</div>}
       <div className="viaje-abajo">
-        <span>{v.viaje_fijo_id ? '🔁 Fijo' : v.tipo === 'programado' ? '📅 Programado' : '⚡ Inmediato'} · #{v.id}</span>
+        <span>
+          <strong className="viaje-hora-chica">
+            {v.tipo === 'programado' ? hora(v.hora_presentacion) : hora(v.hora_asignacion)}
+          </strong>
+          {mostrarFecha && ` ${fechaCorta(v.hora_asignacion)}`}
+          {' · '}{v.viaje_fijo_id ? '🔁 Fijo' : v.tipo === 'programado' ? '📅 Programado' : '⚡ Inmediato'} · #{v.id}
+        </span>
         <span>
           {v.chofer ? (fijo ? '📌 ' : '') + v.chofer.nombre
             : esperaFijo ? `📌 ${v.fijo?.nombre ?? ''} (se le ofrece el ${fechaCorta(cuandoSeOfrece(v))})`
@@ -53,15 +58,13 @@ export default function TarjetaViaje({ v, ahora, mostrarFecha, onAbrir }) {
             : urgente ? '⚠️ Falta chofer' : ''}
         </span>
       </div>
-      {(v.cliente_nombre || v.estado === 'finalizado') && (
+      {v.estado === 'finalizado' && (
         <div className="viaje-abajo">
-          <span>{v.cliente_nombre}</span>
-          {v.estado === 'finalizado' && (
-            <span className="importe">
-              {dinero(totalCobrado(v))} · {(v.cuenta?.nombre || v.cuenta_otro)
-                ? `Cta. cte. ${v.cuenta?.nombre ?? v.cuenta_otro}` : FORMAS_PAGO[v.forma_pago]}
-            </span>
-          )}
+          <span />
+          <span className="importe">
+            {dinero(totalCobrado(v))} · {(v.cuenta?.nombre || v.cuenta_otro)
+              ? `Cta. cte. ${v.cuenta?.nombre ?? v.cuenta_otro}` : FORMAS_PAGO[v.forma_pago]}
+          </span>
         </div>
       )}
     </button>

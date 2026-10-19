@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { supabase } from './supabase.js'
 import ElegirFechas from './ElegirFechas.jsx'
-import { deFechaLocal, fechaCorta, fechaLocal } from './viajes.js'
+import { deFechaLocal, fechaCorta, fechaLocal, recorridoDebajo, tituloViaje } from './viajes.js'
 
 // Orden de la semana para mostrar (lunes primero). Valores: 0 = domingo … 6 = sábado.
 export const SEMANA = [[1, 'Lun'], [2, 'Mar'], [3, 'Mié'], [4, 'Jue'], [5, 'Vie'], [6, 'Sáb'], [0, 'Dom']]
@@ -84,11 +84,10 @@ export default function ViajesFijos({ onVolver }) {
           <li key={f.id}>
             <button className={'fila' + (f.activo && !serieTerminada(f) ? '' : ' inactivo')} onClick={() => setEditando(f)}>
               <span>
-                <strong>{f.fechas?.length ? '📅' : '🔁'} {horaCorta(f.hora)} · {textoSerie(f)}</strong>
-                <small>{f.origen}{f.destino ? ' → ' + f.destino : ''}</small>
-                {(f.cliente_nombre || f.chofer) && (
-                  <small>{[f.cliente_nombre, f.chofer && '📌 ' + f.chofer.nombre].filter(Boolean).join(' · ')}</small>
-                )}
+                <strong>{f.fechas?.length ? '📅' : '🔁'} {tituloViaje(f)}</strong>
+                {recorridoDebajo(f) && <small>{recorridoDebajo(f)}</small>}
+                <small>{horaCorta(f.hora)} · {textoSerie(f)}</small>
+                {f.chofer && <small>📌 {f.chofer.nombre}</small>}
               </span>
               {!f.activo ? <span className="etiqueta">Pausado</span>
                 : serieTerminada(f) && <span className="etiqueta">Terminado</span>}

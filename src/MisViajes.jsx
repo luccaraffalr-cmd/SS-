@@ -97,9 +97,9 @@ export default function MisViajes({ perfil }) {
         return (
           <section key={v.id} className="tarjeta separada oferta">
             <h2>{automatica ? '🔔 Viaje para vos' : '📌 Gestión te asignó un viaje'}</h2>
-            <p className="viaje-hora sin-margen">{cuando(v)}</p>
-            <div className="dato"><small>Buscar en</small><strong>{v.origen}</strong></div>
+            <div className="dato"><small>Buscar en</small><strong className="viaje-titulo">{v.origen}</strong></div>
             <div className="dato"><small>Destino</small><strong>{v.destino || 'Sin destino cargado'}</strong></div>
+            <div className="dato"><small>Cuándo</small><strong>{cuando(v)}</strong></div>
             {v.observaciones && <div className="dato"><small>Observaciones</small>{v.observaciones}</div>}
 
             {confirmandoRechazo === v.id ? (
@@ -125,12 +125,13 @@ export default function MisViajes({ perfil }) {
       {actual && (
         <section className="tarjeta separada mi-viaje">
           <h2>🚕 Tu viaje #{actual.id}</h2>
-          <p className="viaje-hora sin-margen">
-            {actual.tipo === 'programado' ? <>Presentarse a las {hora(actual.hora_presentacion)}</> : 'Inmediato'}
-          </p>
-          <div className="dato"><small>Buscar en</small><strong>{actual.origen}</strong></div>
+          <div className="dato"><small>Buscar en</small><strong className="viaje-titulo">{actual.origen}</strong></div>
           {actual.destino && <div className="dato"><small>Destino</small><strong>{actual.destino}</strong></div>}
           {actual.cliente_nombre && <div className="dato"><small>Cliente</small><strong>{actual.cliente_nombre}</strong></div>}
+          <div className="dato">
+            <small>Cuándo</small>
+            <strong>{actual.tipo === 'programado' ? <>Presentarse a las {hora(actual.hora_presentacion)}</> : 'Inmediato'}</strong>
+          </div>
           {actual.observaciones && <div className="dato"><small>Observaciones</small>{actual.observaciones}</div>}
           {actual.cliente_telefono && (
             <a className="boton" href={'tel:' + actual.cliente_telefono}>📞 Llamar al cliente ({actual.cliente_telefono})</a>
@@ -178,8 +179,9 @@ export default function MisViajes({ perfil }) {
           <h2>⏳ Mis viajes sin pago ({sinPago.length})</h2>
           {sinPago.map((v) => (
             <div key={v.id} className="proximo">
-              <strong>#{v.id} · {cuando(v)}</strong>
-              <span>{v.origen}{v.destino ? ' → ' + v.destino : ''}</span>
+              <strong className="viaje-titulo">{v.origen}</strong>
+              {v.destino && <span>→ {v.destino}</span>}
+              <span className="viaje-cuando">{cuando(v)} · #{v.id}</span>
               {cargandoPago === v.id ? (
                 <FormPago textoBoton="Guardar pago"
                   onGuardar={(importe, forma, cuenta, otro, extras) => cargarPagoPendiente(v.id, importe, forma, cuenta, otro, extras)}
@@ -199,9 +201,10 @@ export default function MisViajes({ perfil }) {
             const llegoLaHora = new Date(v.hora_asignacion).getTime() <= ahora
             return (
               <div key={v.id} className={'proximo' + (llegoLaHora ? ' es-hora' : '')}>
-                <strong>#{v.id} · {cuando(v)}</strong>
-                <span>{v.origen}{v.destino ? ' → ' + v.destino : ''}</span>
+                <strong className="viaje-titulo">{v.origen}</strong>
+                {v.destino && <span>→ {v.destino}</span>}
                 {v.cliente_nombre && <small>{v.cliente_nombre}</small>}
+                <span className="viaje-cuando">{cuando(v)} · #{v.id}</span>
                 {llegoLaHora && !actual && (
                   <button className="boton verde" disabled={ocupado} onClick={() => llamar('salir_a_hacer_viaje', v.id)}>
                     🚗 Salir a hacer el viaje

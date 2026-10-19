@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { supabase } from './supabase.js'
-import { hora, problemaDelViaje } from './viajes.js'
+import { hora, problemaDelViaje, recorridoDebajo, tituloViaje } from './viajes.js'
 import ElegirChofer, { useChoferesParaAsignar } from './ElegirChofer.jsx'
 
 const CONSULTA = 'id, estado, tipo, origen, destino, cliente_nombre, hora_presentacion, hora_asignacion, iniciado_en,'
@@ -95,9 +95,9 @@ function PanelAsignar({ viajes, cuando, onVer }) {
       {error && <p className="aviso error sin-margen">{error}</p>}
       {viajes.map((v) => (
         <div key={v.id} className="viaje-alerta">
-          <strong>{cuando(v)} · #{v.id}</strong>
-          <span>{v.origen}{v.destino ? ' → ' + v.destino : ''}</span>
-          {v.cliente_nombre && <small>{v.cliente_nombre}</small>}
+          <strong className="viaje-titulo">{tituloViaje(v)}</strong>
+          {recorridoDebajo(v) && <span>{recorridoDebajo(v)}</span>}
+          <span className="viaje-cuando">{cuando(v)} · #{v.id}</span>
           {v.problema === 'sin_chofer' && v.espera_gestion && (
             <small className="rechazado">❌ Lo rechazó {v.rechazo?.nombre ?? 'un chofer'}</small>
           )}
