@@ -3,6 +3,7 @@ import { supabase } from './supabase.js'
 import { textoError } from './estados.js'
 import { cuando, hora } from './viajes.js'
 import FormPago from './FormPago.jsx'
+import { useAtras } from './atras.js'
 import { pitido } from './notificaciones.js'
 
 // App del chofer: ofertas para aceptar o rechazar, su viaje actual y los próximos.
@@ -16,6 +17,12 @@ export default function MisViajes({ perfil }) {
   const [finalizando, setFinalizando] = useState(null)
   const [motivo, setMotivo] = useState('')
   const [cargandoPago, setCargandoPago] = useState(null) // id del viaje sin pago que está cargando
+
+  // El botón atrás del celular hace lo mismo que "Volver".
+  useAtras(finalizando !== null, () => setFinalizando(null))
+  useAtras(finalizando === 'pago' || finalizando === 'fallido', () => setFinalizando('elegir'))
+  useAtras(cargandoPago !== null, () => setCargandoPago(null))
+  useAtras(confirmandoRechazo !== null, () => setConfirmandoRechazo(null))
 
   const cargar = useCallback(async () => {
     const { data } = await supabase.from('viajes').select('*')

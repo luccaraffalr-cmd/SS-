@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from 'react'
 import { supabase } from './supabase.js'
+import { useAtras } from './atras.js'
 import FormViaje from './FormViaje.jsx'
 import TarjetaViaje, { CONSULTA_VIAJES } from './TarjetaViaje.jsx'
 import Calendario from './Calendario.jsx'
@@ -74,6 +75,10 @@ export default function Viajes() {
     const { data } = await supabase.from('viajes').select(CONSULTA_VIAJES).eq('id', id).single()
     if (data) setEditando(data)
   }
+
+  // El botón atrás del celular hace lo mismo que "Volver".
+  useAtras(!!editando, () => { setEditando(null); cargar() })
+  useAtras(vista === 'fijos', () => setVista('lista'))
 
   if (editando) {
     return <FormViaje viaje={editando === 'nuevo' ? null : editando} fechaInicial={editando === 'nuevo' ? fechaNueva : null}

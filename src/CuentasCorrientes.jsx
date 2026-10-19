@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { supabase } from './supabase.js'
+import { useAtras } from './atras.js'
 
 const TIPOS = { empresa: 'Empresa', cliente: 'Cliente' }
 const VACIA = { nombre: '', tipo: 'empresa', telefono: '', activo: true }
@@ -14,8 +15,10 @@ export default function CuentasCorrientes() {
     setLista(data ?? [])
   }
   useEffect(() => { cargar() }, [])
+  const volver = () => { setEditando(null); cargar() }
+  useAtras(!!editando, volver) // el botón atrás del celular hace lo mismo que "Volver"
 
-  if (editando) return <FormCuenta cuenta={editando} onListo={() => { setEditando(null); cargar() }} />
+  if (editando) return <FormCuenta cuenta={editando} onListo={volver} />
 
   return (
     <main className="pantalla">

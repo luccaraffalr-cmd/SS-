@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { supabase } from './supabase.js'
+import { useAtras } from './atras.js'
 import { NOMBRE_ROL, llamarFuncionUsuarios } from './usuarios.js'
 import DatosChofer from './DatosChofer.jsx'
 
@@ -18,6 +19,7 @@ export default function Usuarios({ yo }) {
   useEffect(() => { cargar() }, [])
 
   function volver() { setEditando(null); cargar() }
+  useAtras(!!editando, volver) // el botón atrás del celular hace lo mismo que "Volver"
 
   if (editando === 'nuevo') return <NuevoUsuario onListo={volver} />
   if (editando) return <EditarUsuario perfil={editando} esYo={editando.id === yo.id} onListo={volver} />

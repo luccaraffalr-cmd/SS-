@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { supabase } from './supabase.js'
 import ElegirFechas from './ElegirFechas.jsx'
+import { useAtras } from './atras.js'
 import { deFechaLocal, fechaCorta, fechaLocal, recorridoDebajo, tituloViaje } from './viajes.js'
 
 // Orden de la semana para mostrar (lunes primero). Valores: 0 = domingo … 6 = sábado.
@@ -63,9 +64,10 @@ export default function ViajesFijos({ onVolver }) {
       .then(({ data }) => setChoferes(data ?? []))
   }, [])
 
-  if (editando) {
-    return <FormViajeFijo fijo={editando} choferes={choferes} onListo={() => { setEditando(null); cargar() }} />
-  }
+  const volver = () => { setEditando(null); cargar() }
+  useAtras(!!editando, volver) // el botón atrás del celular hace lo mismo que "Volver"
+
+  if (editando) return <FormViajeFijo fijo={editando} choferes={choferes} onListo={volver} />
 
   return (
     <main className="pantalla">

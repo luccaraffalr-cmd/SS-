@@ -47,7 +47,9 @@
    (gestión desde el celular). Dentro de la app no andan las web push: por eso los avisos van por Firebase.
    Se firma con la clave de depuración de esta compu (`%USERPROFILE%\.android\debug.keystore`): no borrarla,
    o los celulares no van a poder actualizar sin desinstalar. Parte nativa: `UbicacionService.java`
-   (servicio en primer plano que manda a `reportar_mi_ubicacion`) y `UbicacionPlugin.java`.
+   (servicio en primer plano que manda a `reportar_mi_ubicacion`), `UbicacionPlugin.java` y `MainActivity.java`
+   (desde el 19/10 le pasa el botón atrás del celular a la página: ver `src/atras.js`; APK nuevo en
+   `Descargas\Remiseria.apk`, el anterior quedó como `Remiseria-29-9.apk`).
 
 ## Estado (6/10/2026)
 - **Etapa 1 terminada.** Publicado en Netlify el 29/9/2026 (quedaban ~6 deploys de septiembre; publicar por tandas).

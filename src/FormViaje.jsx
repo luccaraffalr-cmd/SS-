@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { supabase } from './supabase.js'
 import { NOMBRE_ESTADO_VIAJE, deFechaLocal, fechaLocal, hora, problemaDelViaje, unirFechaHora } from './viajes.js'
 import ElegirFechas from './ElegirFechas.jsx'
+import { useAtras } from './atras.js'
 import { SEMANA, textoFechas, textoSerie } from './ViajesFijos.jsx'
 import ElegirChofer, { useChoferesParaAsignar } from './ElegirChofer.jsx'
 import FormPago from './FormPago.jsx'
@@ -91,6 +92,11 @@ export default function FormViaje({ viaje, fechaInicial, onListo }) {
     if (!viaje?.viaje_fijo_id) return
     supabase.from('viajes_fijos').select('*').eq('id', viaje.viaje_fijo_id).maybeSingle().then(({ data }) => setSerie(data))
   }, [viaje?.viaje_fijo_id])
+
+  // El botón atrás del celular hace lo mismo que "Volver" en lo que se abre dentro del viaje.
+  useAtras(corrigiendoPago, () => setCorrigiendoPago(false))
+  useAtras(!!preguntaSerie, () => setPreguntaSerie(null))
+  useAtras(confirmandoAnular, () => setConfirmandoAnular(false))
 
   function elegirRepetir(modo) {
     setRepetir(modo)
