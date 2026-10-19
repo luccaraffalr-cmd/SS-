@@ -1,6 +1,6 @@
 {
   "appId": "ar.remiseria.app",
-  "appName": "Remisería",
+  "appName": "Senda Segura",
   "webDir": "dist",
   "server": {
     "url": "https://fastidious-cocada-43719b.netlify.app",

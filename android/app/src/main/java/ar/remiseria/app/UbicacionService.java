@@ -219,7 +219,7 @@ public class UbicacionService extends Service {
             PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE);
         return new NotificationCompat.Builder(this, CANAL)
             .setSmallIcon(android.R.drawable.ic_menu_mylocation)
-            .setContentTitle("Remisería")
+            .setContentTitle("Senda Segura")
             .setContentText("Compartiendo tu ubicación")
             .setOngoing(true)
             .setContentIntent(alTocar)
