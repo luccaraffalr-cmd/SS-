@@ -3,7 +3,9 @@
   publish = "dist"
   # No publicar (ni gastar créditos) si solo cambió algo que no es la app,
   # como los archivos SQL o la especificación.
-  ignore = "git diff --quiet $CACHED_COMMIT_REF $COMMIT_REF -- src public index.html package.json package-lock.json vite.config.js netlify.toml"
+  # Si Netlify perdió la memoria de la última publicación (pasa después de unas semanas), CACHED_COMMIT_REF
+  # es igual a COMMIT_REF y no hay con qué comparar: en ese caso se publica igual (19/10/2026).
+  ignore = "[ \"$CACHED_COMMIT_REF\" != \"$COMMIT_REF\" ] && git diff --quiet $CACHED_COMMIT_REF $COMMIT_REF -- src public index.html package.json package-lock.json vite.config.js netlify.toml"
 
 # Todas las direcciones abren la app (necesario para las pantallas internas).
 [[redirects]]
