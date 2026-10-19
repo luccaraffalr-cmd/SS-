@@ -12,6 +12,7 @@ public class MainActivity extends BridgeActivity {
     @Override
     public void onCreate(Bundle savedInstanceState) {
         registerPlugin(UbicacionPlugin.class); // ubicación en segundo plano (UbicacionService)
+        registerPlugin(ActualizacionPlugin.class); // que la app se actualice sola (versión 2)
         super.onCreate(savedInstanceState);
 
         // Botón atrás del celular (19/10/2026): si en la app hay algo abierto encima (un viaje, cargar el pago…), lo cierra

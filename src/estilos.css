@@ -333,6 +333,11 @@ a.boton { display: block; text-align: center; text-decoration: none; }
   text-align: center;
 }
 
+/* "Hay una versión nueva de la app" (APK) con botón Actualizar */
+.aviso-app { display: flex; flex-direction: column; gap: 8px; text-align: left; font-weight: 400; }
+.aviso-app strong { font-size: 1.05rem; }
+.aviso-app .boton { margin-top: 4px; }
+
 textarea {
   font: inherit;
   font-weight: 400;

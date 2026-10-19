@@ -19,7 +19,20 @@
       <h1>📶 Sin conexión</h1>
       <p>No se pudo abrir la app. Revisá que el celular tenga internet (datos o WiFi).</p>
       <p><small>Si estabas compartiendo tu ubicación, se sigue mandando cuando vuelva la señal.</small></p>
-      <button onclick="location.href = 'https://fastidious-cocada-43719b.netlify.app'">Reintentar</button>
+      <p id="estado"><small>Se vuelve a conectar sola cuando vuelva la señal.</small></p>
+      <button onclick="abrir()">Reintentar</button>
     </main>
+    <script>
+      // Desde la versión 2 de la app: prueba sola cada 10 segundos (y apenas el celular avisa que volvió la señal).
+      var APP = 'https://fastidious-cocada-43719b.netlify.app'
+      function abrir() { location.href = APP }
+      function probar() {
+        fetch(APP + '/version.json?t=' + Date.now(), { cache: 'no-store' })
+          .then(function (r) { if (r.ok) abrir() })
+          .catch(function () {})
+      }
+      setInterval(probar, 10000)
+      window.addEventListener('online', probar)
+    </script>
   </body>
 </html>

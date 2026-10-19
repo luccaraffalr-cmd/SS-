@@ -2,6 +2,7 @@ import React from 'react'
 import ReactDOM from 'react-dom/client'
 import App from './App.jsx'
 import AvisoVersion from './AvisoVersion.jsx'
+import ActualizarApp from './ActualizarApp.jsx'
 import Seguimiento from './Seguimiento.jsx'
 import './estilos.css'
 import { registrarServiceWorker } from './notificaciones.js'
@@ -16,6 +17,7 @@ ReactDOM.createRoot(document.getElementById('root')).render(
     {codigoSeguimiento ? <Seguimiento codigo={codigoSeguimiento} /> : (
       <>
         <AvisoVersion />
+        <ActualizarApp />
         <App />
       </>
     )}

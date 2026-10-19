@@ -13,6 +13,7 @@ import android.content.pm.PackageManager;
 import android.content.pm.ServiceInfo;
 import android.location.Location;
 import android.os.Build;
+import android.os.Handler;
 import android.os.IBinder;
 import android.os.Looper;
 import android.os.PowerManager;
@@ -49,13 +50,16 @@ public class UbicacionService extends Service {
     static final String PREFS = "ubicacion";
     private static final String CANAL = "ubicacion";
     private static final int ID_AVISO = 1;
-    private static final long CADA_MS = 15_000;       // cada cuánto pide una ubicación nueva
-    private static final long MINIMO_MS = 10_000;     // nunca más seguido que esto
+    // Cada cuánto pide una ubicación nueva. Arranca en 15 segundos y después lo decide el servidor en cada respuesta
+    // (desde la versión 2: más seguido en viaje, menos libre o en cola; se ajusta en la tabla config_app).
+    private static final long CADA_MS = 15_000;
+    private long cadaMs = CADA_MS;
 
     private FusedLocationProviderClient cliente;
     private LocationCallback alRecibir;
     private PowerManager.WakeLock wakeLock;
     private final ExecutorService envios = Executors.newSingleThreadExecutor();
+    private final Handler principal = new Handler(Looper.getMainLooper());
 
     static SharedPreferences prefs(Context c) {
         return c.getSharedPreferences(PREFS, Context.MODE_PRIVATE);
@@ -76,7 +80,14 @@ public class UbicacionService extends Service {
 
         crearCanal();
         int tipo = Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q ? ServiceInfo.FOREGROUND_SERVICE_TYPE_LOCATION : 0;
-        ServiceCompat.startForeground(this, ID_AVISO, armarAviso(), tipo);
+        try {
+            ServiceCompat.startForeground(this, ID_AVISO, armarAviso(), tipo);
+        } catch (Exception e) {
+            // Android no lo dejó (por ejemplo, arrancando solo sin "permitir todo el tiempo"): vuelve al abrir la app.
+            prefs(this).edit().putString("ultimoError", "Android no dejó compartir: " + e.getClass().getSimpleName()).apply();
+            stopSelf();
+            return START_NOT_STICKY;
+        }
 
         if (wakeLock == null) {
             PowerManager pm = (PowerManager) getSystemService(POWER_SERVICE);
@@ -89,13 +100,16 @@ public class UbicacionService extends Service {
         return START_STICKY;
     }
 
+    private static LocationRequest armarPedido(long cada) {
+        return new LocationRequest.Builder(Priority.PRIORITY_HIGH_ACCURACY, cada)
+            .setMinUpdateIntervalMillis(Math.max(5_000, cada - 5_000)) // nunca mucho más seguido que lo pedido
+            .setWaitForAccurateLocation(false)
+            .build();
+    }
+
     @SuppressWarnings("MissingPermission") // se revisa en onStartCommand
     private void empezarAPedirUbicacion() {
         cliente = LocationServices.getFusedLocationProviderClient(this);
-        LocationRequest pedido = new LocationRequest.Builder(Priority.PRIORITY_HIGH_ACCURACY, CADA_MS)
-            .setMinUpdateIntervalMillis(MINIMO_MS)
-            .setWaitForAccurateLocation(false)
-            .build();
         alRecibir = new LocationCallback() {
             @Override
             public void onLocationResult(LocationResult resultado) {
@@ -103,7 +117,18 @@ public class UbicacionService extends Service {
                 if (ubicacion != null) envios.execute(() -> enviar(ubicacion));
             }
         };
-        cliente.requestLocationUpdates(pedido, alRecibir, Looper.getMainLooper());
+        cliente.requestLocationUpdates(armarPedido(cadaMs), alRecibir, Looper.getMainLooper());
+    }
+
+    /** El servidor pidió otra frecuencia (por ejemplo, el chofer salió a hacer un viaje). */
+    @SuppressWarnings("MissingPermission")
+    private void cambiarFrecuencia(long cada) {
+        principal.post(() -> {
+            if (cada == cadaMs || cliente == null || alRecibir == null) return;
+            cadaMs = cada;
+            cliente.removeLocationUpdates(alRecibir);
+            cliente.requestLocationUpdates(armarPedido(cadaMs), alRecibir, Looper.getMainLooper());
+        });
     }
 
     private void enviar(Location ubicacion) {
@@ -137,8 +162,19 @@ public class UbicacionService extends Service {
             String respuesta = leer(codigo < 400 ? conexion.getInputStream() : conexion.getErrorStream());
             if (codigo >= 200 && codigo < 300) {
                 p.edit().putLong("ultimoEnvio", System.currentTimeMillis()).remove("ultimoError").apply();
-                // El servidor devuelve el estado del chofer: si terminó el día (o lo puso gestión), se apaga solo.
-                if (respuesta.contains("fuera_de_servicio")) apagar();
+                // El servidor devuelve { estado, cada } (antes, solo el estado).
+                String estado = respuesta;
+                int cada = 0;
+                try {
+                    JSONObject r = new JSONObject(respuesta);
+                    estado = r.optString("estado", respuesta);
+                    cada = r.optInt("cada", 0);
+                } catch (Exception ignorado) {
+                    // respuesta vieja (solo el estado)
+                }
+                // Si terminó el día (o lo puso gestión fuera de servicio), se apaga solo.
+                if (estado.contains("fuera_de_servicio")) apagar();
+                else if (cada >= 5) cambiarFrecuencia(cada * 1000L);
             } else if (respuesta.contains("Clave incorrecta")) {
                 apagar(); // usuario desactivado o clave vieja: la app pide una nueva al volver a abrirse
             } else {
@@ -193,6 +229,7 @@ public class UbicacionService extends Service {
 
     @Override
     public void onDestroy() {
+        principal.removeCallbacksAndMessages(null);
         if (cliente != null && alRecibir != null) cliente.removeLocationUpdates(alRecibir);
         alRecibir = null;
         if (wakeLock != null && wakeLock.isHeld()) wakeLock.release();

@@ -12,7 +12,9 @@ webpush.setVapidDetails(
   Deno.env.get('VAPID_PRIVATE')!,
 )
 
-type Aviso = { titulo: string; cuerpo: string; etiqueta: string }
+// fuerte: suena con el sonido propio y largo (canal "avisos_viaje", app versión 2 o más): viaje ofrecido o asignado y
+// "es hora de salir". Los demás (cambió, se anuló) van por el canal "viajes", con el sonido común.
+type Aviso = { titulo: string; cuerpo: string; etiqueta: string; fuerte?: boolean }
 type Viaje = { id: number; tipo: string; origen: string; destino: string | null; hora_presentacion: string | null }
 
 function respuesta(cuerpo: unknown, estado = 200) {
@@ -41,7 +43,7 @@ Deno.serve(async (req) => {
       .maybeSingle()
     if (!aviso) return respuesta({ ok: true, enviadas: 0, motivo: 'aviso no válido o ya enviado' })
     const enviadas = await enviarATodos(admin, aviso.chofer_id,
-      { titulo: aviso.titulo, cuerpo: aviso.cuerpo, etiqueta: aviso.etiqueta })
+      { titulo: aviso.titulo, cuerpo: aviso.cuerpo, etiqueta: aviso.etiqueta, fuerte: aviso.etiqueta.startsWith('salida-') })
     return respuesta({ ok: true, enviadas })
   }
 
@@ -62,6 +64,7 @@ Deno.serve(async (req) => {
     cuerpo: `${cuando}
 ${recorrido(v)}`,
     etiqueta: `viaje-${v.id}`,
+    fuerte: true,
   })
   return respuesta({ ok: true, enviadas })
 })
@@ -141,13 +144,15 @@ async function permisoDeGoogle(cuenta: Cuenta) {
 async function enviarALaApp(admin: any, choferId: string, aviso: Aviso) {
   const secreto = Deno.env.get('FIREBASE_CUENTA')
   if (!secreto) return 0
-  const { data: tokens } = await admin.from('tokens_app').select('token').eq('perfil_id', choferId)
+  const { data: tokens } = await admin.from('tokens_app').select('token, version').eq('perfil_id', choferId)
   if (!tokens?.length) return 0
 
   const cuenta = JSON.parse(secreto) as Cuenta
   const permiso = await permisoDeGoogle(cuenta)
   let enviadas = 0
-  for (const { token } of tokens) {
+  for (const { token, version } of tokens) {
+    // El sonido propio está solo en la app versión 2 o más (la 1 no tiene el canal "avisos_viaje").
+    const conSonidoPropio = !!aviso.fuerte && (version ?? 1) >= 2
     const r = await fetch(`https://fcm.googleapis.com/v1/projects/${cuenta.project_id}/messages:send`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + permiso },
@@ -159,9 +164,9 @@ async function enviarALaApp(admin: any, choferId: string, aviso: Aviso) {
             priority: 'HIGH',
             ttl: '3600s',
             notification: {
-              channel_id: 'viajes', // canal con sonido fuerte (lo crea la app)
+              channel_id: conSonidoPropio ? 'avisos_viaje' : 'viajes', // los canales los crea la app
               tag: aviso.etiqueta,
-              sound: 'default',
+              sound: conSonidoPropio ? 'aviso_viaje' : 'default', // (solo cuenta en Android 7; desde el 8 manda el canal)
               default_vibrate_timings: true,
               notification_priority: 'PRIORITY_MAX',
               visibility: 'PUBLIC',
