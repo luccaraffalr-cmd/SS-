@@ -1,5 +1,6 @@
 // Manda las notificaciones push al celular del chofer (app Android y navegador). La llama la base de datos:
-// - { oferta_id }: cuando le ofrecen o asignan un viaje (disparador en "ofertas").
+// - { oferta_id }: cuando le ofrecen o asignan un viaje (disparador en "ofertas"). Si la oferta es de la cola, a los demás
+//   choferes que están trabajando les llega "📣 Salió un viaje para Juan" (con el cliente).
 // - { aviso_id }: un aviso guardado en la tabla "avisos" (es hora de salir, cambió tu viaje, se anuló,
 //   también si se lo pasaron a otro). Lo crea la base con crear_aviso().
 // Cada aviso se manda una sola vez y solo si es reciente (evita duplicados y usos indebidos).
@@ -15,7 +16,9 @@ webpush.setVapidDetails(
 // fuerte: suena con el sonido propio y largo (canal "avisos_viaje", app versión 2 o más): viaje ofrecido o asignado y
 // "es hora de salir". Los demás (cambió, se anuló) van por el canal "viajes", con el sonido común.
 type Aviso = { titulo: string; cuerpo: string; etiqueta: string; fuerte?: boolean }
-type Viaje = { id: number; tipo: string; origen: string; destino: string | null; hora_presentacion: string | null }
+type Viaje = {
+  id: number; tipo: string; origen: string; destino: string | null; hora_presentacion: string | null; cliente_nombre?: string | null
+}
 
 function respuesta(cuerpo: unknown, estado = 200) {
   return new Response(JSON.stringify(cuerpo), { status: estado, headers: { 'Content-Type': 'application/json' } })
@@ -51,7 +54,7 @@ Deno.serve(async (req) => {
   const { data: oferta } = await admin.from('ofertas')
     .update({ notificada_en: new Date().toISOString() })
     .eq('id', Number(datos.oferta_id)).eq('resultado', 'pendiente').is('notificada_en', null).gte('creada_en', hace2min)
-    .select('chofer_id, tipo, viaje:viajes(id, tipo, origen, destino, hora_presentacion)')
+    .select('chofer_id, tipo, viaje:viajes(id, tipo, origen, destino, hora_presentacion, cliente_nombre)')
     .maybeSingle()
   if (!oferta) return respuesta({ ok: true, enviadas: 0, motivo: 'oferta no válida o ya notificada' })
 
@@ -59,15 +62,37 @@ Deno.serve(async (req) => {
   const cuando = v.tipo === 'programado' && v.hora_presentacion
     ? 'Programado ' + horaArgentina(v.hora_presentacion, { weekday: 'short', hour: '2-digit', minute: '2-digit' })
     : 'Inmediato'
-  const enviadas = await enviarATodos(admin, oferta.chofer_id, {
+  let enviadas = await enviarATodos(admin, oferta.chofer_id, {
     titulo: oferta.tipo === 'automatica' ? '🔔 Viaje para vos' : '📌 Gestión te asignó un viaje',
     cuerpo: `${cuando}
 ${recorrido(v)}`,
     etiqueta: `viaje-${v.id}`,
     fuerte: true,
   })
+  if (oferta.tipo === 'automatica') enviadas += await avisarALosDemas(admin, oferta.chofer_id, v)
   return respuesta({ ok: true, enviadas })
 })
+
+// "📣 Salió un viaje para Juan" a los demás choferes que están trabajando (decidido el 20/10/2026): así, si Juan no lo
+// ve, le pueden avisar. Con el cliente (no el recorrido) y el sonido común. Si el viaje pasa a otro chofer, el aviso
+// nuevo reemplaza al anterior (misma etiqueta).
+// deno-lint-ignore no-explicit-any
+async function avisarALosDemas(admin: any, choferId: string, v: Viaje) {
+  const { data: ofrecido } = await admin.from('perfiles').select('nombre').eq('id', choferId).maybeSingle()
+  const { data: demas } = await admin.from('choferes').select('id, perfil:perfiles!inner(activo, rol)')
+    .neq('estado', 'fuera_de_servicio').eq('oculto', false).neq('id', choferId)
+  const aviso: Aviso = {
+    titulo: `📣 Salió un viaje para ${ofrecido?.nombre ?? 'un chofer'}`,
+    cuerpo: v.cliente_nombre ? `Cliente: ${v.cliente_nombre}` : 'Viaje de la cola',
+    etiqueta: `salio-${v.id}`,
+  }
+  let enviadas = 0
+  // deno-lint-ignore no-explicit-any
+  for (const c of (demas ?? []).filter((c: any) => c.perfil?.activo && c.perfil?.rol === 'chofer')) {
+    enviadas += await enviarATodos(admin, c.id, aviso)
+  }
+  return enviadas
+}
 
 // Manda el aviso a todos los celulares del chofer: app Android (Firebase) y navegador (web push).
 // deno-lint-ignore no-explicit-any
@@ -113,8 +138,11 @@ function base64url(datos: Uint8Array | string) {
   return btoa(binario).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '')
 }
 
-// Permiso de Google para mandar avisos (se firma con la clave de la cuenta de servicio).
+// Permiso de Google para mandar avisos (se firma con la clave de la cuenta de servicio). Dura una hora: se reusa
+// (con "Salió un viaje" se manda a varios choferes seguidos).
+let permisoGuardado: { token: string; vence: number } | null = null
 async function permisoDeGoogle(cuenta: Cuenta) {
+  if (permisoGuardado && permisoGuardado.vence > Date.now() + 60_000) return permisoGuardado.token
   const ahora = Math.floor(Date.now() / 1000)
   const sinFirmar = base64url(JSON.stringify({ alg: 'RS256', typ: 'JWT' })) + '.' + base64url(JSON.stringify({
     iss: cuenta.client_email,
@@ -137,6 +165,7 @@ async function permisoDeGoogle(cuenta: Cuenta) {
   })
   const datos = await r.json()
   if (!datos.access_token) throw new Error('Google no dio permiso: ' + JSON.stringify(datos))
+  permisoGuardado = { token: datos.access_token, vence: Date.now() + 3_500_000 }
   return datos.access_token as string
 }
 

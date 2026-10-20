@@ -356,6 +356,11 @@ Hoy la ubicación "desaparece" por varios minutos. Hay que diseñar para que **n
   - Se pasa de mes **deslizando con el dedo** (las flechas siguen).
   - Al tocar un día se ven sus viajes y está el botón **"+ Nuevo viaje para el …"**, que abre el viaje nuevo con esa fecha
     (programado si no es hoy). Para días que ya pasaron no aparece.
+- **(2026-10-20) "📣 Salió un viaje para Juan"** (pedido del dueño): cuando la cola le ofrece un viaje a un chofer, a los
+  demás choferes que están trabajando (no fuera de servicio, no ocultos) les llega un aviso con el sonido común y lo ven en
+  su pantalla mientras nadie lo acepte, con el **nombre del cliente** (no el origen ni el destino), para poder avisarle si
+  no lo ve. Si pasa a otro chofer, el aviso nuevo reemplaza al anterior. Solo para los viajes de la cola (no los asignados a
+  mano). Cambia, para este caso, lo de "nunca datos del cliente" en los viajes ajenos.
 - **(2026-10-19) Arranque de cero de los viajes:** se borraron todos los viajes que ya habían pasado (también los sin
   chofer y los que nadie tomó, y sus filas en la copia de la planilla); quedaron solo los futuros. Los números de viaje
   saltaban de a miles (los viajes fijos gastaban un número cada 10 minutos aunque no crearan nada): se arregló y los

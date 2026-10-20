@@ -5,6 +5,7 @@ import { NOMBRE_ESTADO, textoError } from './estados.js'
 import { cuando } from './viajes.js'
 import MisViajes from './MisViajes.jsx'
 import ViajesSinCargar from './ViajesSinCargar.jsx'
+import OfertasEnCurso from './OfertasEnCurso.jsx'
 import ActivarNotificaciones from './ActivarNotificaciones.jsx'
 import ProximosViajes, { AlertaSinChoferChofer } from './ViajesEsperando.jsx'
 import UbicacionApp from './UbicacionApp.jsx'
@@ -164,6 +165,7 @@ export default function Chofer({ perfil }) {
       {esAppAndroid && <UbicacionApp perfil={perfil} estadoChofer={estado} />}
       <MisViajes perfil={perfil} onSinPago={setSinPago} />
       <ProximosViajes />
+      <OfertasEnCurso yo={perfil.id} />
 
       <section className="tarjeta separada">
         <h2>Cola ({cola.length})</h2>

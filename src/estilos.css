@@ -244,6 +244,10 @@ a.boton { display: block; text-align: center; text-decoration: none; }
 .asignar-rapido select { min-width: 0; }
 .asignar-rapido .boton { padding: 10px 14px; }
 
+/* "Salió un viaje para Juan" (chofer) */
+.salio-viaje { border: 3px solid #2563eb; background: #eff6ff; gap: 10px; }
+.salio-viaje strong { font-size: 1.05rem; }
+
 /* Viajes sin cargar el pago (chofer): cartel naranja que se despliega, abajo de todo */
 .desplegable-sin-cargar { margin-top: 16px; border-radius: 12px; overflow: hidden; }
 .desplegable-sin-cargar .alerta-sin-chofer { background: #d97706; animation: none; }
