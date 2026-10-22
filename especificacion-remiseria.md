@@ -321,7 +321,7 @@ Hoy la ubicación "desaparece" por varios minutos. Hay que diseñar para que **n
   - Gestión puede asignar a un chofer que está **En viaje**: queda como su **próximo viaje**.
   - Si gestión le saca un viaje que ya estaba haciendo (reasigna o anula), el chofer vuelve al **puesto 1**.
   - Si todos están ocupados, el viaje que espera se le ofrece al **primero que se anuncie** (como la regla B).
-- **(2026-09-28) Viajes ajenos que ve el chofer:** "Próximos viajes" (programados sin chofer, solo la hora de asignación) y el cartel de viajes sin chofer (hora, origen y destino; nunca datos del cliente). Por ahora **solo los ve**: no puede elegirlos; los asigna gestión.
+- **(2026-09-28) Viajes ajenos que ve el chofer:** "Próximos viajes" (programados sin chofer, solo la hora de asignación) y el cartel de viajes sin chofer (hora, origen y destino; nunca datos del cliente). ~~Por ahora **solo los ve**: no puede elegirlos; los asigna gestión.~~ **Desde el 22/10/2026 los puede tomar** (ver más abajo).
 - **(2026-09-28) Prioridad entre viajes esperando:** primero los marcados **⭐ Priorizar** por gestión, después los **programados**, después los **inmediatos**; dentro de cada grupo, el de hora de asignación más temprana.
 - **(2026-09-28) Tema a confirmar n.º 1:** el chofer elegido para un programado **sigue en la cola** hasta su hora (puede rechazar ofertas si sabe que no llega). Destino: opcional, pero se le muestra al chofer en la oferta.
 - **(2026-09-28) Choferes entran con un usuario** (ej. `juanperez`), no necesitan email.
@@ -362,6 +362,16 @@ Hoy la ubicación "desaparece" por varios minutos. Hay que diseñar para que **n
   su pantalla mientras nadie lo acepte, con el **nombre del cliente** (no el origen ni el destino), para poder avisarle si
   no lo ve. Si pasa a otro chofer, el aviso nuevo reemplaza al anterior. Solo para los viajes de la cola (no los asignados a
   mano). Cambia, para este caso, lo de "nunca datos del cliente" en los viajes ajenos.
+- **(2026-10-22) Los choferes pueden tomar los viajes sin chofer** (cuando nos quedamos sin choferes disponibles):
+  - Cuando un viaje queda sin chofer (llegó su hora y la cola no lo tomó: nadie en la cola, o todos rechazaron o no
+    contestaron), se **espera 1 minuto**: si alguien se anuncia, se le ofrece como siempre (2:30 para aceptar).
+  - Pasado el minuto, en el cartel rojo de viajes sin chofer aparece **"✋ Tomar este viaje"** (con "¿Lo tomás? Sí, lo tomo"
+    para no tomarlo sin querer) y a los choferes que están trabajando les suena **"🆘 Viaje sin chofer"** (con dónde buscar).
+  - **El primero que lo toma se lo queda**, sin tener que aceptarlo. Lo pueden tomar los que están **Libres, en la cola o en
+    viaje**: los libres o en la cola salen a hacerlo en el momento; al que está en viaje le queda como próximo viaje. Los fuera
+    de servicio y los ocultos no. Lo puede tomar también el que lo había rechazado o no había contestado.
+  - Los viajes que esperan a gestión (un chofer rechazó una asignación a mano, chofer fijo) no se pueden tomar.
+  - Queda anotado en el historial ("Juan tomó el viaje desde la app").
 - **(2026-10-22) Hora en 24 hs y link del pasajero más directo:** la hora de presentación (viaje y viaje fijo) se elige
   con dos listas, hora y minutos, siempre en 24 hs (el campo del celular o la compu a veces mostraba a. m./p. m.). El link de
   seguimiento ya no tiene "Generar link": están directo **WhatsApp** y **Copiar link** (el link se genera solo al tocar uno).

@@ -321,6 +321,8 @@ a.boton { display: block; text-align: center; text-decoration: none; }
 .lista-alerta { list-style: none; margin: 0; padding: 10px 14px; display: flex; flex-direction: column; gap: 8px; background: #fef2f2; }
 .lista-alerta li { display: flex; flex-direction: column; overflow-wrap: anywhere; }
 .lista-alerta .ayuda { margin: 0; }
+.lista-alerta .tomar-viaje { margin-top: 8px; }
+.lista-alerta .botonera.tomar-viaje { padding: 10px; border-radius: 10px; background: #fff; }
 
 .aviso-notificaciones { border: 3px solid #facc15; background: #fefce8; }
 /* Gestión (admin): "Activá las notificaciones" arriba de todo; si ya están activadas no ocupa lugar. */

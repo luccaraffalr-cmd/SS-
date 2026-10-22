@@ -117,7 +117,7 @@ export default function Chofer({ perfil }) {
 
   return (
     <main className="pantalla">
-      <AlertaSinChoferChofer />
+      <AlertaSinChoferChofer chofer={chofer} />
       <h1>Hola, {perfil.nombre}</h1>
       <ActivarNotificaciones />
 

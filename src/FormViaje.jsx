@@ -33,7 +33,10 @@ function textoSituacion(v) {
   if (v.estado === 'sin_chofer' && v.espera_gestion) {
     return `❌ ${v.rechazo?.nombre ?? 'El chofer'} rechazó este viaje. No se asigna solo: elegí otro chofer o dejalo en automático.`
   }
-  if (v.estado === 'sin_chofer') return 'Esperando chofer: se le ofrece al primero de la cola.'
+  if (v.estado === 'sin_chofer') {
+    return 'Esperando chofer: se le ofrece al primero de la cola. Si en un minuto nadie lo toma, cualquier chofer que esté '
+      + 'trabajando lo puede tomar desde la app (y les suena un aviso).'
+  }
   if (v.estado === 'ofrecido' && !v.asignado_por) {
     return `Se le ofreció a ${nombre} (primero de la cola). Esperando que acepte. Si no contesta en 2 minutos y medio, `
       + 'pasa solo al siguiente de la cola.'
