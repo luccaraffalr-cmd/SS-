@@ -30,6 +30,17 @@ function LineaDestino({ viaje, sinDestino }) {
   )
 }
 
+// Ofertas de la cola: 2 minutos y medio para contestar (22/10/2026); si no, el viaje pasa al siguiente.
+function TiempoParaContestar({ vence, ahora }) {
+  const quedan = Math.max(0, Math.ceil((new Date(vence).getTime() - ahora) / 1000))
+  if (quedan === 0) return <p className="tiempo-oferta poco">⌛ Se terminó el tiempo: el viaje pasa al siguiente.</p>
+  return (
+    <p className={'tiempo-oferta' + (quedan <= 30 ? ' poco' : '')}>
+      ⏱️ Te quedan <strong>{Math.floor(quedan / 60)}:{String(quedan % 60).padStart(2, '0')}</strong> para contestar
+    </p>
+  )
+}
+
 // App del chofer: ofertas para aceptar o rechazar, su viaje actual y los próximos.
 // Los viajes sin cargar el pago los muestra ViajesSinCargar abajo de todo: se los pasa con onSinPago.
 export default function MisViajes({ perfil, onSinPago }) {
@@ -122,6 +133,7 @@ export default function MisViajes({ perfil, onSinPago }) {
         return (
           <section key={v.id} className="tarjeta separada oferta">
             <h2>{automatica ? '🔔 Viaje para vos' : '📌 Gestión te asignó un viaje'}</h2>
+            {automatica && v.oferta_vence && <TiempoParaContestar vence={v.oferta_vence} ahora={ahora} />}
             <BloqueOrigen viaje={v} />
             <LineaDestino viaje={v} sinDestino="Sin destino cargado" />
             <div className="dato"><small>Cuándo</small><strong>{cuando(v)}</strong></div>

@@ -251,6 +251,9 @@ a.boton { display: block; text-align: center; text-decoration: none; }
 .proximo .boton { margin-top: 8px; }
 
 .oferta { border: 3px solid #f59e0b; }
+.tiempo-oferta { margin: 0; padding: 8px 12px; border-radius: 10px; background: #fef3c7; color: #92400e; font-size: 1rem; }
+.tiempo-oferta strong { font-variant-numeric: tabular-nums; }
+.tiempo-oferta.poco { background: #fee2e2; color: #991b1b; }
 .sin-pago { border: 3px solid #f59e0b; }
 .esperando { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 6px; }
 .esperando:empty { display: none; }

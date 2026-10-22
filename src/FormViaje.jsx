@@ -34,7 +34,8 @@ function textoSituacion(v) {
   }
   if (v.estado === 'sin_chofer') return 'Esperando chofer: se le ofrece al primero de la cola.'
   if (v.estado === 'ofrecido' && !v.asignado_por) {
-    return `Se le ofreció a ${nombre} (primero de la cola). Esperando que acepte. Si no contesta, podés asignárselo a otro.`
+    return `Se le ofreció a ${nombre} (primero de la cola). Esperando que acepte. Si no contesta en 2 minutos y medio, `
+      + 'pasa solo al siguiente de la cola.'
   }
   if (v.estado === 'ofrecido') return `📌 Asignado a mano a ${nombre}. Esperando que lo acepte.`
   if (v.estado === 'asignado' && !v.iniciado_en) return `${nombre} lo aceptó. Todavía no salió a hacerlo.`

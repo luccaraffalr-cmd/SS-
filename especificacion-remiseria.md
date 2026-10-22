@@ -313,7 +313,8 @@ Hoy la ubicación "desaparece" por varios minutos. Hay que diseñar para que **n
   - Los choferes ven la cola, quién está Libre y quién En viaje.
 - **(2026-09-28) Cola ordenable "tipo Spotify":** en gestión se arrastra a cada chofer al puesto que se quiera.
 - **(2026-09-28) Asignación con aceptación del chofer.** Reemplaza "El chofer no puede rechazar viajes" (4.3):
-  - **Oferta automática:** el viaje se le ofrece al primero de la cola. **Sin tiempo límite** (cambiado el 28/9/2026: antes eran 3 minutos): queda esperando hasta que acepte o rechace; si no contesta, gestión se lo puede asignar a otro.
+  - **Oferta automática:** el viaje se le ofrece al primero de la cola. ~~Sin tiempo límite~~ **Desde el 22/10/2026 tiene
+    2 minutos y medio para contestar** (ver la decisión del 22/10 más abajo). (El 28/9 se había sacado el límite de 3 minutos.)
     - **Rechaza:** el viaje pasa al siguiente y él **sigue primero en la cola** (cambiado el 28/9/2026: antes salía de la cola).
     - No se le vuelve a ofrecer el mismo viaje.
   - **Asignación manual (gestión):** el chofer la acepta al recibirla (sin tiempo límite) y, cuando llega la hora o termina el viaje que está haciendo, toca **"Salir a hacer el viaje"**. Si la rechaza, el viaje **vuelve a gestión** (no se asigna solo).
@@ -361,6 +362,15 @@ Hoy la ubicación "desaparece" por varios minutos. Hay que diseñar para que **n
   su pantalla mientras nadie lo acepte, con el **nombre del cliente** (no el origen ni el destino), para poder avisarle si
   no lo ve. Si pasa a otro chofer, el aviso nuevo reemplaza al anterior. Solo para los viajes de la cola (no los asignados a
   mano). Cambia, para este caso, lo de "nunca datos del cliente" en los viajes ajenos.
+- **(2026-10-22) Vuelve el tiempo límite de las ofertas de la cola: 2 minutos y medio** (pasaba que un chofer no tomaba el
+  viaje y, si nadie estaba atento, quedaba sin hacer):
+  - Si el chofer no acepta ni rechaza en 2:30, el viaje **pasa solo al siguiente de la cola** y él **sigue primero** (igual
+    que cuando rechaza). Ese viaje no se le vuelve a ofrecer.
+  - Le suena **"⌛ Se te pasó el viaje"** (no contestaste a tiempo, seguís primero). En la oferta ve la cuenta regresiva
+    "⏱️ Te quedan 2:12 para contestar" (en rojo los últimos 30 segundos).
+  - Si no queda nadie en la cola, el viaje queda sin chofer: cartel rojo y aviso con sonido a los admins.
+  - Si un chofer no contesta varias seguidas, por ahora no pasa nada más (gestión lo puede sacar de la cola a mano).
+  - Las asignaciones a mano de gestión siguen sin tiempo límite.
 - **(2026-10-22) Origen destacado para el chofer** (los choferes se confundían con el destino): en la oferta, "Tu viaje"
   y "Tus viajes asignados", el origen va en un **recuadro verde "📍 BUSCAR EN"** con letra grande; el destino queda abajo,
   más chico y gris, como **"Llevar a: …"**. En los avisos "🔔 Viaje para vos", "📌 Gestión te asignó un viaje" y
