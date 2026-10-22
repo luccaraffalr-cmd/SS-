@@ -11,6 +11,7 @@ import CompartirViaje from './CompartirViaje.jsx'
 import EstadoPlanilla from './EstadoPlanilla.jsx'
 import { FORMAS_PAGO, dinero, fechaCorta, totalCobrado } from './viajes.js'
 import { cuandoSeOfrece } from './TarjetaViaje.jsx'
+import { EditarAdjuntos } from './Adjuntos.jsx'
 
 // Explicación en palabras de en qué anda la asignación del viaje.
 function textoSituacion(v) {
@@ -65,6 +66,8 @@ export default function FormViaje({ viaje, fechaInicial, onListo }) {
         : String(ANTICIPACION_POR_DEFECTO),
     }
   })
+  // Links, ubicaciones, fotos, audios y archivos pegados al origen, al destino o a las observaciones (22/10/2026).
+  const [adjuntos, setAdjuntos] = useState(viaje?.adjuntos ?? [])
   const [error, setError] = useState('')
   const [enviando, setEnviando] = useState(false)
   const [confirmandoAnular, setConfirmandoAnular] = useState(false)
@@ -166,6 +169,7 @@ export default function FormViaje({ viaje, fechaInicial, onListo }) {
       origen: datos.origen.trim(),
       destino: datos.destino.trim() || null,
       observaciones: datos.observaciones.trim() || null,
+      adjuntos,
       hora_presentacion: esProgramado ? presentacion.toISOString() : null,
     }
     if (esProgramado) fila.hora_asignacion = asignacion.toISOString()
@@ -213,6 +217,7 @@ export default function FormViaje({ viaje, fechaInicial, onListo }) {
       cliente_nombre: datos.cliente_nombre.trim() || null,
       cliente_telefono: datos.cliente_telefono.trim() || null,
       observaciones: datos.observaciones.trim() || null,
+      adjuntos,
       chofer_id: choferElegido || null,
     }
     let fila
@@ -248,6 +253,7 @@ export default function FormViaje({ viaje, fechaInicial, onListo }) {
       ({ error } = await supabase.rpc('cambiar_serie', {
         viaje: viaje.id, p_hora: datos.hora, p_anticipacion: minutos, p_origen: fila.origen, p_destino: fila.destino,
         p_cliente_nombre: fila.cliente_nombre, p_cliente_telefono: fila.cliente_telefono, p_observaciones: fila.observaciones,
+        p_adjuntos: fila.adjuntos,
       }))
     }
     setEnviando(false)
@@ -354,15 +360,24 @@ export default function FormViaje({ viaje, fechaInicial, onListo }) {
           </div>
         )}
 
-        <label>Origen (dirección de búsqueda)<input value={datos.origen} onChange={cambiar('origen')} required /></label>
-        <label>Destino<input value={datos.destino} onChange={cambiar('destino')} /></label>
+        <div className="campo-con-adjuntos">
+          <label>Origen (dirección de búsqueda)<input value={datos.origen} onChange={cambiar('origen')} required /></label>
+          <EditarAdjuntos campo="origen" adjuntos={adjuntos} onCambiar={setAdjuntos} />
+        </div>
+        <div className="campo-con-adjuntos">
+          <label>Destino<input value={datos.destino} onChange={cambiar('destino')} /></label>
+          <EditarAdjuntos campo="destino" adjuntos={adjuntos} onCambiar={setAdjuntos} />
+        </div>
         <label>Cliente<input value={datos.cliente_nombre} onChange={cambiar('cliente_nombre')} /></label>
         <label>Teléfono del cliente<input type="tel" value={datos.cliente_telefono} onChange={cambiar('cliente_telefono')} /></label>
-        <label>
-          Observaciones
-          <textarea rows={3} value={datos.observaciones} onChange={cambiar('observaciones')}
-            placeholder="ej: con espera, ida y vuelta, lleva valija…" />
-        </label>
+        <div className="campo-con-adjuntos">
+          <label>
+            Observaciones
+            <textarea rows={3} value={datos.observaciones} onChange={cambiar('observaciones')}
+              placeholder="ej: con espera, ida y vuelta, lleva valija…" />
+          </label>
+          <EditarAdjuntos campo="observaciones" adjuntos={adjuntos} onCambiar={setAdjuntos} />
+        </div>
         {esNuevo && (
           <label>
             Chofer (opcional)
@@ -376,7 +391,7 @@ export default function FormViaje({ viaje, fechaInicial, onListo }) {
 
         {conChofer && (
           <p className="ayuda sin-margen">
-            Si cambiás el horario, el origen o el destino, a {viaje.chofer.nombre} le llega un aviso.
+            Si cambiás el horario, el origen o el destino, o le agregás algo con 📎, a {viaje.chofer.nombre} le llega un aviso.
           </p>
         )}
         {error && <p className="aviso error">{error}</p>}

@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { supabase } from './supabase.js'
 import ElegirFechas from './ElegirFechas.jsx'
 import { useAtras } from './atras.js'
+import { EditarAdjuntos } from './Adjuntos.jsx'
 import { deFechaLocal, fechaCorta, fechaLocal, recorridoDebajo, tituloViaje } from './viajes.js'
 
 // Orden de la semana para mostrar (lunes primero). Valores: 0 = domingo … 6 = sábado.
@@ -112,6 +113,8 @@ function FormViajeFijo({ fijo, choferes, onListo }) {
     desde: fijo.desde || fechaLocal(),
     fechas: fijo.fechas ?? null, // días sueltos
   }))
+  // Lo que se adjunta acá queda en todos los viajes del viaje fijo (decidido el 22/10/2026).
+  const [adjuntos, setAdjuntos] = useState(fijo.adjuntos ?? [])
   const [error, setError] = useState('')
   const [enviando, setEnviando] = useState(false)
   const [confirmandoBorrar, setConfirmandoBorrar] = useState(false)
@@ -138,6 +141,7 @@ function FormViajeFijo({ fijo, choferes, onListo }) {
       cliente_nombre: datos.cliente_nombre.trim() || null,
       cliente_telefono: datos.cliente_telefono.trim() || null,
       observaciones: datos.observaciones.trim() || null,
+      adjuntos,
       chofer_id: datos.chofer_id || null,
       activo: datos.activo,
       ...cambios,
@@ -205,14 +209,23 @@ function FormViajeFijo({ fijo, choferes, onListo }) {
           ))}
         </div>
 
-        <label>Origen (dirección de búsqueda)<input value={datos.origen} onChange={cambiar('origen')} required /></label>
-        <label>Destino<input value={datos.destino} onChange={cambiar('destino')} /></label>
+        <div className="campo-con-adjuntos">
+          <label>Origen (dirección de búsqueda)<input value={datos.origen} onChange={cambiar('origen')} required /></label>
+          <EditarAdjuntos campo="origen" adjuntos={adjuntos} onCambiar={setAdjuntos} />
+        </div>
+        <div className="campo-con-adjuntos">
+          <label>Destino<input value={datos.destino} onChange={cambiar('destino')} /></label>
+          <EditarAdjuntos campo="destino" adjuntos={adjuntos} onCambiar={setAdjuntos} />
+        </div>
         <label>Cliente<input value={datos.cliente_nombre} onChange={cambiar('cliente_nombre')} /></label>
         <label>Teléfono del cliente<input type="tel" value={datos.cliente_telefono} onChange={cambiar('cliente_telefono')} /></label>
-        <label>
-          Observaciones
-          <textarea rows={2} value={datos.observaciones} onChange={cambiar('observaciones')} />
-        </label>
+        <div className="campo-con-adjuntos">
+          <label>
+            Observaciones
+            <textarea rows={2} value={datos.observaciones} onChange={cambiar('observaciones')} />
+          </label>
+          <EditarAdjuntos campo="observaciones" adjuntos={adjuntos} onCambiar={setAdjuntos} />
+        </div>
         <label>
           Chofer fijo (opcional)
           <select value={datos.chofer_id} onChange={cambiar('chofer_id')}>

@@ -77,11 +77,13 @@
     viaje" (también si se lo pasan a otro o queda sin chofer; trigger `viajes_avisar_cambios`). Más alertas
     "no salió" / "sin aceptar" en gestión y advertencia al "Terminar el día". Los avisos en la app los probó
     el usuario el 6/10: andan bien.
-- **21/10: la app ya está en uso y se van corrigiendo cosas.** SQL hasta el 030 aplicados y `notificar` subida.
+- **21/10: la app ya está en uso y se van corrigiendo cosas.** SQL hasta el 031 aplicados y `notificar` subida.
   Falta publicar en Netlify todo lo hecho desde el 19/10 a la tarde (viajes sin cargar abajo, "Salió un viaje para Juan",
   hora en el celular, y lo del 21/10: Mapa al final para el admin, sin "Transferencia al dueño", botón "Editar cola",
   avisos a los admins — "Salió un viaje" y alertas del cartel rojo, SQL 030; el admin las activa con el cartel amarillo
-  de gestión).
+  de gestión; y del 22/10: **adjuntos** en Origen/Destino/Observaciones, SQL 031, `Adjuntos.jsx` y `adjuntos.js`,
+  carpeta privada `adjuntos` en Storage). Siguiente: "Compartir desde WhatsApp" (APK nueva, solo para el celular del dueño)
+  y, más adelante, borrar solas las fotos y audios viejos.
 - Pendiente antes de usarla en serio: cargar los choferes reales (fotos de autos en `Descargas\remises`), instalar la
   app en cada celular (permisos: ubicación "todo el tiempo", batería sin restricciones, notificaciones).
 - **Etapa 3** (contexto y estado en `etapa-3-gestion.md`): la app **reemplaza al formulario de Google** y escribe cada viaje

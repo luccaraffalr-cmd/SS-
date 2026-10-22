@@ -5,6 +5,8 @@ import { cuando, hora } from './viajes.js'
 import FormPago from './FormPago.jsx'
 import { useAtras } from './atras.js'
 import { pitido } from './notificaciones.js'
+import VerAdjuntos from './Adjuntos.jsx'
+import { tieneAdjuntos } from './adjuntos.js'
 
 // App del chofer: ofertas para aceptar o rechazar, su viaje actual y los próximos.
 // Los viajes sin cargar el pago los muestra ViajesSinCargar abajo de todo: se los pasa con onSinPago.
@@ -98,10 +100,21 @@ export default function MisViajes({ perfil, onSinPago }) {
         return (
           <section key={v.id} className="tarjeta separada oferta">
             <h2>{automatica ? '🔔 Viaje para vos' : '📌 Gestión te asignó un viaje'}</h2>
-            <div className="dato"><small>Buscar en</small><strong className="viaje-titulo">{v.origen}</strong></div>
-            <div className="dato"><small>Destino</small><strong>{v.destino || 'Sin destino cargado'}</strong></div>
+            <div className="dato">
+              <small>Buscar en</small><strong className="viaje-titulo">{v.origen}</strong>
+              <VerAdjuntos campo="origen" adjuntos={v.adjuntos} />
+            </div>
+            <div className="dato">
+              <small>Destino</small><strong>{v.destino || 'Sin destino cargado'}</strong>
+              <VerAdjuntos campo="destino" adjuntos={v.adjuntos} />
+            </div>
             <div className="dato"><small>Cuándo</small><strong>{cuando(v)}</strong></div>
-            {v.observaciones && <div className="dato"><small>Observaciones</small>{v.observaciones}</div>}
+            {(v.observaciones || tieneAdjuntos(v, 'observaciones')) && (
+              <div className="dato">
+                <small>Observaciones</small>{v.observaciones}
+                <VerAdjuntos campo="observaciones" adjuntos={v.adjuntos} />
+              </div>
+            )}
 
             {confirmandoRechazo === v.id ? (
               <>
@@ -126,14 +139,27 @@ export default function MisViajes({ perfil, onSinPago }) {
       {actual && (
         <section className="tarjeta separada mi-viaje">
           <h2>🚕 Tu viaje #{actual.id}</h2>
-          <div className="dato"><small>Buscar en</small><strong className="viaje-titulo">{actual.origen}</strong></div>
-          {actual.destino && <div className="dato"><small>Destino</small><strong>{actual.destino}</strong></div>}
+          <div className="dato">
+            <small>Buscar en</small><strong className="viaje-titulo">{actual.origen}</strong>
+            <VerAdjuntos campo="origen" adjuntos={actual.adjuntos} />
+          </div>
+          {(actual.destino || tieneAdjuntos(actual, 'destino')) && (
+            <div className="dato">
+              <small>Destino</small><strong>{actual.destino}</strong>
+              <VerAdjuntos campo="destino" adjuntos={actual.adjuntos} />
+            </div>
+          )}
           {actual.cliente_nombre && <div className="dato"><small>Cliente</small><strong>{actual.cliente_nombre}</strong></div>}
           <div className="dato">
             <small>Cuándo</small>
             <strong>{actual.tipo === 'programado' ? <>Presentarse a las {hora(actual.hora_presentacion)}</> : 'Inmediato'}</strong>
           </div>
-          {actual.observaciones && <div className="dato"><small>Observaciones</small>{actual.observaciones}</div>}
+          {(actual.observaciones || tieneAdjuntos(actual, 'observaciones')) && (
+            <div className="dato">
+              <small>Observaciones</small>{actual.observaciones}
+              <VerAdjuntos campo="observaciones" adjuntos={actual.adjuntos} />
+            </div>
+          )}
           {actual.cliente_telefono && (
             <a className="boton" href={'tel:' + actual.cliente_telefono}>📞 Llamar al cliente ({actual.cliente_telefono})</a>
           )}
@@ -183,8 +209,11 @@ export default function MisViajes({ perfil, onSinPago }) {
             return (
               <div key={v.id} className={'proximo' + (llegoLaHora ? ' es-hora' : '')}>
                 <strong className="viaje-titulo">{v.origen}</strong>
+                <VerAdjuntos campo="origen" adjuntos={v.adjuntos} />
                 {v.destino && <span>→ {v.destino}</span>}
+                <VerAdjuntos campo="destino" adjuntos={v.adjuntos} />
                 {v.cliente_nombre && <small>{v.cliente_nombre}</small>}
+                <VerAdjuntos campo="observaciones" adjuntos={v.adjuntos} />
                 <span className="viaje-cuando">{cuando(v)} · #{v.id}</span>
                 {llegoLaHora && !actual && (
                   <button className="boton verde" disabled={ocupado} onClick={() => llamar('salir_a_hacer_viaje', v.id)}>

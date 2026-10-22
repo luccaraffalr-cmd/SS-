@@ -361,6 +361,19 @@ Hoy la ubicación "desaparece" por varios minutos. Hay que diseñar para que **n
   su pantalla mientras nadie lo acepte, con el **nombre del cliente** (no el origen ni el destino), para poder avisarle si
   no lo ve. Si pasa a otro chofer, el aviso nuevo reemplaza al anterior. Solo para los viajes de la cola (no los asignados a
   mano). Cambia, para este caso, lo de "nunca datos del cliente" en los viajes ajenos.
+- **(2026-10-22) Adjuntos en los viajes** (pedido del dueño: autorizaciones de los countries, audios, ubicaciones):
+  - No van en una lista aparte: se **pegan a una parte del viaje** (Origen, Destino u Observaciones) con el botón
+    **"📎 Agregar"** que hay debajo de cada una. Así, si el cliente manda dos ubicaciones, una va al origen y otra al destino.
+  - Se puede **pegar un link o una ubicación** (si es de Google Maps o Waze, o unas coordenadas, se guarda como ubicación; a un
+    link se le puede poner un nombre, ej. "Autorización") o **subir una foto, un audio o un archivo** (las fotos se achican).
+  - Los carga gestión. **Los ve el chofer de ese viaje desde la oferta**, como botoncitos chicos debajo de cada dato (para no
+    recargar la pantalla): "📍 Ver en el mapa", "🔗 Autorización", "🖼️ Ver foto", "🔊 Escuchar audio". Los otros choferes y el
+    pasajero no los ven nunca. Fotos, audios y archivos van a una carpeta privada de Supabase.
+  - **Viajes fijos y series:** lo que se carga en el viaje fijo (o en "Nuevo viaje" con Repetir) queda en todos sus viajes. Al
+    cambiar un viaje de la serie se pregunta "Solo este viaje" o "Todos los que faltan", como con el resto de los datos.
+  - Si gestión le agrega algo a un viaje que el chofer ya tiene, le llega **"🔄 Cambió tu viaje"** con lo que se agregó.
+  - Pendiente: borrar solas las fotos y audios viejos (hay lugar de sobra por meses) y **"Compartir desde WhatsApp"** (APK
+    nueva para el celular del dueño: WhatsApp → Compartir → Senda Segura → elegir el viaje y la parte).
 - **(2026-10-21) Correcciones con la app en uso:**
   - **Menú del admin:** "Mapa" va al final de todo (Viajes, Choferes, Cuentas, Usuarios, Mi cuenta, Mapa). Los operadores
     siguen como antes.
