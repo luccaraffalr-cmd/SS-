@@ -362,6 +362,9 @@ Hoy la ubicación "desaparece" por varios minutos. Hay que diseñar para que **n
   su pantalla mientras nadie lo acepte, con el **nombre del cliente** (no el origen ni el destino), para poder avisarle si
   no lo ve. Si pasa a otro chofer, el aviso nuevo reemplaza al anterior. Solo para los viajes de la cola (no los asignados a
   mano). Cambia, para este caso, lo de "nunca datos del cliente" en los viajes ajenos.
+- **(2026-10-22) Hora en 24 hs y link del pasajero más directo:** la hora de presentación (viaje y viaje fijo) se elige
+  con dos listas, hora y minutos, siempre en 24 hs (el campo del celular o la compu a veces mostraba a. m./p. m.). El link de
+  seguimiento ya no tiene "Generar link": están directo **WhatsApp** y **Copiar link** (el link se genera solo al tocar uno).
 - **(2026-10-22) Vuelve el tiempo límite de las ofertas de la cola: 2 minutos y medio** (pasaba que un chofer no tomaba el
   viaje y, si nadie estaba atento, quedaba sin hacer):
   - Si el chofer no acepta ni rechaza en 2:30, el viaje **pasa solo al siguiente de la cola** y él **sigue primero** (igual

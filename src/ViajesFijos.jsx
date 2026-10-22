@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { supabase } from './supabase.js'
 import ElegirFechas from './ElegirFechas.jsx'
+import ElegirHora from './ElegirHora.jsx'
 import { useAtras } from './atras.js'
 import { EditarAdjuntos } from './Adjuntos.jsx'
 import { deFechaLocal, fechaCorta, fechaLocal, recorridoDebajo, tituloViaje } from './viajes.js'
@@ -199,7 +200,7 @@ function FormViajeFijo({ fijo, choferes, onListo }) {
           </>
         )}
         <div className="dos-columnas">
-          <label>Hora de presentación<input type="time" value={datos.hora} onChange={cambiar('hora')} required /></label>
+          <label>Hora de presentación<ElegirHora valor={datos.hora} onCambiar={(hora) => setDatos({ ...datos, hora })} /></label>
           <label>Minutos para asignar<input inputMode="numeric" value={datos.anticipacion} onChange={cambiar('anticipacion')} /></label>
         </div>
         <div className="botones-rapidos">

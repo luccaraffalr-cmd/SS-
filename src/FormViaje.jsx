@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { supabase } from './supabase.js'
 import { NOMBRE_ESTADO_VIAJE, deFechaLocal, fechaLocal, hora, problemaDelViaje, unirFechaHora } from './viajes.js'
 import ElegirFechas from './ElegirFechas.jsx'
+import ElegirHora from './ElegirHora.jsx'
 import { useAtras } from './atras.js'
 import { SEMANA, textoFechas, textoSerie } from './ViajesFijos.jsx'
 import ElegirChofer, { useChoferesParaAsignar } from './ElegirChofer.jsx'
@@ -337,7 +338,7 @@ export default function FormViaje({ viaje, fechaInicial, onListo }) {
             )}
             <div className="dos-columnas">
               {repetir === 'no' && <label>Fecha<input type="date" value={datos.fecha} onChange={cambiar('fecha')} required /></label>}
-              <label>Hora de presentación<input type="time" value={datos.hora} onChange={cambiar('hora')} required /></label>
+              <label>Hora de presentación<ElegirHora valor={datos.hora} onCambiar={(hora) => setDatos({ ...datos, hora })} /></label>
             </div>
             <label>
               Minutos de anticipación para asignar el chofer

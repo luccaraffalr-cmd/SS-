@@ -67,6 +67,9 @@ main > .boton { width: 100%; }
 
 /* Los campos de fecha y hora del celular no se pasan del ancho disponible. */
 input[type="date"], input[type="time"] { min-width: 0; max-width: 100%; }
+/* Hora en 24 hs: dos listas (hora : minutos). */
+.elegir-hora { display: flex; align-items: center; gap: 6px; }
+.elegir-hora select { flex: 1; min-width: 0; }
 
 select {
   font: inherit;
