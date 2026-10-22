@@ -12,6 +12,7 @@ export default function Choferes() {
   const [ahora, setAhora] = useState(Date.now())
   const [abierto, setAbierto] = useState(null) // chofer al que se le está cambiando el estado
   const [eligiendo, setEligiendo] = useState(false) // lista de "Agregar a la cola" abierta
+  const [editandoCola, setEditandoCola] = useState(false) // con "Editar cola" se puede mover y sacar choferes
   const [error, setError] = useState('')
   const [ubicaciones, setUbicaciones] = useState({}) // chofer -> cuándo mandó su última ubicación (app Android)
   const ubicacionDe = (c) => ubicaciones[c.id]
@@ -47,17 +48,26 @@ export default function Choferes() {
 
   const cola = useMemo(() => (lista ?? []).filter((c) => c.estado === 'en_cola')
     .sort((a, b) => new Date(a.anunciado_en) - new Date(b.anunciado_en)), [lista])
-  const paraAgregar = (lista ?? []).filter((c) => !c.oculto && c.estado !== 'en_cola' && c.estado !== 'en_viaje')
+  useEffect(() => { if (cola.length === 0) setEditandoCola(false) }, [cola.length])
+  const paraAgregar =(lista ?? []).filter((c) => !c.oculto && c.estado !== 'en_cola' && c.estado !== 'en_viaje')
 
   return (
     <main className="pantalla">
-      <h1>Cola</h1>
+      <div className="titulo-con-boton">
+        <h1>Cola</h1>
+        {cola.length > 0 && (
+          <button className={'boton-chico ' + (editandoCola ? 'listo' : 'editar')} onClick={() => setEditandoCola(!editandoCola)}>
+            {editandoCola ? '✓ Listo' : '✏️ Editar cola'}
+          </button>
+        )}
+      </div>
       {error && <p className="aviso error">{error}</p>}
       <section className="tarjeta">
         {lista !== null && cola.length === 0 && <p className="ayuda sin-margen">No hay nadie en la cola.</p>}
-        {cola.length > 1 && <p className="ayuda sin-margen">Para cambiar el orden, arrastrá la manija ≡.</p>}
+        {editandoCola && cola.length > 1 && <p className="ayuda sin-margen">Para cambiar el orden, arrastrá la manija ≡.</p>}
         <ColaOrdenable
           cola={cola}
+          editando={editandoCola}
           onMover={(chofer, puesto) => llamar('mover_en_cola', { chofer, puesto })}
           onSacar={(chofer) => llamar('salir_de_cola', { chofer })}
         />

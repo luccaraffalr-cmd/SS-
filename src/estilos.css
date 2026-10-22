@@ -264,6 +264,9 @@ a.boton { display: block; text-align: center; text-decoration: none; }
 .lista-alerta .ayuda { margin: 0; }
 
 .aviso-notificaciones { border: 3px solid #facc15; background: #fefce8; }
+/* Gestión (admin): "Activá las notificaciones" arriba de todo; si ya están activadas no ocupa lugar. */
+.avisos-gestion { max-width: 480px; margin: 0 auto; padding: 0 16px; }
+.avisos-gestion:empty { display: none; }
 
 .form-pago { display: flex; flex-direction: column; gap: 12px; }
 .form-pago input { font-size: 1.4rem; font-weight: 700; }
@@ -297,6 +300,11 @@ a.boton { display: block; text-align: center; text-decoration: none; }
   background: #fee2e2;
   color: #991b1b;
 }
+/* Título con un botón al costado (ej. "Cola" + "Editar cola") */
+.titulo-con-boton { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 16px; }
+.titulo-con-boton h1 { margin: 0; }
+.boton-chico.editar { background: #e0e7ff; color: #3730a3; padding: 8px 14px; font-size: 1rem; }
+.boton-chico.listo { background: #16a34a; color: #fff; padding: 8px 14px; font-size: 1rem; }
 
 /* Cola ordenable (gestión) */
 .cola-ordenable { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 6px; }

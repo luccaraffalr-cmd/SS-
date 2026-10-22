@@ -361,6 +361,20 @@ Hoy la ubicación "desaparece" por varios minutos. Hay que diseñar para que **n
   su pantalla mientras nadie lo acepte, con el **nombre del cliente** (no el origen ni el destino), para poder avisarle si
   no lo ve. Si pasa a otro chofer, el aviso nuevo reemplaza al anterior. Solo para los viajes de la cola (no los asignados a
   mano). Cambia, para este caso, lo de "nunca datos del cliente" en los viajes ajenos.
+- **(2026-10-21) Correcciones con la app en uso:**
+  - **Menú del admin:** "Mapa" va al final de todo (Viajes, Choferes, Cuentas, Usuarios, Mi cuenta, Mapa). Los operadores
+    siguen como antes.
+  - **Se saca "Transferencia al dueño"** de las formas de pago para cargar un pago (chofer y gestión). Quedan efectivo,
+    transferencia al chofer y cuenta corriente. Los pagos viejos que la tenían se siguen viendo igual (y al corregirlos
+    aparece la opción).
+  - **Cola en gestión con botón "✏️ Editar cola":** la cola se ve sin manijas; al tocar "Editar cola" aparecen la manija ≡
+    para arrastrar y "Sacar". "✓ Listo" la vuelve a bloquear. Así no se mueve a un chofer sin querer.
+  - **Avisos a los administradores** (en el celular, con sonido; los operadores no):
+    - **"📣 Salió un viaje para Juan"**, igual que a los choferes (con el cliente y el recorrido).
+    - **Las alertas del cartel rojo:** "⚠️ Viaje sin chofer" y "⏳ Juan no aceptó el viaje" cuando llega la hora de
+      asignación, y **"⏰ Juan no salió" 3 minutos después** de la hora de salir (para darle tiempo al chofer). Cada alerta
+      suena una vez; si el viaje cambia de estado, de chofer o de horario y vuelve a tener un problema, suena de nuevo.
+    - El admin activa las notificaciones con el cartel "🔔 Activá las notificaciones" que le aparece arriba en gestión.
 - **(2026-10-19) Arranque de cero de los viajes:** se borraron todos los viajes que ya habían pasado (también los sin
   chofer y los que nadie tomó, y sus filas en la copia de la planilla); quedaron solo los futuros. Los números de viaje
   saltaban de a miles (los viajes fijos gastaban un número cada 10 minutos aunque no crearan nada): se arregló y los

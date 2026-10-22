@@ -1,8 +1,8 @@
 // Manda las notificaciones push al celular del chofer (app Android y navegador). La llama la base de datos:
 // - { oferta_id }: cuando le ofrecen o asignan un viaje (disparador en "ofertas"). Si la oferta es de la cola, a los demás
-//   choferes que están trabajando les llega "📣 Salió un viaje para Juan" (con el cliente).
+//   choferes que están trabajando y a los admins les llega "📣 Salió un viaje para Juan" (con el cliente).
 // - { aviso_id }: un aviso guardado en la tabla "avisos" (es hora de salir, cambió tu viaje, se anuló,
-//   también si se lo pasaron a otro). Lo crea la base con crear_aviso().
+//   también si se lo pasaron a otro; y a los admins, las alertas del cartel rojo). Lo crea la base con crear_aviso().
 // Cada aviso se manda una sola vez y solo si es reciente (evita duplicados y usos indebidos).
 import { createClient } from 'npm:@supabase/supabase-js@2'
 import webpush from 'npm:web-push@3'
@@ -13,8 +13,8 @@ webpush.setVapidDetails(
   Deno.env.get('VAPID_PRIVATE')!,
 )
 
-// fuerte: suena con el sonido propio y largo (canal "avisos_viaje", app versión 2 o más): viaje ofrecido o asignado y
-// "es hora de salir". Los demás (cambió, se anuló) van por el canal "viajes", con el sonido común.
+// fuerte: suena con el sonido propio y largo (canal "avisos_viaje", app versión 2 o más): viaje ofrecido o asignado,
+// "es hora de salir" y las alertas a los admins. Los demás (cambió, se anuló) van por el canal "viajes", con el sonido común.
 type Aviso = { titulo: string; cuerpo: string; etiqueta: string; fuerte?: boolean }
 type Viaje = {
   id: number; tipo: string; origen: string; destino: string | null; hora_presentacion: string | null; cliente_nombre?: string | null
@@ -46,7 +46,8 @@ Deno.serve(async (req) => {
       .maybeSingle()
     if (!aviso) return respuesta({ ok: true, enviadas: 0, motivo: 'aviso no válido o ya enviado' })
     const enviadas = await enviarATodos(admin, aviso.chofer_id,
-      { titulo: aviso.titulo, cuerpo: aviso.cuerpo, etiqueta: aviso.etiqueta, fuerte: aviso.etiqueta.startsWith('salida-') })
+      { titulo: aviso.titulo, cuerpo: aviso.cuerpo, etiqueta: aviso.etiqueta,
+        fuerte: aviso.etiqueta.startsWith('salida-') || aviso.etiqueta.startsWith('alerta-') })
     return respuesta({ ok: true, enviadas })
   }
 
@@ -75,12 +76,13 @@ ${recorrido(v)}`,
 
 // "📣 Salió un viaje para Juan" a los demás choferes que están trabajando (decidido el 20/10/2026): así, si Juan no lo
 // ve, le pueden avisar. Con el cliente (no el recorrido) y el sonido común. Si el viaje pasa a otro chofer, el aviso
-// nuevo reemplaza al anterior (misma etiqueta).
+// nuevo reemplaza al anterior (misma etiqueta). Desde el 21/10/2026 también a los admins (con el recorrido).
 // deno-lint-ignore no-explicit-any
 async function avisarALosDemas(admin: any, choferId: string, v: Viaje) {
   const { data: ofrecido } = await admin.from('perfiles').select('nombre').eq('id', choferId).maybeSingle()
   const { data: demas } = await admin.from('choferes').select('id, perfil:perfiles!inner(activo, rol)')
     .neq('estado', 'fuera_de_servicio').eq('oculto', false).neq('id', choferId)
+  const { data: admins } = await admin.from('perfiles').select('id').eq('rol', 'admin').eq('activo', true)
   const aviso: Aviso = {
     titulo: `📣 Salió un viaje para ${ofrecido?.nombre ?? 'un chofer'}`,
     cuerpo: v.cliente_nombre ? `Cliente: ${v.cliente_nombre}` : 'Viaje de la cola',
@@ -90,6 +92,10 @@ async function avisarALosDemas(admin: any, choferId: string, v: Viaje) {
   // deno-lint-ignore no-explicit-any
   for (const c of (demas ?? []).filter((c: any) => c.perfil?.activo && c.perfil?.rol === 'chofer')) {
     enviadas += await enviarATodos(admin, c.id, aviso)
+  }
+  const avisoAdmin: Aviso = { ...aviso, cuerpo: (v.cliente_nombre ? `Cliente: ${v.cliente_nombre}\n` : '') + recorrido(v) }
+  for (const a of admins ?? []) {
+    enviadas += await enviarATodos(admin, a.id, avisoAdmin)
   }
   return enviadas
 }

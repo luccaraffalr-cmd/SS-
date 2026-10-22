@@ -15,6 +15,9 @@ export const FORMAS_PAGO = {
   cuenta_corriente: 'Cuenta corriente',
 }
 
+// Ya no se eligen al cargar un pago (decidido el 21/10/2026); siguen apareciendo en los pagos viejos.
+export const FORMAS_PAGO_VIEJAS = ['transferencia_duenio']
+
 // "$ 12.500"
 export function dinero(n) {
   return '$ ' + Number(n).toLocaleString('es-AR', { maximumFractionDigits: 2 })

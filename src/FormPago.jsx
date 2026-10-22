@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { supabase } from './supabase.js'
-import { FORMAS_PAGO, dinero, leerImporte } from './viajes.js'
+import { FORMAS_PAGO, FORMAS_PAGO_VIEJAS, dinero, leerImporte } from './viajes.js'
 
 const textoInicial = (n) => (n === null || n === undefined ? '' : String(n))
 
@@ -86,7 +86,7 @@ export default function FormPago({
         </button>
       )}
       <div className="formas-pago">
-        {Object.entries(FORMAS_PAGO).map(([id, texto]) => (
+        {Object.entries(FORMAS_PAGO).filter(([id]) => !FORMAS_PAGO_VIEJAS.includes(id) || id === formaInicial).map(([id, texto]) => (
           <button key={id} type="button" className={forma === id ? 'activo' : ''} onClick={() => setForma(id)}>{texto}</button>
         ))}
       </div>

@@ -9,13 +9,18 @@ window.addEventListener('beforeinstallprompt', (e) => { e.preventDefault(); avis
 
 const instalada = () => window.matchMedia('(display-mode: standalone)').matches
 
-// Recuadro para que el chofer active las notificaciones: en la app Android, las de Android (Firebase);
+const EXPLICACION_CHOFER = 'Así te suena el celular cuando te ofrecen un viaje, aunque tengas la app cerrada o la pantalla bloqueada.'
+
+// Recuadro para que el chofer (o el admin) active las notificaciones: en la app Android, las de Android (Firebase);
 // en el navegador, las web (y, si puede, que instale la página como app).
-export default function ActivarNotificaciones() {
-  return esAppAndroid ? <ActivarNotificacionesApp /> : <ActivarNotificacionesWeb />
+// discreto: con las notificaciones ya activadas no muestra nada (en gestión, arriba de todo).
+export default function ActivarNotificaciones({ explicacion = EXPLICACION_CHOFER, discreto = false }) {
+  return esAppAndroid
+    ? <ActivarNotificacionesApp explicacion={explicacion} discreto={discreto} />
+    : <ActivarNotificacionesWeb explicacion={explicacion} discreto={discreto} />
 }
 
-function ActivarNotificacionesApp() {
+function ActivarNotificacionesApp({ explicacion, discreto }) {
   const [activas, setActivas] = useState(null) // null = revisando
   const [negadas, setNegadas] = useState(false)
 
@@ -35,13 +40,11 @@ function ActivarNotificacionesApp() {
   }
 
   if (activas === null) return null
-  if (activas) return <p className="ayuda centrada">🔔 Notificaciones activadas en este celular</p>
+  if (activas) return discreto ? null : <p className="ayuda centrada">🔔 Notificaciones activadas en este celular</p>
   return (
     <section className="tarjeta separada aviso-notificaciones">
       <h2>🔔 Activá las notificaciones</h2>
-      <p className="sin-margen">
-        Así te suena el celular cuando te ofrecen un viaje, aunque tengas la app cerrada o la pantalla bloqueada.
-      </p>
+      <p className="sin-margen">{explicacion}</p>
       <button className="boton grande verde" onClick={activar}>Activar notificaciones</button>
       {negadas && (
         <>
@@ -55,7 +58,7 @@ function ActivarNotificacionesApp() {
   )
 }
 
-function ActivarNotificacionesWeb() {
+function ActivarNotificacionesWeb({ explicacion, discreto }) {
   const [activas, setActivas] = useState(null) // null = revisando
   const [error, setError] = useState('')
   const [puedeInstalar, setPuedeInstalar] = useState(!!avisoInstalar && !instalada())
@@ -89,19 +92,17 @@ function ActivarNotificacionesWeb() {
       {!activas && (
         <section className="tarjeta separada aviso-notificaciones">
           <h2>🔔 Activá las notificaciones</h2>
-          <p className="sin-margen">
-            Así te suena el celular cuando te ofrecen un viaje, aunque tengas la app cerrada o la pantalla bloqueada.
-          </p>
+          <p className="sin-margen">{explicacion}</p>
           {notificacionesSoportadas()
             ? <button className="boton grande verde" onClick={activar}>Activar notificaciones</button>
             : <p className="aviso error sin-margen">Este navegador no permite notificaciones. Abrí la app con Chrome.</p>}
           {error && <p className="aviso error sin-margen">{error}</p>}
         </section>
       )}
-      {puedeInstalar && (
+      {puedeInstalar && !discreto && (
         <button className="boton secundario" onClick={instalar}>📲 Instalar la app en el celular</button>
       )}
-      {activas && <p className="ayuda centrada">🔔 Notificaciones activadas en este celular</p>}
+      {activas && !discreto && <p className="ayuda centrada">🔔 Notificaciones activadas en este celular</p>}
     </>
   )
 }

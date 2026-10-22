@@ -1,6 +1,7 @@
 import { PushNotifications } from '@capacitor/push-notifications'
 import { supabase } from './supabase.js'
 import { versionDeLaApp } from './actualizacionApp.js'
+import { pitido } from './notificaciones.js'
 
 // Avisos de viajes en la app Android (Firebase). En el navegador se usan los de notificaciones.js.
 
@@ -54,6 +55,12 @@ export async function pedirNotificacionesApp() {
   const { receive } = await PushNotifications.requestPermissions()
   if (receive !== 'granted') return false
   return prepararNotificacionesApp()
+}
+
+// Gestión (admin): con la app abierta, Android no muestra el aviso; que al menos suene un pitido.
+// Devuelve una promesa con la escucha (para sacarla con .remove()).
+export function sonarConLaAppAbierta() {
+  return PushNotifications.addListener('pushNotificationReceived', () => pitido())
 }
 
 // Al cerrar sesión: este celular deja de recibir avisos de ese usuario.
