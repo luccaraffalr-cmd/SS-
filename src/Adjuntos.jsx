@@ -2,6 +2,13 @@ import { useEffect, useRef, useState } from 'react'
 import { adjuntoDeLink, esUbicacion, leerLink, subirArchivo, textoAdjunto, urlDeArchivo } from './adjuntos.js'
 import { useAtras } from './atras.js'
 
+// Clip simple, del color del texto (para "Agregar").
+const Clip = () => (
+  <svg className="icono-clip" viewBox="0 0 24 24" aria-hidden="true">
+    <path d="M15 7l-6.5 6.5a1.5 1.5 0 0 0 3 3l6.5 -6.5a3 3 0 0 0 -6 -6l-6.5 6.5a4.5 4.5 0 0 0 9 9l6.5 -6.5" />
+  </svg>
+)
+
 // Los adjuntos de una parte del viaje (campo: 'origen' | 'destino' | 'observaciones'), como botoncitos chicos para no
 // recargar la pantalla. Los usa el chofer y también gestión.
 export default function VerAdjuntos({ campo, adjuntos }) {
@@ -14,7 +21,7 @@ export default function VerAdjuntos({ campo, adjuntos }) {
   )
 }
 
-// Gestión: los adjuntos de una parte del viaje, con ✕ para sacarlos, y "📎 Agregar" (pegar un link o una ubicación,
+// Gestión: los adjuntos de una parte del viaje, con ✕ para sacarlos, y "Agregar" (pegar un link o una ubicación,
 // o subir una foto, un audio o un archivo). onCambiar recibe una función que cambia la lista.
 export function EditarAdjuntos({ campo, adjuntos, onCambiar }) {
   const [abierto, setAbierto] = useState(false)
@@ -67,7 +74,9 @@ export function EditarAdjuntos({ campo, adjuntos, onCambiar }) {
               onClick={() => onCambiar((lista) => lista.filter((x) => x.id !== a.id))}>✕</button>
           </span>
         ))}
-        {!abierto && <button type="button" className="agregar-adjunto" onClick={() => setAbierto(true)}>📎 Agregar</button>}
+        {!abierto && (
+          <button type="button" className="agregar-adjunto" onClick={() => setAbierto(true)}><Clip /> Agregar</button>
+        )}
       </div>
       {abierto && (
         <div className="panel-adjunto">

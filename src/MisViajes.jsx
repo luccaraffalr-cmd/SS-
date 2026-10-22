@@ -111,7 +111,7 @@ export default function MisViajes({ perfil, onSinPago }) {
             <div className="dato"><small>Cuándo</small><strong>{cuando(v)}</strong></div>
             {(v.observaciones || tieneAdjuntos(v, 'observaciones')) && (
               <div className="dato">
-                <small>Observaciones</small>{v.observaciones}
+                <small>Observaciones</small>{v.observaciones && <span className="texto-dato">{v.observaciones}</span>}
                 <VerAdjuntos campo="observaciones" adjuntos={v.adjuntos} />
               </div>
             )}
@@ -156,7 +156,7 @@ export default function MisViajes({ perfil, onSinPago }) {
           </div>
           {(actual.observaciones || tieneAdjuntos(actual, 'observaciones')) && (
             <div className="dato">
-              <small>Observaciones</small>{actual.observaciones}
+              <small>Observaciones</small>{actual.observaciones && <span className="texto-dato">{actual.observaciones}</span>}
               <VerAdjuntos campo="observaciones" adjuntos={actual.adjuntos} />
             </div>
           )}

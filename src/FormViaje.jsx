@@ -391,7 +391,7 @@ export default function FormViaje({ viaje, fechaInicial, onListo }) {
 
         {conChofer && (
           <p className="ayuda sin-margen">
-            Si cambiás el horario, el origen o el destino, o le agregás algo con 📎, a {viaje.chofer.nombre} le llega un aviso.
+            Si cambiás el horario, el origen o el destino, o le agregás un link, una ubicación o un archivo, a {viaje.chofer.nombre} le llega un aviso.
           </p>
         )}
         {error && <p className="aviso error">{error}</p>}

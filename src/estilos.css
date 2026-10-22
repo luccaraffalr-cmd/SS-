@@ -191,23 +191,27 @@ a.boton { display: block; text-align: center; text-decoration: none; }
 .mi-viaje { border: 3px solid #7c3aed; }
 .dato { display: flex; flex-direction: column; gap: 2px; overflow-wrap: anywhere; }
 .dato small { color: #6b7280; }
-.dato strong { font-size: 1.1rem; }
+/* Lo escrito (origen, destino…) se ve más que los botoncitos de adjuntos que tiene abajo (22/10/2026). */
+.dato strong { font-size: 1.25rem; color: #111827; }
+.dato .viaje-titulo { font-size: 1.4rem; }
+.dato .texto-dato { font-size: 1.1rem; color: #111827; }
+.salio-viaje .dato strong { font-size: 1.1rem; }
 /* Adjuntos de un viaje (links, ubicaciones, fotos, audios y archivos): botoncitos chicos debajo de cada dato. */
 .campo-con-adjuntos { display: flex; flex-direction: column; gap: 6px; }
-.adjuntos { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 4px; }
+.adjuntos { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 6px; }
 .adjuntos:empty { display: none; }
 .adjunto {
   display: inline-flex;
   align-items: center;
   max-width: 100%;
-  padding: 6px 12px;
+  padding: 5px 11px;
   border: none;
   border-radius: 999px;
   background: #e0e7ff;
   color: #3730a3;
   font: inherit;
-  font-size: 0.95rem;
-  font-weight: 600;
+  font-size: 0.88rem;
+  font-weight: 500;
   text-decoration: none;
   cursor: pointer;
 }
@@ -218,15 +222,19 @@ a.boton { display: block; text-align: center; text-decoration: none; }
 .adjunto-con-sacar .adjunto { padding-right: 4px; }
 .sacar-adjunto { border: none; background: none; color: #3730a3; font: inherit; padding: 6px 12px 6px 6px; cursor: pointer; }
 .agregar-adjunto {
-  border: 1px dashed #9ca3af;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  border: 1px solid #d1d5db;
   border-radius: 999px;
-  background: none;
+  background: #fff;
   padding: 5px 12px;
-  color: #4b5563;
+  color: #374151;
   font: inherit;
   font-size: 0.9rem;
   cursor: pointer;
 }
+.icono-clip { width: 1.05em; height: 1.05em; flex-shrink: 0; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
 .panel-adjunto { display: flex; flex-direction: column; gap: 8px; padding: 12px; border-radius: 10px; background: #f3f4f6; }
 .panel-adjunto label.boton { display: block; text-align: center; cursor: pointer; }
 .panel-adjunto label.boton.deshabilitado { opacity: 0.6; cursor: default; }
