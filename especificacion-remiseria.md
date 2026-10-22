@@ -361,6 +361,10 @@ Hoy la ubicación "desaparece" por varios minutos. Hay que diseñar para que **n
   su pantalla mientras nadie lo acepte, con el **nombre del cliente** (no el origen ni el destino), para poder avisarle si
   no lo ve. Si pasa a otro chofer, el aviso nuevo reemplaza al anterior. Solo para los viajes de la cola (no los asignados a
   mano). Cambia, para este caso, lo de "nunca datos del cliente" en los viajes ajenos.
+- **(2026-10-22) Origen destacado para el chofer** (los choferes se confundían con el destino): en la oferta, "Tu viaje"
+  y "Tus viajes asignados", el origen va en un **recuadro verde "📍 BUSCAR EN"** con letra grande; el destino queda abajo,
+  más chico y gris, como **"Llevar a: …"**. En los avisos "🔔 Viaje para vos", "📌 Gestión te asignó un viaje" y
+  "🚗 Es hora de salir" también: primero "Buscar en: …" y abajo "Llevar a: …" (SQL 032).
 - **(2026-10-22) Adjuntos en los viajes** (pedido del dueño: autorizaciones de los countries, audios, ubicaciones):
   - No van en una lista aparte: se **pegan a una parte del viaje** (Origen, Destino u Observaciones) con el botón
     **"📎 Agregar"** que hay debajo de cada una. Así, si el cliente manda dos ubicaciones, una va al origen y otra al destino.

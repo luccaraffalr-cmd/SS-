@@ -196,6 +196,13 @@ a.boton { display: block; text-align: center; text-decoration: none; }
 .dato .viaje-titulo { font-size: 1.4rem; }
 .dato .texto-dato { font-size: 1.1rem; color: #111827; }
 .salio-viaje .dato strong { font-size: 1.1rem; }
+/* Chofer: el origen en un recuadro verde y el destino abajo, más chico (22/10/2026: se confundían). */
+.buscar-en { display: flex; flex-direction: column; gap: 2px; padding: 12px; border: 2px solid #16a34a; border-radius: 12px; background: #dcfce7; overflow-wrap: anywhere; }
+.buscar-en small { color: #166534; font-size: 0.8rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em; }
+.buscar-en .viaje-titulo { font-size: 1.45rem; color: #111827; }
+.llevar-a { color: #4b5563; font-size: 0.95rem; overflow-wrap: anywhere; }
+.llevar-a strong { color: #374151; font-weight: 600; }
+.proximo .buscar-en { margin-bottom: 4px; }
 /* Adjuntos de un viaje (links, ubicaciones, fotos, audios y archivos): botoncitos chicos debajo de cada dato. */
 .campo-con-adjuntos { display: flex; flex-direction: column; gap: 6px; }
 .adjuntos { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 6px; }

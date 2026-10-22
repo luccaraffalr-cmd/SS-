@@ -65,8 +65,8 @@ Deno.serve(async (req) => {
     : 'Inmediato'
   let enviadas = await enviarATodos(admin, oferta.chofer_id, {
     titulo: oferta.tipo === 'automatica' ? '🔔 Viaje para vos' : '📌 Gestión te asignó un viaje',
-    cuerpo: `${cuando}
-${recorrido(v)}`,
+    // Primero dónde buscar al pasajero (22/10/2026: los choferes se confundían con el destino).
+    cuerpo: `${cuando}\nBuscar en: ${v.origen}${v.destino ? '\nLlevar a: ' + v.destino : ''}`,
     etiqueta: `viaje-${v.id}`,
     fuerte: true,
   })

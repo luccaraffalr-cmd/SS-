@@ -8,6 +8,28 @@ import { pitido } from './notificaciones.js'
 import VerAdjuntos from './Adjuntos.jsx'
 import { tieneAdjuntos } from './adjuntos.js'
 
+// Origen destacado (22/10/2026: los choferes se confundían con el destino): recuadro verde "📍 BUSCAR EN" con letra grande.
+function BloqueOrigen({ viaje }) {
+  return (
+    <div className="buscar-en">
+      <small>📍 Buscar en</small>
+      <strong className="viaje-titulo">{viaje.origen}</strong>
+      <VerAdjuntos campo="origen" adjuntos={viaje.adjuntos} />
+    </div>
+  )
+}
+
+// El destino, abajo y más chico: "Llevar a: …". sinDestino: qué decir si no tiene (si no se pasa, no se muestra nada).
+function LineaDestino({ viaje, sinDestino }) {
+  if (!viaje.destino && !sinDestino && !tieneAdjuntos(viaje, 'destino')) return null
+  return (
+    <div className="llevar-a">
+      Llevar a: <strong>{viaje.destino || sinDestino || 'sin destino cargado'}</strong>
+      <VerAdjuntos campo="destino" adjuntos={viaje.adjuntos} />
+    </div>
+  )
+}
+
 // App del chofer: ofertas para aceptar o rechazar, su viaje actual y los próximos.
 // Los viajes sin cargar el pago los muestra ViajesSinCargar abajo de todo: se los pasa con onSinPago.
 export default function MisViajes({ perfil, onSinPago }) {
@@ -100,14 +122,8 @@ export default function MisViajes({ perfil, onSinPago }) {
         return (
           <section key={v.id} className="tarjeta separada oferta">
             <h2>{automatica ? '🔔 Viaje para vos' : '📌 Gestión te asignó un viaje'}</h2>
-            <div className="dato">
-              <small>Buscar en</small><strong className="viaje-titulo">{v.origen}</strong>
-              <VerAdjuntos campo="origen" adjuntos={v.adjuntos} />
-            </div>
-            <div className="dato">
-              <small>Destino</small><strong>{v.destino || 'Sin destino cargado'}</strong>
-              <VerAdjuntos campo="destino" adjuntos={v.adjuntos} />
-            </div>
+            <BloqueOrigen viaje={v} />
+            <LineaDestino viaje={v} sinDestino="Sin destino cargado" />
             <div className="dato"><small>Cuándo</small><strong>{cuando(v)}</strong></div>
             {(v.observaciones || tieneAdjuntos(v, 'observaciones')) && (
               <div className="dato">
@@ -139,16 +155,8 @@ export default function MisViajes({ perfil, onSinPago }) {
       {actual && (
         <section className="tarjeta separada mi-viaje">
           <h2>🚕 Tu viaje #{actual.id}</h2>
-          <div className="dato">
-            <small>Buscar en</small><strong className="viaje-titulo">{actual.origen}</strong>
-            <VerAdjuntos campo="origen" adjuntos={actual.adjuntos} />
-          </div>
-          {(actual.destino || tieneAdjuntos(actual, 'destino')) && (
-            <div className="dato">
-              <small>Destino</small><strong>{actual.destino}</strong>
-              <VerAdjuntos campo="destino" adjuntos={actual.adjuntos} />
-            </div>
-          )}
+          <BloqueOrigen viaje={actual} />
+          <LineaDestino viaje={actual} />
           {actual.cliente_nombre && <div className="dato"><small>Cliente</small><strong>{actual.cliente_nombre}</strong></div>}
           <div className="dato">
             <small>Cuándo</small>
@@ -208,10 +216,8 @@ export default function MisViajes({ perfil, onSinPago }) {
             const llegoLaHora = new Date(v.hora_asignacion).getTime() <= ahora
             return (
               <div key={v.id} className={'proximo' + (llegoLaHora ? ' es-hora' : '')}>
-                <strong className="viaje-titulo">{v.origen}</strong>
-                <VerAdjuntos campo="origen" adjuntos={v.adjuntos} />
-                {v.destino && <span>→ {v.destino}</span>}
-                <VerAdjuntos campo="destino" adjuntos={v.adjuntos} />
+                <BloqueOrigen viaje={v} />
+                <LineaDestino viaje={v} />
                 {v.cliente_nombre && <small>{v.cliente_nombre}</small>}
                 <VerAdjuntos campo="observaciones" adjuntos={v.adjuntos} />
                 <span className="viaje-cuando">{cuando(v)} · #{v.id}</span>
