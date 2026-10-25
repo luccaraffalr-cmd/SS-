@@ -13,6 +13,7 @@ import EstadoPlanilla from './EstadoPlanilla.jsx'
 import { FORMAS_PAGO, dinero, fechaCorta, totalCobrado } from './viajes.js'
 import { cuandoSeOfrece } from './TarjetaViaje.jsx'
 import { EditarAdjuntos } from './Adjuntos.jsx'
+import RecorridoViaje from './RecorridoViaje.jsx'
 
 // Explicación en palabras de en qué anda la asignación del viaje.
 function textoSituacion(v) {
@@ -47,12 +48,52 @@ function textoSituacion(v) {
   return ''
 }
 
+// Aprobación del pago (24/10/2026): quién y cuándo lo aprobó. Los admins lo aprueban o le quitan la aprobación (de un
+// toque: el botón está adentro del viaje, no en la lista).
+function AprobacionPago({ viaje, esAdmin, onListo }) {
+  const [ocupado, setOcupado] = useState(false)
+  const [error, setError] = useState('')
+
+  async function llamar(funcion, parametros) {
+    setError('')
+    setOcupado(true)
+    const { error } = await supabase.rpc(funcion, parametros)
+    setOcupado(false)
+    if (error) setError('No se pudo: ' + error.message)
+    else onListo()
+  }
+
+  if (viaje.aprobado_en) {
+    return (
+      <>
+        <p className="aviso ok sin-margen">
+          ✅ Pago aprobado{viaje.aprobador?.nombre && ` por ${viaje.aprobador.nombre}`} el {fechaCorta(viaje.aprobado_en)} a
+          las {hora(viaje.aprobado_en)}.
+        </p>
+        {esAdmin && (
+          <button type="button" className="boton secundario" disabled={ocupado}
+            onClick={() => llamar('quitar_aprobacion', { p_viaje: viaje.id })}>Quitar aprobación</button>
+        )}
+        {error && <p className="aviso error sin-margen">{error}</p>}
+      </>
+    )
+  }
+  if (!esAdmin) return <p className="ayuda sin-margen">El pago todavía no está aprobado.</p>
+  return (
+    <>
+      <button type="button" className="boton verde" disabled={ocupado}
+        onClick={() => llamar('aprobar_pagos', { p_viajes: [viaje.id] })}>✓ Aprobar el pago</button>
+      {error && <p className="aviso error sin-margen">{error}</p>}
+    </>
+  )
+}
+
 const ANTICIPACION_POR_DEFECTO = 30
 const ANTICIPACIONES_RAPIDAS = [10, 20, 30, 45]
 
 // Alta y edición de un viaje (gestión). fechaInicial ("2026-10-15"): viaje nuevo cargado desde un día del calendario;
 // si no es hoy, arranca como programado para ese día.
-export default function FormViaje({ viaje, fechaInicial, onListo }) {
+export default function FormViaje({ viaje, fechaInicial, onListo, esAdmin = false }) {
   const esNuevo = !viaje
   const [datos, setDatos] = useState(() => {
     const presentacion = viaje?.hora_presentacion ? new Date(viaje.hora_presentacion) : null
@@ -147,7 +188,7 @@ export default function FormViaje({ viaje, fechaInicial, onListo }) {
     setEnviando(true)
     const { error } = await supabase.rpc(funcion, { viaje: viaje.id })
     setEnviando(false)
-    if (error) setError('No se pudo anular: ' + error.message)
+    if (error) setError('No se pudo eliminar: ' + error.message)
     else onListo()
   }
 
@@ -281,7 +322,7 @@ export default function FormViaje({ viaje, fechaInicial, onListo }) {
       {!esNuevo && viaje.viaje_fijo_id && (
         <p className="aviso">
           🔁 Este viaje se repite{serie && <>: <strong>{textoSerie(serie)}</strong></>}.
-          {deUnaSerie && ' Al guardar cambios o anularlo, te pregunto si es solo este o todos los que faltan.'}
+          {deUnaSerie && ' Al guardar cambios o eliminarlo, te pregunto si es solo este o todos los que faltan.'}
         </p>
       )}
       <form className="tarjeta" onSubmit={guardar}>
@@ -455,6 +496,12 @@ export default function FormViaje({ viaje, fechaInicial, onListo }) {
                 )}
               </p>}
           {viaje.estado === 'finalizado' && <EstadoPlanilla viajeId={viaje.id} />}
+          {viaje.estado === 'finalizado' && !corrigiendoPago && (
+            <AprobacionPago viaje={viaje} esAdmin={esAdmin} onListo={onListo} />
+          )}
+          {corrigiendoPago && viaje.aprobado_en && (
+            <p className="aviso sin-margen">Este pago está aprobado: si lo corregís, deja de estarlo y hay que volver a aprobarlo.</p>
+          )}
           {corrigiendoPago ? (
             <FormPago importeInicial={viaje.importe} formaInicial={viaje.forma_pago}
               cuentaInicial={viaje.cuenta_id} otroInicial={viaje.cuenta_otro}
@@ -466,6 +513,10 @@ export default function FormViaje({ viaje, fechaInicial, onListo }) {
             </button>
           )}
         </div>
+      )}
+
+      {!esNuevo && viaje.iniciado_en && (
+        <RecorridoViaje viajeId={viaje.id} enCurso={viaje.estado === 'asignado'} />
       )}
 
       {!esNuevo && viaje.chofer_id && ['ofrecido', 'asignado'].includes(viaje.estado) && <CompartirViaje viaje={viaje} />}
@@ -502,11 +553,12 @@ export default function FormViaje({ viaje, fechaInicial, onListo }) {
       {sePuedeAnular && (
         <div className="tarjeta separada">
           {!confirmandoAnular ? (
-            <button type="button" className="boton peligro" onClick={() => setConfirmandoAnular(true)}>Anular viaje</button>
+            <button type="button" className="boton peligro" onClick={() => setConfirmandoAnular(true)}>Eliminar viaje</button>
           ) : (
             <>
               <p className="sin-margen">
-                ¿Seguro que querés anular el viaje #{viaje.id}?
+                ¿Seguro que querés eliminar el viaje #{viaje.id}? Deja de verse en la lista (queda solo en el filtro
+                "Eliminado").
                 {viaje.iniciado_en && viaje.chofer?.nombre &&
                   <> <strong>{viaje.chofer.nombre}</strong> vuelve al puesto 1 de la cola.</>}
                 {conChofer && <> A {viaje.chofer.nombre} le llega un aviso.</>}
@@ -514,14 +566,14 @@ export default function FormViaje({ viaje, fechaInicial, onListo }) {
               {deUnaSerie ? (
                 <>
                   <button type="button" className="boton peligro" disabled={enviando} onClick={() => anular()}>
-                    Anular solo este viaje
+                    Eliminar solo este viaje
                   </button>
                   <button type="button" className="boton peligro" disabled={enviando} onClick={() => anular('anular_serie')}>
-                    Anular este y los que siguen
+                    Eliminar este y los que siguen
                   </button>
                 </>
               ) : (
-                <button type="button" className="boton peligro" disabled={enviando} onClick={() => anular()}>Sí, anular</button>
+                <button type="button" className="boton peligro" disabled={enviando} onClick={() => anular()}>Sí, eliminar</button>
               )}
               <button type="button" className="boton secundario" onClick={() => setConfirmandoAnular(false)}>No, dejarlo</button>
             </>

@@ -22,7 +22,7 @@ export default function Gestion({ perfil }) {
         ['cuenta', 'Mi cuenta'], ['mapa', 'Mapa']]
     : [['viajes', 'Viajes'], ['choferes', 'Choferes'], ['mapa', 'Mapa'], ['cuenta', 'Mi cuenta']]
 
-  // Los admins reciben avisos (decidido el 21/10/2026): "Salió un viaje para Juan" y las alertas del cartel rojo.
+  // Los admins reciben avisos (21/10/2026; desde el 24/10, solo cuando nadie toma un viaje).
   useEffect(() => {
     if (!esAdmin || !esAppAndroid) return
     const escucha = sonarConLaAppAbierta()
@@ -39,12 +39,12 @@ export default function Gestion({ perfil }) {
       <AlertaSinChofer onVer={() => setSeccion('viajes')} />
       {esAdmin && (
         <div className="avisos-gestion">
-          <ActivarNotificaciones discreto explicacion={'Así te suena el celular cuando sale un viaje de la cola y cuando un'
-            + ' viaje se queda sin chofer, el chofer no lo acepta o no sale, aunque tengas la app cerrada.'} />
+          <ActivarNotificaciones discreto explicacion={'Así te suena el celular cuando nadie toma un viaje, aunque tengas'
+            + ' la app cerrada.'} />
         </div>
       )}
 
-      {seccion === 'viajes' && <Viajes />}
+      {seccion === 'viajes' && <Viajes esAdmin={esAdmin} />}
       {seccion === 'choferes' && <Choferes />}
       {seccion === 'mapa' && <Mapa />}
       {seccion === 'cuentas' && esAdmin && <CuentasCorrientes />}

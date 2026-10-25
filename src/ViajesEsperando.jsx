@@ -53,8 +53,9 @@ export function AlertaSinChoferChofer({ chofer }) {
         <ul className="lista-alerta">
           {urgentes.map((v) => (
             <li key={v.id}>
-              {/* El chofer no ve datos del cliente: lo más grande es el origen y el horario va abajo. */}
-              <strong>{v.origen}</strong>
+              {/* El chofer no ve datos del cliente: lo más grande es el origen y el horario va abajo. Origen y destino
+                  recién cuando se libera para que lo tome cualquiera (24/10/2026); antes, solo el horario. */}
+              <strong>{v.origen ?? 'Viaje sin chofer'}</strong>
               {v.destino && <span>→ {v.destino}</span>}
               <span className="viaje-cuando">
                 {v.tipo === 'programado' ? `Presentarse ${hora(v.hora_presentacion)}` : `Para ya (desde ${hora(v.hora_asignacion)})`}

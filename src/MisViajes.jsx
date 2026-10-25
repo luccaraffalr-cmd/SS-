@@ -135,7 +135,8 @@ export default function MisViajes({ perfil, onSinPago }) {
             <h2>{automatica ? '🔔 Viaje para vos' : '📌 Gestión te asignó un viaje'}</h2>
             {automatica && v.oferta_vence && <TiempoParaContestar vence={v.oferta_vence} ahora={ahora} />}
             <BloqueOrigen viaje={v} />
-            <LineaDestino viaje={v} sinDestino="Sin destino cargado" />
+            {/* El destino se ve recién al aceptar (pedido del dueño, 24/10/2026: que no elijan los viajes por a dónde van). */}
+            <div className="llevar-a">Llevar a: <strong>🔒 lo ves cuando lo aceptes</strong></div>
             <div className="dato"><small>Cuándo</small><strong>{cuando(v)}</strong></div>
             {(v.observaciones || tieneAdjuntos(v, 'observaciones')) && (
               <div className="dato">

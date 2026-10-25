@@ -5,7 +5,7 @@ export const NOMBRE_ESTADO_VIAJE = {
   pago_pendiente: 'Pago pendiente',
   finalizado: 'Finalizado',
   fallido: 'Fallido',
-  anulado: 'Anulado',
+  anulado: 'Eliminado', // (24/10/2026) en la base sigue "anulado"; solo se ven en el filtro "Eliminado"
 }
 
 export const FORMAS_PAGO = {

@@ -67,9 +67,10 @@ main > .boton { width: 100%; }
 
 /* Los campos de fecha y hora del celular no se pasan del ancho disponible. */
 input[type="date"], input[type="time"] { min-width: 0; max-width: 100%; }
-/* Hora en 24 hs: dos listas (hora : minutos). */
-.elegir-hora { display: flex; align-items: center; gap: 6px; }
-.elegir-hora select { flex: 1; min-width: 0; }
+/* Hora en 24 hs, escrita ("1430" → "14:30"). */
+.elegir-hora { display: flex; flex-direction: column; gap: 4px; }
+.elegir-hora input { width: 100%; min-width: 0; font-variant-numeric: tabular-nums; }
+.elegir-hora input.hora-mal { border-color: #dc2626; }
 
 select {
   font: inherit;
@@ -231,7 +232,9 @@ a.boton { display: block; text-align: center; text-decoration: none; }
 .adjunto-con-sacar { display: inline-flex; align-items: center; max-width: 100%; border-radius: 999px; background: #e0e7ff; }
 .adjunto-con-sacar .adjunto { padding-right: 4px; }
 .sacar-adjunto { border: none; background: none; color: #3730a3; font: inherit; padding: 6px 12px 6px 6px; cursor: pointer; }
+/* "Agregar" a la derecha, lejos del campo, para no tocarlo sin querer al ir a escribir (24/10/2026). */
 .agregar-adjunto {
+  margin-left: auto;
   display: inline-flex;
   align-items: center;
   gap: 5px;
@@ -248,6 +251,27 @@ a.boton { display: block; text-align: center; text-decoration: none; }
 .panel-adjunto { display: flex; flex-direction: column; gap: 8px; padding: 12px; border-radius: 10px; background: #f3f4f6; }
 .panel-adjunto label.boton { display: block; text-align: center; cursor: pointer; }
 .panel-adjunto label.boton.deshabilitado { opacity: 0.6; cursor: default; }
+/* "Compartir desde WhatsApp": elegir el viaje al que va lo compartido */
+.foto-compartida { max-width: 100%; max-height: 240px; object-fit: contain; border-radius: 8px; align-self: flex-start; }
+.texto-compartido { padding: 8px 10px; border-radius: 8px; background: #f3f4f6; overflow-wrap: anywhere; white-space: pre-wrap; }
+.lista-elegir { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 6px; }
+.opcion-viaje {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  width: 100%;
+  padding: 10px 12px;
+  border: 2px solid transparent;
+  border-radius: 10px;
+  background: #f3f4f6;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  overflow-wrap: anywhere;
+  cursor: pointer;
+}
+.opcion-viaje small { color: #6b7280; }
+.opcion-viaje.elegida { border-color: #16a34a; background: #dcfce7; cursor: default; }
 .proximo { display: flex; flex-direction: column; gap: 2px; padding: 10px 12px; border-radius: 10px; background: #f3f4f6; overflow-wrap: anywhere; }
 .proximo small { color: #6b7280; }
 .proximo.es-hora { background: #dcfce7; }
@@ -486,6 +510,49 @@ textarea {
 .tarjeta-viaje.urgente { border-left-color: #dc2626; background: #fef2f2; }
 .tarjeta-viaje.fijo { border-left-color: #f97316; background: #fff7ed; }
 .tarjeta-viaje.pago-pendiente { border-left-color: #f59e0b; background: #fffbeb; }
+/* Aprobar pagos (24/10/2026): tick a la derecha de los finalizados sin aprobar; tickeado = verde. */
+.tarjeta-con-tick { position: relative; }
+.tarjeta-viaje.elegido { border-left-color: #16a34a; background: #f0fdf4; }
+.lugar-tick { flex-shrink: 0; width: 44px; height: 30px; }
+.tick-aprobar {
+  position: absolute;
+  top: 8px;
+  right: 10px;
+  width: 44px;
+  height: 44px;
+  border: 2px solid #9ca3af;
+  border-radius: 50%;
+  background: #fff;
+  color: #d1d5db;
+  font: inherit;
+  font-size: 1.4rem;
+  font-weight: 700;
+  line-height: 1;
+  cursor: pointer;
+}
+.tick-aprobar.elegido { border-color: #16a34a; background: #16a34a; color: #fff; }
+.etiqueta.viaje.finalizado.aprobado { background: #16a34a; color: #fff; }
+/* Burbuja verde de abajo para confirmar los pagos tickeados. */
+.burbuja-aprobar {
+  position: fixed;
+  left: 50%;
+  bottom: 16px;
+  z-index: 900;
+  transform: translateX(-50%);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: calc(100% - 32px);
+  max-width: 448px;
+  padding: 8px;
+  border-radius: 999px;
+  background: #16a34a;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.25);
+}
+.burbuja-aprobar .boton { flex: 1; padding: 12px; border-radius: 999px; background: #fff; color: #166534; }
+.burbuja-aprobar .cancelar-burbuja { border: none; background: none; color: #fff; font: inherit; font-weight: 600; padding: 8px 12px; cursor: pointer; }
+.aviso-aprobar { background: #16a34a; }
+.pantalla.con-burbuja { padding-bottom: 96px; } /* que la burbuja no tape el último viaje */
 .importe { color: #166534; font-weight: 700; }
 .aviso-pagos {
   display: block;
@@ -528,6 +595,30 @@ textarea {
 .fila:disabled { opacity: 1; }
 .texto-alerta { color: #b91c1c !important; font-weight: 600; }
 .marcador-auto { font-size: 26px; line-height: 32px; text-align: center; }
+/* Recorrido de un viaje (gestión) */
+.recorrido-mapa { position: relative; }
+.mapa-recorrido { height: 300px; min-height: 0; }
+.marca-recorrido { font-size: 20px; line-height: 26px; text-align: center; }
+.datos-recorrido { display: flex; flex-wrap: wrap; gap: 6px 16px; font-size: 1.05rem; }
+.texto-demora { color: #b91c1c; font-weight: 600; }
+.boton-mapa {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  z-index: 500;
+  padding: 8px 12px;
+  border: none;
+  border-radius: 8px;
+  background: #fff;
+  color: #111827;
+  font: inherit;
+  font-weight: 600;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.3);
+  cursor: pointer;
+}
+/* Mapa del recorrido en grande: ocupa toda la pantalla. */
+.recorrido-mapa.en-grande { position: fixed; inset: 0; z-index: 1000; background: #fff; }
+.recorrido-mapa.en-grande .mapa-recorrido { height: 100%; border-radius: 0; }
 .marcador-auto b {
   position: absolute;
   top: 30px;

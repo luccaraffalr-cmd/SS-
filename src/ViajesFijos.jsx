@@ -76,7 +76,7 @@ export default function ViajesFijos({ onVolver }) {
       <h1>Viajes fijos</h1>
       <p className="ayuda">
         Viajes que se repiten: todas las semanas (con o sin fecha de fin) o días sueltos. También se cargan desde
-        "Nuevo viaje" → Repetir. Los viajes se cargan solos y se ven en el calendario; al cambiar o anular uno, la app
+        "Nuevo viaje" → Repetir. Los viajes se cargan solos y se ven en el calendario; al cambiar o eliminar uno, la app
         pregunta si es solo ese o todos los que faltan.
       </p>
       <button className="boton" onClick={() => setEditando({ ...VACIO, desde: fechaLocal() })}>+ Nuevo viaje fijo</button>
@@ -258,7 +258,7 @@ function FormViajeFijo({ fijo, choferes, onListo }) {
             <>
               <p className="sin-margen">
                 ¿Seguro? Se borran los viajes de las próximas semanas que todavía no se ofrecieron a ningún chofer
-                (los que ya se ofrecieron quedan anulados). Los viajes ya hechos quedan en el historial.
+                (los que ya se ofrecieron quedan eliminados). Los viajes ya hechos quedan en el historial.
               </p>
               <button type="button" className="boton peligro" disabled={enviando} onClick={borrar}>Sí, borrar</button>
               <button type="button" className="boton secundario" onClick={() => setConfirmandoBorrar(false)}>No</button>

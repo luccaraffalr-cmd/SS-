@@ -1,8 +1,9 @@
 // Manda las notificaciones push al celular del chofer (app Android y navegador). La llama la base de datos:
 // - { oferta_id }: cuando le ofrecen o asignan un viaje (disparador en "ofertas"). Si la oferta es de la cola, a los demás
-//   choferes que están trabajando y a los admins les llega "📣 Salió un viaje para Juan" (con el cliente).
+//   choferes que están trabajando les llega "📣 Salió un viaje para Juan" (con el cliente).
 // - { aviso_id }: un aviso guardado en la tabla "avisos" (es hora de salir, cambió tu viaje, se anuló,
-//   también si se lo pasaron a otro; y a los admins, las alertas del cartel rojo). Lo crea la base con crear_aviso().
+//   también si se lo pasaron a otro, viaje sin chofer para tomar; y a los admins, cuando nadie tomó un viaje).
+//   Lo crea la base con crear_aviso() o enviar_aviso().
 // Cada aviso se manda una sola vez y solo si es reciente (evita duplicados y usos indebidos).
 import { createClient } from 'npm:@supabase/supabase-js@2'
 import webpush from 'npm:web-push@3'
@@ -26,8 +27,6 @@ function respuesta(cuerpo: unknown, estado = 200) {
 
 const horaArgentina = (fecha: string, opciones: Intl.DateTimeFormatOptions) =>
   new Date(fecha).toLocaleString('es-AR', { timeZone: 'America/Argentina/Buenos_Aires', ...opciones })
-
-const recorrido = (v: Viaje) => `${v.origen}${v.destino ? ' → ' + v.destino : ''}`
 
 Deno.serve(async (req) => {
   const admin = createClient(Deno.env.get('SUPABASE_URL')!, Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!)
@@ -65,8 +64,9 @@ Deno.serve(async (req) => {
     : 'Inmediato'
   let enviadas = await enviarATodos(admin, oferta.chofer_id, {
     titulo: oferta.tipo === 'automatica' ? '🔔 Viaje para vos' : '📌 Gestión te asignó un viaje',
-    // Primero dónde buscar al pasajero (22/10/2026: los choferes se confundían con el destino).
-    cuerpo: `${cuando}\nBuscar en: ${v.origen}${v.destino ? '\nLlevar a: ' + v.destino : ''}`,
+    // Primero dónde buscar al pasajero (22/10/2026: los choferes se confundían con el destino). El destino no va: lo ve
+    // recién al aceptar (24/10/2026, para que no elijan los viajes por a dónde van).
+    cuerpo: `${cuando}\nBuscar en: ${v.origen}`,
     etiqueta: `viaje-${v.id}`,
     fuerte: true,
   })
@@ -76,13 +76,13 @@ Deno.serve(async (req) => {
 
 // "📣 Salió un viaje para Juan" a los demás choferes que están trabajando (decidido el 20/10/2026): así, si Juan no lo
 // ve, le pueden avisar. Con el cliente (no el recorrido) y el sonido común. Si el viaje pasa a otro chofer, el aviso
-// nuevo reemplaza al anterior (misma etiqueta). Desde el 21/10/2026 también a los admins (con el recorrido).
+// nuevo reemplaza al anterior (misma etiqueta). (Del 21 al 24/10/2026 también les llegaba a los admins: el dueño pidió
+// que le suene solo cuando nadie toma un viaje.)
 // deno-lint-ignore no-explicit-any
 async function avisarALosDemas(admin: any, choferId: string, v: Viaje) {
   const { data: ofrecido } = await admin.from('perfiles').select('nombre').eq('id', choferId).maybeSingle()
   const { data: demas } = await admin.from('choferes').select('id, perfil:perfiles!inner(activo, rol)')
     .neq('estado', 'fuera_de_servicio').eq('oculto', false).neq('id', choferId)
-  const { data: admins } = await admin.from('perfiles').select('id').eq('rol', 'admin').eq('activo', true)
   const aviso: Aviso = {
     titulo: `📣 Salió un viaje para ${ofrecido?.nombre ?? 'un chofer'}`,
     cuerpo: v.cliente_nombre ? `Cliente: ${v.cliente_nombre}` : 'Viaje de la cola',
@@ -92,10 +92,6 @@ async function avisarALosDemas(admin: any, choferId: string, v: Viaje) {
   // deno-lint-ignore no-explicit-any
   for (const c of (demas ?? []).filter((c: any) => c.perfil?.activo && c.perfil?.rol === 'chofer')) {
     enviadas += await enviarATodos(admin, c.id, aviso)
-  }
-  const avisoAdmin: Aviso = { ...aviso, cuerpo: (v.cliente_nombre ? `Cliente: ${v.cliente_nombre}\n` : '') + recorrido(v) }
-  for (const a of admins ?? []) {
-    enviadas += await enviarATodos(admin, a.id, avisoAdmin)
   }
   return enviadas
 }

@@ -83,8 +83,19 @@
   **adjuntos** en Origen/Destino/Observaciones (SQL 031, `Adjuntos.jsx`, `adjuntos.js`, carpeta privada `adjuntos`),
   origen en recuadro verde "BUSCAR EN" (SQL 032), ofertas de la cola con 2:30 (SQL 033), hora en 24 hs (`ElegirHora.jsx`),
   link del pasajero directo, y los choferes pueden **tomar viajes sin chofer** al minuto (SQL 034, `tomar_viaje`).
-  Siguiente: "Compartir desde WhatsApp" (APK nueva, solo para el celular del dueño) y, más adelante, borrar solas las
-  fotos y audios viejos. Cuando haya ofertas reales, confirmar que vencen a los 2:30 (no se pudo ver el 22/10).
+  Cuando haya ofertas reales, confirmar que vencen a los 2:30 (no se pudo ver el 22/10).
+- **Publicado en Netlify el 24/10/2026** (SQL hasta el 038, `notificar` subida): pedidos del dueño — **recorrido de cada viaje**
+  (SQL 036/037, tabla `recorridos`, `RecorridoViaje.jsx`: km, duración, demora = paradas de 3 min o más con puntos rojos,
+  línea celeste→azul, ver en grande; solo gestión), lista de viajes por grupos (sin tomar → por salir → en viaje →
+  terminados sin aprobar → aprobados), **destino oculto en la oferta hasta aceptar** (SQL 035), hora escrita en 24 hs
+  (`ElegirHora.jsx`), al admin le suena solo "Nadie tomó el viaje" (al liberarse para todos), "Agregar" a la derecha,
+  **aprobar pagos** (SQL 038: `aprobado_en`/`aprobado_por`, tick + burbuja verde en la lista, solo admins; si cambia el pago
+  se pierde la aprobación) y **anulados = "Eliminados"**, solo visibles con su filtro.
+- **"Compartir desde WhatsApp" hecho pero sin probar** (24/10): `CompartidoPlugin.java` + intent-filter SEND, versión 1.2
+  (código 3) en `build.gradle`, `AgregarCompartido.jsx`, `compartidoApp.js`. La parte web ya está publicada (no hace nada sin
+  la app nueva). El usuario todavía no quiere armar la app: cuando quiera, `.\compilar-app.ps1 -Prueba` → probar en SU
+  celular → app normal (`publicar-apk.ps1` o instalar a mano en el del dueño). Más adelante: borrar solas las fotos y
+  audios viejos.
 - Pendiente antes de usarla en serio: cargar los choferes reales (fotos de autos en `Descargas\remises`), instalar la
   app en cada celular (permisos: ubicación "todo el tiempo", batería sin restricciones, notificaciones).
 - **Etapa 3** (contexto y estado en `etapa-3-gestion.md`): la app **reemplaza al formulario de Google** y escribe cada viaje

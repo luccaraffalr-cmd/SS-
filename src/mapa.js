@@ -27,6 +27,36 @@ export function iconoAuto(nombre, clase = '') {
   })
 }
 
+// De celeste (principio del viaje) a azul oscuro (final): así se distingue la ida de la vuelta por la misma calle.
+function colorDelTramo(fraccion) {
+  const desde = [56, 189, 248], hasta = [30, 41, 120]
+  return `rgb(${desde.map((x, i) => Math.round(x + (hasta[i] - x) * fraccion)).join(',')})`
+}
+
+// Recorrido de un viaje en una capa del mapa (se puede borrar y volver a dibujar). puntos: [[lat, lon]…];
+// paradas: [{ lat, lon, minutos, texto }] (detenido 3 minutos o más, en rojo). Devuelve el área para encuadrarlo.
+export function dibujarRecorrido(capa, puntos, paradas, enCurso) {
+  const tramos = Math.min(40, puntos.length - 1)
+  for (let t = 0; t < tramos; t++) {
+    const desde = Math.floor((t * (puntos.length - 1)) / tramos)
+    const hasta = Math.floor(((t + 1) * (puntos.length - 1)) / tramos)
+    L.polyline(puntos.slice(desde, hasta + 1), {
+      color: colorDelTramo(tramos === 1 ? 0 : t / (tramos - 1)), weight: 5, opacity: 0.9,
+    }).addTo(capa)
+  }
+  for (const p of paradas) {
+    L.circleMarker([p.lat, p.lon], {
+      radius: Math.min(14, 7 + p.minutos / 3), color: '#991b1b', weight: 2, fillColor: '#ef4444', fillOpacity: 0.85,
+    }).bindPopup(escapar(p.texto)).addTo(capa)
+  }
+  const marca = (texto) => L.divIcon({ className: 'marca-recorrido', html: texto, iconSize: [26, 26], iconAnchor: [13, 13] })
+  L.marker(puntos[0], { icon: marca('🟢') }).addTo(capa)
+  L.marker(puntos[puntos.length - 1], { icon: enCurso ? iconoAuto('') : marca('🏁') }).addTo(capa)
+  return L.latLngBounds(puntos)
+}
+
+export const crearCapa = (mapa) => L.layerGroup().addTo(mapa)
+
 export function crearMarcador(lat, lon, icono) {
   return L.marker([lat, lon], { icon: icono })
 }

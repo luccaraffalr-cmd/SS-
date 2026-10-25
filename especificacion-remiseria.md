@@ -362,6 +362,40 @@ Hoy la ubicación "desaparece" por varios minutos. Hay que diseñar para que **n
   su pantalla mientras nadie lo acepte, con el **nombre del cliente** (no el origen ni el destino), para poder avisarle si
   no lo ve. Si pasa a otro chofer, el aviso nuevo reemplaza al anterior. Solo para los viajes de la cola (no los asignados a
   mano). Cambia, para este caso, lo de "nunca datos del cliente" en los viajes ajenos.
+- **(2026-10-24) Pedidos del dueño:**
+  - **Recorrido de cada viaje** (por ahora para controlar; más adelante, para calcular precios): desde que el chofer toca
+    "Salir a hacer el viaje" hasta que lo finaliza, con las ubicaciones que manda la app. En el viaje (gestión) se ve el
+    **mapa**, los **km**, la **duración** y la **demora**: suma de las veces que el auto estuvo **detenido 3 minutos o más**
+    (así no cuentan los frenos del tránsito; SQL 037). La espera del cliente no se puede medir exacta (el auto puede moverse
+    mientras espera): es aproximada; se decidió no agregar un botón de espera. En el mapa, cada lugar donde estuvo detenido
+    es un **punto rojo** (al tocarlo: cuánto tiempo y de qué hora a qué hora), la línea va de **celeste (principio) a azul
+    oscuro (final)** para distinguir la ida de la vuelta, y hay un botón **"Ver en grande"** (pantalla completa). Se guarda
+    para siempre al finalizar (SQL 036); mientras se hace, se ve el de hasta ahora.
+  - **Lista de viajes** (gestión): arriba los que nadie tomó todavía, después los aceptados que no salieron, los que se están
+    haciendo, los terminados (primero los que faltan aprobar), los aprobados y al final los anulados.
+  - **El chofer no ve el destino hasta aceptar** (ofertas de la cola y asignaciones a mano), para que no elija los viajes
+    por a dónde van: en la oferta dice "Llevar a: 🔒 lo ves cuando lo aceptes", y ni el aviso del celular ni "Cambió tu
+    viaje" lo muestran. Cuando el viaje se libera para que lo tome cualquiera, ahí sí se ve origen y destino (antes de eso, el
+    cartel de viajes sin chofer muestra solo el horario). Reemplaza "el destino se le muestra al chofer en la oferta" (28/9).
+  - **La hora se escribe** con el teclado de números ("1430" → "14:30"), siempre en 24 hs (reemplaza las dos listas del 22/10).
+  - **Avisos al admin: solo cuando no hay nadie para tomar un viaje**: le suena "⚠️ Nadie tomó el viaje" en el momento en que
+    se libera para todos los choferes. Ya no le suenan "Salió un viaje para Juan", "no aceptó" ni "no salió" (siguen en el
+    cartel rojo). De los viajes que esperan a gestión (un chofer rechazó una asignación a mano) le sigue sonando "Viaje sin
+    chofer" a su hora, porque esos no se liberan nunca.
+  - El botón **"Agregar"** de los adjuntos va a la derecha, para no tocarlo sin querer al ir a escribir.
+  - **Aprobar los pagos:** en la lista de viajes, los finalizados sin aprobar tienen un **tick a la derecha**. Se tickean uno
+    o varios y aparece abajo una **burbuja verde "✅ Aprobar N pagos"** para confirmar (o "Cancelar"). Quedan **"✅ Aprobado"**.
+    Arriba de la lista, "✓ N pagos para aprobar" lleva a los finalizados (no hay una categoría aparte: los que faltan
+    aprobar están en "Finalizado", con el tick, y en el filtro de estado está también "Aprobado"). En la lista, **los que
+    faltan aprobar van arriba de los aprobados**. **Solo los admins aprueban.** Adentro del viaje se ve quién y cuándo lo aprobó, y el admin puede
+    **"Quitar aprobación"** de un toque (sin confirmación: está adentro del viaje, no en la lista). **Si el pago cambia** (lo corrige gestión o lo
+    vuelve a cargar el chofer), deja de estar aprobado y hay que volver a aprobarlo. No es un estado nuevo: el viaje sigue
+    "finalizado" (la planilla y las cuentas no cambian) y se anota quién lo aprobó y cuándo (SQL 038).
+  - En la tarjeta de cada viaje ya no dice "Inmediato" ni "Programado" (menos cosas escritas).
+  - **Los viajes anulados pasan a llamarse "Eliminados" y no se ven en ningún lado** (ni en la lista ni en el calendario),
+    salvo con el filtro de estado **"Eliminado"**. En gestión, "Anular viaje" ahora es **"Eliminar viaje"** (con la misma
+    confirmación). En la base siguen guardados como "anulado" (con su historial); al chofer le sigue llegando "❌ Se anuló
+    tu viaje".
 - **(2026-10-22) Los choferes pueden tomar los viajes sin chofer** (cuando nos quedamos sin choferes disponibles):
   - Cuando un viaje queda sin chofer (llegó su hora y la cola no lo tomó: nadie en la cola, o todos rechazaron o no
     contestaron), se **espera 1 minuto**: si alguien se anuncia, se le ofrece como siempre (2:30 para aceptar).
