@@ -22,6 +22,17 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
 
+            <!-- Versión 3: aparece en "Compartir" (WhatsApp, Google Maps, galería…) para agregarlo a un viaje. -->
+            <intent-filter>
+                <action android:name="android.intent.action.SEND" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <data android:mimeType="text/plain" />
+                <data android:mimeType="image/*" />
+                <data android:mimeType="audio/*" />
+                <data android:mimeType="application/ogg" />
+                <data android:mimeType="application/pdf" />
+            </intent-filter>
+
         </activity>
 
         <!-- Manda la ubicación con la pantalla bloqueada (con el aviso fijo "compartiendo ubicación"). -->
