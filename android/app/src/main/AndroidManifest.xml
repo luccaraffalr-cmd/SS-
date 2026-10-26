@@ -9,6 +9,12 @@
         android:supportsRtl="true"
         android:theme="@style/AppTheme">
 
+        <!-- Versión 3: canal por defecto de los avisos. Además, sin algún meta-data acá el plugin de avisos no los muestra
+             con la app abierta (capacitor.config.json → presentationOptions). -->
+        <meta-data
+            android:name="com.google.firebase.messaging.default_notification_channel_id"
+            android:value="viajes" />
+
         <activity
             android:configChanges="orientation|keyboardHidden|keyboard|screenSize|locale|smallestScreenSize|screenLayout|uiMode|navigation|density"
             android:name=".MainActivity"

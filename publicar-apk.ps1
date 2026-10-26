@@ -5,7 +5,7 @@
 # Hace: arma la app (compilar-app.ps1) → la sube a Storage (carpeta pública "app") → actualiza la tabla config_app
 # → deja una copia en Descargas\Remiseria.apk (para instalar a mano en un celular nuevo).
 param([Parameter(Mandatory = $true)][string]$Novedades)
-$ErrorActionPreference = 'Stop'
+# (Sin 'Stop': los avisos que npm y la CLI escriben en stderr cortaban el script. Los errores se ven con $LASTEXITCODE.)
 $raiz = $PSScriptRoot
 $ref = 'yomjqdbaatydpvazkvvg'
 $env:Path = [Environment]::GetEnvironmentVariable('Path', 'Machine') + ';' + [Environment]::GetEnvironmentVariable('Path', 'User')
@@ -20,7 +20,9 @@ Set-Location $raiz
 $apk = "$raiz\android\app\build\outputs\apk\debug\app-debug.apk"
 $archivo = "remiseria-$codigo.apk"
 
-npx.cmd supabase storage cp $apk "ss:///app/$archivo" --project-ref $ref --content-type application/vnd.android.package-archive --cache-control 'max-age=60'
+# La ruta tiene que ser relativa ("C:\…" la CLI no la entiende) y la copia a Storage pide --experimental (26/10/2026).
+npx.cmd supabase storage cp android/app/build/outputs/apk/debug/app-debug.apk "ss:///app/$archivo" --project-ref $ref `
+  --content-type application/vnd.android.package-archive --cache-control 'max-age=60' --experimental
 if ($LASTEXITCODE) { throw 'No se pudo subir la app a Storage.' }
 $url = "https://$ref.supabase.co/storage/v1/object/public/app/$archivo"
 
@@ -35,3 +37,5 @@ Invoke-RestMethod -Method Patch -Uri "https://$ref.supabase.co/rest/v1/config_ap
 
 Copy-Item $apk "$env:USERPROFILE\Downloads\Remiseria.apk" -Force
 Write-Host "Publicada la versión $nombre. Los celulares con la app 1.1 o más la ofrecen sola; el archivo también quedó en Descargas\Remiseria.apk."
+# Ojo: la app carga las pantallas de Netlify. Si la versión nueva necesita pantallas nuevas, hay que publicar también en
+# Netlify (push a main).

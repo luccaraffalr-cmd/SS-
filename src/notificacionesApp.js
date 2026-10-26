@@ -57,10 +57,19 @@ export async function pedirNotificacionesApp() {
   return prepararNotificacionesApp()
 }
 
-// Gestión (admin): con la app abierta, Android no muestra el aviso; que al menos suene un pitido.
+// Desde la versión 3 de la app, los avisos suenan y aparecen arriba también con la app abierta (capacitor.config.json →
+// presentationOptions). Las versiones viejas no: ahí la página hace un pitido.
+export async function avisosConLaAppAbierta() {
+  const version = await versionDeLaApp()
+  return !!version && version.codigo >= 3
+}
+
+// Gestión (admin): con la app abierta, la app vieja no muestra el aviso; que al menos suene un pitido.
 // Devuelve una promesa con la escucha (para sacarla con .remove()).
 export function sonarConLaAppAbierta() {
-  return PushNotifications.addListener('pushNotificationReceived', () => pitido())
+  return PushNotifications.addListener('pushNotificationReceived', async () => {
+    if (!(await avisosConLaAppAbierta())) pitido()
+  })
 }
 
 // Al cerrar sesión: este celular deja de recibir avisos de ese usuario.

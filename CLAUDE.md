@@ -91,11 +91,15 @@
   (`ElegirHora.jsx`), al admin le suena solo "Nadie tomó el viaje" (al liberarse para todos), "Agregar" a la derecha,
   **aprobar pagos** (SQL 038: `aprobado_en`/`aprobado_por`, tick + burbuja verde en la lista, solo admins; si cambia el pago
   se pierde la aprobación) y **anulados = "Eliminados"**, solo visibles con su filtro.
-- **"Compartir desde WhatsApp" hecho pero sin probar** (24/10): `CompartidoPlugin.java` + intent-filter SEND, versión 1.2
-  (código 3) en `build.gradle`, `AgregarCompartido.jsx`, `compartidoApp.js`. La parte web ya está publicada (no hace nada sin
-  la app nueva). El usuario todavía no quiere armar la app: cuando quiera, `.\compilar-app.ps1 -Prueba` → probar en SU
-  celular → app normal (`publicar-apk.ps1` o instalar a mano en el del dueño). Más adelante: borrar solas las fotos y
-  audios viejos.
+- **26/10: app Android "Senda Segura" 1.2 (código 3) armada y subida** (`config_app` en versión 3, archivo en Storage
+  `app/remiseria-3.apk` y en `Descargas\Remiseria.apk`; la anterior quedó como `Remiseria-19-10.apk`). Trae lo de la v2
+  (se actualiza sola, ubicación tras reiniciar, sonido propio, ícono/nombre, frecuencia desde el servidor), **Compartir desde
+  WhatsApp** (`CompartidoPlugin.java`, `AgregarCompartido.jsx`) y **avisos con la app abierta** (`capacitor.config.json` →
+  `presentationOptions` + `<meta-data>` en el manifest, sin el cual el plugin no los muestra; la página ya no hace pitido
+  con la app 3+). Probada en el celular del usuario (compartir y aviso con la app abierta: andan). **Todos los celulares
+  tenían la v1**: hay que instalarla a mano una vez en cada uno (se manda el archivo por WhatsApp); de ahí en adelante, con
+  `.\publicar-apk.ps1 -Novedades "…"` (arreglado el 26/10) les aparece "Hay una versión nueva" solo. Más adelante: borrar
+  solas las fotos y audios viejos.
 - Pendiente antes de usarla en serio: cargar los choferes reales (fotos de autos en `Descargas\remises`), instalar la
   app en cada celular (permisos: ubicación "todo el tiempo", batería sin restricciones, notificaciones).
 - **Etapa 3** (contexto y estado en `etapa-3-gestion.md`): la app **reemplaza al formulario de Google** y escribe cada viaje

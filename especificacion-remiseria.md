@@ -362,6 +362,13 @@ Hoy la ubicación "desaparece" por varios minutos. Hay que diseñar para que **n
   su pantalla mientras nadie lo acepte, con el **nombre del cliente** (no el origen ni el destino), para poder avisarle si
   no lo ve. Si pasa a otro chofer, el aviso nuevo reemplaza al anterior. Solo para los viajes de la cola (no los asignados a
   mano). Cambia, para este caso, lo de "nunca datos del cliente" en los viajes ajenos.
+- **(2026-10-26) App Android "Senda Segura" 1.2** (reemplaza a la "Remisería" vieja; se instala a mano una vez en cada
+  celular y de ahí en adelante se actualiza sola con el cartel "Hay una versión nueva — Actualizar"):
+  - Lo de la versión 2 (19/10): se actualiza sola, la ubicación vuelve sola si el celular se reinicia, sonido propio y
+    largo para los viajes, ícono de las dos S y nombre "Senda Segura", cada cuánto manda la ubicación lo decide el servidor
+    (menos seguido cuando está libre) y el botón atrás del celular.
+  - **Compartir desde WhatsApp** (WhatsApp → Compartir → Senda Segura → elegir el viaje y la parte). Solo gestión.
+  - **Los avisos suenan y aparecen arriba también con la app abierta** (antes, con la app abierta no sonaban).
 - **(2026-10-24) Pedidos del dueño:**
   - **Recorrido de cada viaje** (por ahora para controlar; más adelante, para calcular precios): desde que el chofer toca
     "Salir a hacer el viaje" hasta que lo finaliza, con las ubicaciones que manda la app. En el viaje (gestión) se ve el

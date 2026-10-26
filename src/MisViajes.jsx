@@ -5,6 +5,7 @@ import { cuando, hora } from './viajes.js'
 import FormPago from './FormPago.jsx'
 import { useAtras } from './atras.js'
 import { pitido } from './notificaciones.js'
+import { avisosConLaAppAbierta } from './notificacionesApp.js'
 import VerAdjuntos from './Adjuntos.jsx'
 import { tieneAdjuntos } from './adjuntos.js'
 
@@ -115,7 +116,8 @@ export default function MisViajes({ perfil, onSinPago }) {
   useEffect(() => {
     if (!idsOfertas) { setOfertasVistas(''); return }
     const vistas = new Set(ofertasVistas.split(','))
-    if (idsOfertas.split(',').some((id) => !vistas.has(id))) pitido()
+    // (La app versión 3 o más ya hace sonar el aviso con la app abierta: no hace falta el pitido.)
+    if (idsOfertas.split(',').some((id) => !vistas.has(id))) avisosConLaAppAbierta().then((suena) => { if (!suena) pitido() })
     setOfertasVistas(idsOfertas)
   }, [idsOfertas]) // eslint-disable-line react-hooks/exhaustive-deps
   const actual = viajes.find((v) => v.estado === 'asignado' && v.iniciado_en)
