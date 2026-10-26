@@ -7,16 +7,15 @@ import Calendario from './Calendario.jsx'
 import ViajesFijos from './ViajesFijos.jsx'
 import { NOMBRE_ESTADO_VIAJE, fechaLocal, unirFechaHora } from './viajes.js'
 
-// Orden de la lista (pedido del dueño, 24/10/2026): arriba los que nadie tomó todavía, después los aceptados que
-// todavía no salieron, los que se están haciendo, los terminados (los que faltan aprobar) y los aprobados. (Los eliminados
-// solo se ven con su filtro.)
+// Orden de la lista (pedido del dueño, 26/10/2026): arriba los que se están haciendo, después los próximos (sin tomar o
+// aceptados que todavía no salieron), los terminados (los que faltan aprobar) y los aprobados. (Los eliminados solo se
+// ven con su filtro.)
 function grupoDelViaje(v) {
-  if (v.estado === 'sin_chofer' || v.estado === 'ofrecido') return 0 // sin tomar
-  if (v.estado === 'asignado' && !v.iniciado_en) return 1 // aceptado, por salir
-  if (v.estado === 'asignado') return 2 // en viaje
-  if (v.estado === 'finalizado' && v.aprobado_en) return 4 // pago aprobado
-  if (v.estado === 'anulado') return 5
-  return 3 // hechos: pago pendiente, finalizado sin aprobar, fallido
+  if (v.estado === 'asignado' && v.iniciado_en) return 0 // en viaje
+  if (['sin_chofer', 'ofrecido', 'asignado'].includes(v.estado)) return 1 // próximos
+  if (v.estado === 'finalizado' && v.aprobado_en) return 3 // pago aprobado
+  if (v.estado === 'anulado') return 4
+  return 2 // hechos: pago pendiente, finalizado sin aprobar, fallido
 }
 
 // Filtro que no es un estado del viaje: los finalizados con el pago aprobado (24/10/2026). Los que faltan aprobar están en
@@ -79,7 +78,7 @@ export default function Viajes({ esAdmin }) {
       const grupoA = grupoDelViaje(a), grupoB = grupoDelViaje(b)
       if (grupoA !== grupoB) return grupoA - grupoB
       const dif = new Date(a.hora_asignacion) - new Date(b.hora_asignacion)
-      return grupoA <= 2 ? dif : -dif
+      return grupoA <= 1 ? dif : -dif
     }))
   }, [filtroFecha, filtroEstado, filtroChofer])
 

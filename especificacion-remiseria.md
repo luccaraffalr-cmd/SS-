@@ -362,6 +362,34 @@ Hoy la ubicación "desaparece" por varios minutos. Hay que diseñar para que **n
   su pantalla mientras nadie lo acepte, con el **nombre del cliente** (no el origen ni el destino), para poder avisarle si
   no lo ve. Si pasa a otro chofer, el aviso nuevo reemplaza al anterior. Solo para los viajes de la cola (no los asignados a
   mano). Cambia, para este caso, lo de "nunca datos del cliente" en los viajes ajenos.
+- **(2026-10-26) Devolver un viaje** (pedido del dueño: por ejemplo, si al chofer se le rompe el auto):
+  - El chofer que ya tiene el viaje (aceptado o haciéndolo) toca **"↩️ No puedo seguir: devolver el viaje"** y cuenta qué
+    pasó **escribiendo y/o con un audio** grabado ahí mismo (necesita la app Android 1.3 para el micrófono). Queda en las
+    observaciones del viaje.
+  - Si ya estaba con el pasajero, dice **dónde está**: escribiéndolo y/o con **"📍 Está donde estoy yo"** (la última
+    ubicación de su auto). Eso pasa a ser el nuevo "Buscar en" (el anterior queda anotado en las observaciones).
+  - El viaje **vuelve a la cola solo, como ⭐ prioritario**. Al que lo devolvió no se le vuelve a ofrecer y **queda Libre**.
+  - A los admins les suena **"⚠️ Juan devolvió el viaje"** con lo que pasó (SQL 042).
+- **(2026-10-26) Destino al cargar el pago:** si el viaje se cargó **sin destino**, cuando el chofer carga el pago (al
+  finalizar, o después desde "viajes sin cargar") tiene que escribir **"¿A dónde lo llevaste?"**; sin eso no lo deja
+  guardar. Se guarda en el viaje y va a la planilla. Si el viaje ya tenía destino, no se pide. En "Fallido" no se pide
+  (SQL 041).
+- **(2026-10-26) "No ofrecer a": choferes que no pueden hacer un viaje** (pedido del dueño: por ejemplo, a un cliente no le
+  gusta que lo lleven 2 de los 6 choferes):
+  - Se marcan **en cada viaje** (y en los viajes fijos, donde queda guardado y se copia a cada viaje): "🚫 No ofrecer a",
+    tocando los choferes. Se marcan los que **no** (si entra un chofer nuevo, ese sí puede).
+  - La cola se lo ofrece **al primero de los que sí pueden**. A los otros no se les ofrece, no lo pueden tomar, no lo ven
+    en el cartel de viajes sin chofer y no les suena el aviso.
+  - ~~Si no hay ninguno de los que pueden: a los 2 minutos se le da igual al primero de la cola.~~ **Cambiado el mismo
+    26/10:** a los marcados **no se les ofrece en ningún momento** (por ejemplo, viajes que necesitan un auto con baúl). Si
+    ninguno de los demás lo toma, a gestión le suena "Nadie tomó el viaje" como en todos los viajes y lo asigna a mano
+    (SQL 043).
+  - Gestión se lo puede **asignar a mano** a uno de esos: en la lista para elegir chofer aparece "⚠️ … — el cliente no lo
+    quiere", pero decide gestión. (SQL 040)
+- **(2026-10-26) Viajes inmediatos: nada de la dirección hasta aceptar** (pedido del dueño): en la oferta de un inmediato
+  el chofer no ve el origen, ni el destino, ni las observaciones (dice "Buscar en: 🔒 Lo ves cuando lo aceptes"); el aviso
+  del celular dice "Aceptalo en la app para ver a dónde ir", y los avisos de cambios tampoco muestran la dirección (SQL 039).
+  Al aceptar ve todo. En los programados sigue como el 24/10: se ve "Buscar en" y las observaciones; el destino, al aceptar.
 - **(2026-10-26) App Android "Senda Segura" 1.2** (reemplaza a la "Remisería" vieja; se instala a mano una vez en cada
   celular y de ahí en adelante se actualiza sola con el cartel "Hay una versión nueva — Actualizar"):
   - Lo de la versión 2 (19/10): se actualiza sola, la ubicación vuelve sola si el celular se reinicia, sonido propio y
@@ -379,7 +407,10 @@ Hoy la ubicación "desaparece" por varios minutos. Hay que diseñar para que **n
     oscuro (final)** para distinguir la ida de la vuelta, y hay un botón **"Ver en grande"** (pantalla completa). Se guarda
     para siempre al finalizar (SQL 036); mientras se hace, se ve el de hasta ahora.
   - **Lista de viajes** (gestión): arriba los que nadie tomó todavía, después los aceptados que no salieron, los que se están
-    haciendo, los terminados (primero los que faltan aprobar), los aprobados y al final los anulados.
+    haciendo, los terminados (primero los que faltan aprobar), los aprobados y al final los anulados. **Cambiado el
+    26/10/2026:** arriba los que **se están haciendo**, después los **próximos** (sin tomar o aceptados que todavía no
+    salieron, del más próximo al más lejano), los **terminados sin aprobar** y los **aprobados** (los dos, el más reciente
+    arriba).
   - **El chofer no ve el destino hasta aceptar** (ofertas de la cola y asignaciones a mano), para que no elija los viajes
     por a dónde van: en la oferta dice "Llevar a: 🔒 lo ves cuando lo aceptes", y ni el aviso del celular ni "Cambió tu
     viaje" lo muestran. Cuando el viaje se libera para que lo tome cualquiera, ahí sí se ve origen y destino (antes de eso, el

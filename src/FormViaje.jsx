@@ -14,6 +14,7 @@ import { FORMAS_PAGO, dinero, fechaCorta, totalCobrado } from './viajes.js'
 import { cuandoSeOfrece } from './TarjetaViaje.jsx'
 import { EditarAdjuntos } from './Adjuntos.jsx'
 import RecorridoViaje from './RecorridoViaje.jsx'
+import ElegirExcluidos from './ElegirExcluidos.jsx'
 
 // Explicación en palabras de en qué anda la asignación del viaje.
 function textoSituacion(v) {
@@ -114,6 +115,8 @@ export default function FormViaje({ viaje, fechaInicial, onListo, esAdmin = fals
   })
   // Links, ubicaciones, fotos, audios y archivos pegados al origen, al destino o a las observaciones (22/10/2026).
   const [adjuntos, setAdjuntos] = useState(viaje?.adjuntos ?? [])
+  // Choferes a los que no se les ofrece (26/10/2026).
+  const [excluidos, setExcluidos] = useState(viaje?.choferes_excluidos ?? [])
   const [error, setError] = useState('')
   const [enviando, setEnviando] = useState(false)
   const [confirmandoAnular, setConfirmandoAnular] = useState(false)
@@ -216,6 +219,7 @@ export default function FormViaje({ viaje, fechaInicial, onListo, esAdmin = fals
       destino: datos.destino.trim() || null,
       observaciones: datos.observaciones.trim() || null,
       adjuntos,
+      choferes_excluidos: excluidos,
       hora_presentacion: esProgramado ? presentacion.toISOString() : null,
     }
     if (esProgramado) fila.hora_asignacion = asignacion.toISOString()
@@ -264,6 +268,7 @@ export default function FormViaje({ viaje, fechaInicial, onListo, esAdmin = fals
       cliente_telefono: datos.cliente_telefono.trim() || null,
       observaciones: datos.observaciones.trim() || null,
       adjuntos,
+      choferes_excluidos: excluidos,
       chofer_id: choferElegido || null,
     }
     let fila
@@ -299,7 +304,7 @@ export default function FormViaje({ viaje, fechaInicial, onListo, esAdmin = fals
       ({ error } = await supabase.rpc('cambiar_serie', {
         viaje: viaje.id, p_hora: datos.hora, p_anticipacion: minutos, p_origen: fila.origen, p_destino: fila.destino,
         p_cliente_nombre: fila.cliente_nombre, p_cliente_telefono: fila.cliente_telefono, p_observaciones: fila.observaciones,
-        p_adjuntos: fila.adjuntos,
+        p_adjuntos: fila.adjuntos, p_excluidos: fila.choferes_excluidos,
       }))
     }
     setEnviando(false)
@@ -424,10 +429,12 @@ export default function FormViaje({ viaje, fechaInicial, onListo, esAdmin = fals
           </label>
           <EditarAdjuntos campo="observaciones" adjuntos={adjuntos} onCambiar={setAdjuntos} />
         </div>
+        <ElegirExcluidos choferes={choferes.map((c) => ({ id: c.id, nombre: c.perfiles.nombre }))}
+          excluidos={excluidos} onCambiar={setExcluidos} />
         {esNuevo && (
           <label>
             Chofer (opcional)
-            <ElegirChofer valor={choferElegido} onCambiar={setChoferElegido} choferes={choferes} />
+            <ElegirChofer valor={choferElegido} onCambiar={setChoferElegido} choferes={choferes} excluidos={excluidos} />
             <small className="ayuda">
               Solo si el cliente pidió un chofer en particular. Si no, se asigna solo.
               {esProgramado && repetir !== 'no' && ' Como se repite, cada viaje se le ofrece a este chofer 7 días antes y lo tiene que aceptar.'}
@@ -534,7 +541,7 @@ export default function FormViaje({ viaje, fechaInicial, onListo, esAdmin = fals
           )}
           <label>
             Chofer
-            <ElegirChofer valor={choferElegido} onCambiar={setChoferElegido} choferes={choferes}
+            <ElegirChofer valor={choferElegido} onCambiar={setChoferElegido} choferes={choferes} excluidos={excluidos}
               textoVacio="Sin chofer (vuelve a la asignación automática)" />
           </label>
           <button type="button" className="boton"

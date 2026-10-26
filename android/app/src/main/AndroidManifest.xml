@@ -83,4 +83,7 @@
     <!-- Versión 2: volver a mandar la ubicación al reiniciar y que la app se actualice sola. -->
     <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
     <uses-permission android:name="android.permission.REQUEST_INSTALL_PACKAGES" />
+    <!-- Versión 4 (1.3): grabar un audio al devolver un viaje (la página pide el micrófono y Capacitor pide el permiso). -->
+    <uses-permission android:name="android.permission.RECORD_AUDIO" />
+    <uses-permission android:name="android.permission.MODIFY_AUDIO_SETTINGS" />
 </manifest>

@@ -21,17 +21,19 @@ export function useChoferesParaAsignar() {
   return choferes
 }
 
-export function textoOpcionChofer(c) {
+// excluido: el viaje tiene a este chofer en "No ofrecer a" (26/10/2026): gestión lo puede elegir igual, con el aviso.
+export function textoOpcionChofer(c, excluido = false) {
   const extra = c.estado === 'en_viaje' ? ' (queda como próximo viaje)' : ''
-  return `${c.perfiles.nombre} — ${NOMBRE_ESTADO[c.estado]}${c.oculto ? ', oculto' : ''}${extra}`
+  return `${excluido ? '⚠️ ' : ''}${c.perfiles.nombre} — ${NOMBRE_ESTADO[c.estado]}${c.oculto ? ', oculto' : ''}${extra}`
+    + (excluido ? ' — el cliente no lo quiere' : '')
 }
 
-// Selector de chofer. valor = id del chofer o '' (sin chofer).
-export default function ElegirChofer({ valor, onCambiar, choferes, textoVacio = 'Sin chofer (asignación automática)' }) {
+// Selector de chofer. valor = id del chofer o '' (sin chofer). excluidos: ids de "No ofrecer a" (se marcan con ⚠️).
+export default function ElegirChofer({ valor, onCambiar, choferes, excluidos = [], textoVacio = 'Sin chofer (asignación automática)' }) {
   return (
     <select value={valor} onChange={(e) => onCambiar(e.target.value)}>
       <option value="">{textoVacio}</option>
-      {choferes.map((c) => <option key={c.id} value={c.id}>{textoOpcionChofer(c)}</option>)}
+      {choferes.map((c) => <option key={c.id} value={c.id}>{textoOpcionChofer(c, excluidos.includes(c.id))}</option>)}
     </select>
   )
 }

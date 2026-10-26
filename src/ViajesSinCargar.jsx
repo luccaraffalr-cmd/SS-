@@ -42,7 +42,7 @@ export default function ViajesSinCargar({ viajes }) {
               {v.destino && <span>→ {v.destino}</span>}
               <span className="viaje-cuando">{cuando(v)} · #{v.id}</span>
               {cargandoPago === v.id ? (
-                <FormPago textoBoton="Guardar pago"
+                <FormPago textoBoton="Guardar pago" pedirDestino={!v.destino}
                   onGuardar={(importe, forma, cuenta, otro, extras) => cargarPago(v.id, importe, forma, cuenta, otro, extras)}
                   onCancelar={() => setCargandoPago(null)} />
               ) : (

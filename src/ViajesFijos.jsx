@@ -4,6 +4,7 @@ import ElegirFechas from './ElegirFechas.jsx'
 import ElegirHora from './ElegirHora.jsx'
 import { useAtras } from './atras.js'
 import { EditarAdjuntos } from './Adjuntos.jsx'
+import ElegirExcluidos from './ElegirExcluidos.jsx'
 import { deFechaLocal, fechaCorta, fechaLocal, recorridoDebajo, tituloViaje } from './viajes.js'
 
 // Orden de la semana para mostrar (lunes primero). Valores: 0 = domingo … 6 = sábado.
@@ -116,6 +117,7 @@ function FormViajeFijo({ fijo, choferes, onListo }) {
   }))
   // Lo que se adjunta acá queda en todos los viajes del viaje fijo (decidido el 22/10/2026).
   const [adjuntos, setAdjuntos] = useState(fijo.adjuntos ?? [])
+  const [excluidos, setExcluidos] = useState(fijo.choferes_excluidos ?? []) // "No ofrecer a" (26/10/2026)
   const [error, setError] = useState('')
   const [enviando, setEnviando] = useState(false)
   const [confirmandoBorrar, setConfirmandoBorrar] = useState(false)
@@ -143,6 +145,7 @@ function FormViajeFijo({ fijo, choferes, onListo }) {
       cliente_telefono: datos.cliente_telefono.trim() || null,
       observaciones: datos.observaciones.trim() || null,
       adjuntos,
+      choferes_excluidos: excluidos,
       chofer_id: datos.chofer_id || null,
       activo: datos.activo,
       ...cambios,
@@ -227,6 +230,7 @@ function FormViajeFijo({ fijo, choferes, onListo }) {
           </label>
           <EditarAdjuntos campo="observaciones" adjuntos={adjuntos} onCambiar={setAdjuntos} />
         </div>
+        <ElegirExcluidos choferes={choferes} excluidos={excluidos} onCambiar={setExcluidos} />
         <label>
           Chofer fijo (opcional)
           <select value={datos.chofer_id} onChange={cambiar('chofer_id')}>

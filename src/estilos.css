@@ -251,6 +251,51 @@ a.boton { display: block; text-align: center; text-decoration: none; }
 .panel-adjunto { display: flex; flex-direction: column; gap: 8px; padding: 12px; border-radius: 10px; background: #f3f4f6; }
 .panel-adjunto label.boton { display: block; text-align: center; cursor: pointer; }
 .panel-adjunto label.boton.deshabilitado { opacity: 0.6; cursor: default; }
+/* Devolver un viaje (chofer, 26/10/2026) */
+.boton-devolver {
+  align-self: center;
+  padding: 8px 4px;
+  border: none;
+  background: none;
+  color: #b91c1c;
+  font: inherit;
+  font-size: 0.95rem;
+  text-decoration: underline;
+  cursor: pointer;
+}
+.devolver-viaje { display: flex; flex-direction: column; gap: 10px; padding: 12px; border: 2px solid #fca5a5; border-radius: 12px; background: #fff; }
+.grabar-audio { display: flex; flex-direction: column; gap: 6px; }
+.grabar-audio audio { width: 100%; }
+.chip-chofer.elegido-aca { border-color: #16a34a; background: #dcfce7; color: #166534; font-weight: 600; }
+/* "No ofrecer a": choferes a los que no se les ofrece el viaje (26/10/2026) */
+.campo-excluidos { display: flex; flex-direction: column; gap: 8px; }
+.boton-desplegar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px solid #d1d5db;
+  border-radius: 10px;
+  background: #fff;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+.chips-choferes { display: flex; flex-wrap: wrap; gap: 6px; }
+.chip-chofer {
+  padding: 6px 12px;
+  border: 1px solid #d1d5db;
+  border-radius: 999px;
+  background: #f3f4f6;
+  color: #111827;
+  font: inherit;
+  font-size: 0.95rem;
+  cursor: pointer;
+}
+.chip-chofer.excluido { border-color: #dc2626; background: #fee2e2; color: #991b1b; font-weight: 600; }
 /* "Compartir desde WhatsApp": elegir el viaje al que va lo compartido */
 .foto-compartida { max-width: 100%; max-height: 240px; object-fit: contain; border-radius: 8px; align-self: flex-start; }
 .texto-compartido { padding: 8px 10px; border-radius: 8px; background: #f3f4f6; overflow-wrap: anywhere; white-space: pre-wrap; }
@@ -355,6 +400,7 @@ a.boton { display: block; text-align: center; text-decoration: none; }
 
 .form-pago { display: flex; flex-direction: column; gap: 12px; }
 .form-pago input { font-size: 1.4rem; font-weight: 700; }
+.form-pago input.campo-destino { font-size: 1.05rem; font-weight: 400; }
 .extras-pago { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
 .extras-pago label { font-size: 0.95rem; }
 .extras-pago input { width: 100%; min-width: 0; font-size: 1.1rem; }

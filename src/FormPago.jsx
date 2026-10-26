@@ -6,13 +6,14 @@ const textoInicial = (n) => (n === null || n === undefined ? '' : String(n))
 
 // Importe + forma de pago (+ cuenta corriente si corresponde: una de la lista u "Otro" con el nombre).
 // Además, como el formulario de la planilla: demora y peaje (se cobran aparte) y nafta (lo que cargó el chofer).
-// onGuardar(importe, forma, cuenta, otro, { demora, peaje, nafta }) devuelve una promesa con el texto del error,
-// o nada si salió bien.
+// onGuardar(importe, forma, cuenta, otro, { demora, peaje, nafta, destino? }) devuelve una promesa con el texto del error,
+// o nada si salió bien. pedirDestino (chofer, viaje cargado sin destino; 26/10/2026): tiene que escribir a dónde lo llevó.
 export default function FormPago({
   importeInicial = '', formaInicial = '', cuentaInicial = null, otroInicial = '',
-  demoraInicial = null, peajeInicial = null, naftaInicial = null,
+  demoraInicial = null, peajeInicial = null, naftaInicial = null, pedirDestino = false,
   textoBoton = 'Guardar pago', onGuardar, onCancelar,
 }) {
+  const [destino, setDestino] = useState('')
   const [importe, setImporte] = useState(textoInicial(importeInicial))
   const [forma, setForma] = useState(formaInicial ?? '')
   // id de la cuenta, 'otro' o '' (sin elegir)
@@ -37,6 +38,7 @@ export default function FormPago({
 
   async function guardar() {
     setError('')
+    if (pedirDestino && !destino.trim()) return setError('Escribí a dónde lo llevaste (el destino).')
     const n = leerImporte(importe)
     if (n === null) return setError('Escribí el importe (solo números).')
     const demora = leerExtra(extras.demora), peaje = leerExtra(extras.peaje), nafta = leerExtra(extras.nafta)
@@ -51,7 +53,7 @@ export default function FormPago({
     const err = await onGuardar(n, forma,
       esCuenta && cuenta !== 'otro' ? Number(cuenta) : null,
       esCuenta && cuenta === 'otro' ? otro.trim() : null,
-      { demora, peaje, nafta })
+      { demora, peaje, nafta, ...(pedirDestino ? { destino: destino.trim() } : {}) })
     setEnviando(false)
     if (err) setError(err)
   }
@@ -64,6 +66,13 @@ export default function FormPago({
 
   return (
     <div className="form-pago">
+      {pedirDestino && (
+        <label>
+          ¿A dónde lo llevaste? (el viaje no tenía destino)
+          <input className="campo-destino" value={destino} onChange={(e) => setDestino(e.target.value)}
+            placeholder="ej: Hospital Italiano" />
+        </label>
+      )}
       <label>
         Importe del viaje
         <input inputMode="decimal" placeholder="$" value={importe} onChange={(e) => setImporte(e.target.value)} />

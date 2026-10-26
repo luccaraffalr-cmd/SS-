@@ -7,6 +7,7 @@ import { useAtras } from './atras.js'
 import { pitido } from './notificaciones.js'
 import { avisosConLaAppAbierta } from './notificacionesApp.js'
 import VerAdjuntos from './Adjuntos.jsx'
+import DevolverViaje from './DevolverViaje.jsx'
 import { tieneAdjuntos } from './adjuntos.js'
 
 // Origen destacado (22/10/2026: los choferes se confundían con el destino): recuadro verde "📍 BUSCAR EN" con letra grande.
@@ -53,6 +54,8 @@ export default function MisViajes({ perfil, onSinPago }) {
   // Al finalizar: null | 'elegir' | 'pago' | 'fallido'
   const [finalizando, setFinalizando] = useState(null)
   const [motivo, setMotivo] = useState('')
+  const [devolviendo, setDevolviendo] = useState(null) // id del viaje que está devolviendo (26/10/2026)
+  useAtras(devolviendo !== null, () => setDevolviendo(null))
 
   // El botón atrás del celular hace lo mismo que "Volver".
   useAtras(finalizando !== null, () => setFinalizando(null))
@@ -136,11 +139,21 @@ export default function MisViajes({ perfil, onSinPago }) {
           <section key={v.id} className="tarjeta separada oferta">
             <h2>{automatica ? '🔔 Viaje para vos' : '📌 Gestión te asignó un viaje'}</h2>
             {automatica && v.oferta_vence && <TiempoParaContestar vence={v.oferta_vence} ahora={ahora} />}
-            <BloqueOrigen viaje={v} />
-            {/* El destino se ve recién al aceptar (pedido del dueño, 24/10/2026: que no elijan los viajes por a dónde van). */}
-            <div className="llevar-a">Llevar a: <strong>🔒 lo ves cuando lo aceptes</strong></div>
+            {/* Que no elijan los viajes por a dónde van (pedidos del dueño): en los inmediatos no se ve nada de la dirección
+                ni las observaciones hasta aceptar (26/10/2026); en los programados, el destino (24/10/2026). */}
+            {v.tipo === 'inmediato' ? (
+              <div className="buscar-en">
+                <small>📍 Buscar en</small>
+                <strong className="viaje-titulo">🔒 Lo ves cuando lo aceptes</strong>
+              </div>
+            ) : (
+              <>
+                <BloqueOrigen viaje={v} />
+                <div className="llevar-a">Llevar a: <strong>🔒 lo ves cuando lo aceptes</strong></div>
+              </>
+            )}
             <div className="dato"><small>Cuándo</small><strong>{cuando(v)}</strong></div>
-            {(v.observaciones || tieneAdjuntos(v, 'observaciones')) && (
+            {v.tipo !== 'inmediato' && (v.observaciones || tieneAdjuntos(v, 'observaciones')) && (
               <div className="dato">
                 <small>Observaciones</small>{v.observaciones && <span className="texto-dato">{v.observaciones}</span>}
                 <VerAdjuntos campo="observaciones" adjuntos={v.adjuntos} />
@@ -187,8 +200,15 @@ export default function MisViajes({ perfil, onSinPago }) {
             <a className="boton" href={'tel:' + actual.cliente_telefono}>📞 Llamar al cliente ({actual.cliente_telefono})</a>
           )}
 
-          {finalizando === null && (
-            <button className="boton grande verde" onClick={() => setFinalizando('elegir')}>🏁 Finalicé</button>
+          {finalizando === null && devolviendo !== actual.id && (
+            <>
+              <button className="boton grande verde" onClick={() => setFinalizando('elegir')}>🏁 Finalicé</button>
+              <button className="boton-devolver" onClick={() => setDevolviendo(actual.id)}>↩️ No puedo seguir: devolver el viaje</button>
+            </>
+          )}
+          {devolviendo === actual.id && (
+            <DevolverViaje viaje={actual} perfilId={perfil.id}
+              onListo={() => { setDevolviendo(null); cargar() }} onCancelar={() => setDevolviendo(null)} />
           )}
           {finalizando === 'elegir' && (
             <div className="botonera">
@@ -202,7 +222,7 @@ export default function MisViajes({ perfil, onSinPago }) {
             </div>
           )}
           {finalizando === 'pago' && (
-            <FormPago textoBoton="Finalizar viaje"
+            <FormPago textoBoton="Finalizar viaje" pedirDestino={!actual.destino}
               onGuardar={(importe, forma_pago, cuenta, otro, extras) =>
                 finalizar(actual.id, 'pago', { importe, forma_pago, cuenta, otro, ...extras })}
               onCancelar={() => setFinalizando('elegir')} />
@@ -243,6 +263,12 @@ export default function MisViajes({ perfil, onSinPago }) {
                 )}
                 {llegoLaHora && actual && <small>Cuando termines el viaje actual, salí a hacer este.</small>}
                 {!llegoLaHora && <small>Se habilita a las {hora(v.hora_asignacion)} (te va a sonar un aviso).</small>}
+                {devolviendo === v.id ? (
+                  <DevolverViaje viaje={v} perfilId={perfil.id}
+                    onListo={() => { setDevolviendo(null); cargar() }} onCancelar={() => setDevolviendo(null)} />
+                ) : (
+                  <button className="boton-devolver" onClick={() => setDevolviendo(v.id)}>↩️ No lo puedo hacer: devolverlo</button>
+                )}
               </div>
             )
           })}

@@ -91,6 +91,12 @@
   (`ElegirHora.jsx`), al admin le suena solo "Nadie tomó el viaje" (al liberarse para todos), "Agregar" a la derecha,
   **aprobar pagos** (SQL 038: `aprobado_en`/`aprobado_por`, tick + burbuja verde en la lista, solo admins; si cambia el pago
   se pierde la aprobación) y **anulados = "Eliminados"**, solo visibles con su filtro.
+- **Publicado en Netlify el 26/10/2026** (SQL hasta el 043): inmediatos sin dirección hasta aceptar (039), "🚫 No ofrecer a"
+  por viaje y viaje fijo — nunca se les ofrece a los marcados (040 y 043, `excluidos_vigentes`), destino al cargar el pago
+  si faltaba (041), **devolver el viaje** con texto/audio y dónde está el pasajero, vuelve a la cola prioritario (042,
+  `DevolverViaje.jsx`, `GrabarAudio.jsx`, audios de choferes en `adjuntos/chofer/<id>/`), lista de viajes: en viaje →
+  próximos → terminados sin aprobar → aprobados. **App 1.3 (código 4)**: lo de la 1.2 + permiso de micrófono (para grabar
+  al devolver). Es la que se reparte a mano en cada celular (`Descargas\Remiseria.apk`); la 1.2 no se llegó a repartir.
 - **26/10: app Android "Senda Segura" 1.2 (código 3) armada y subida** (`config_app` en versión 3, archivo en Storage
   `app/remiseria-3.apk` y en `Descargas\Remiseria.apk`; la anterior quedó como `Remiseria-19-10.apk`). Trae lo de la v2
   (se actualiza sola, ubicación tras reiniciar, sonido propio, ícono/nombre, frecuencia desde el servidor), **Compartir desde

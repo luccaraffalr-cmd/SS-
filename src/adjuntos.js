@@ -57,14 +57,15 @@ async function achicarFoto(archivo) {
   }
 }
 
-// Sube una foto, audio o archivo y devuelve el adjunto (tira un error si no pudo).
-export async function subirArchivo(campo, archivo) {
+// Sube una foto, audio o archivo y devuelve el adjunto (tira un error si no pudo). carpeta: para los audios de los
+// choferes, "chofer/<su id>/" (solo pueden subir ahí).
+export async function subirArchivo(campo, archivo, carpeta = '') {
   const tipo = tipoDeArchivo(archivo)
   const datos = tipo === 'foto' ? await achicarFoto(archivo) : archivo
   const ext = datos !== archivo ? 'jpg' : extension(archivo.name)
   // Los audios de WhatsApp (.opus) a veces llegan sin tipo: si no, el celular no los reproduce.
   const contentType = datos.type || (['opus', 'ogg', 'oga'].includes(ext) ? 'audio/ogg' : undefined)
-  const ruta = `${nuevoId()}.${ext}`
+  const ruta = `${carpeta}${nuevoId()}.${ext}`
   const { error } = await supabase.storage.from('adjuntos').upload(ruta, datos, { contentType })
   if (error) throw new Error(error.message)
   return { id: nuevoId(), campo, tipo, ruta, nombre: tipo === 'archivo' ? archivo.name : null }

@@ -4,7 +4,7 @@ import { hora, problemaDelViaje, recorridoDebajo, tituloViaje } from './viajes.j
 import ElegirChofer, { useChoferesParaAsignar } from './ElegirChofer.jsx'
 
 const CONSULTA = 'id, estado, tipo, origen, destino, cliente_nombre, hora_presentacion, hora_asignacion, iniciado_en,'
-  + ' asignado_por, espera_gestion, chofer:perfiles!viajes_chofer_id_fkey(nombre, telefono),'
+  + ' asignado_por, espera_gestion, choferes_excluidos, chofer:perfiles!viajes_chofer_id_fkey(nombre, telefono),'
   + ' rechazo:perfiles!viajes_rechazado_por_fkey(nombre)'
 
 // Cartel rojo arriba de todo el panel de gestión con los viajes que ya llegaron a su hora y:
@@ -111,7 +111,7 @@ function PanelAsignar({ viajes, cuando, onVer }) {
             <a className="boton secundario" href={'tel:' + v.chofer.telefono}>📞 Llamar a {v.chofer.nombre}</a>
           )}
           <div className="asignar-rapido">
-            <ElegirChofer valor={elegidos[v.id] ?? ''} choferes={choferes}
+            <ElegirChofer valor={elegidos[v.id] ?? ''} choferes={choferes} excluidos={v.choferes_excluidos ?? []}
               textoVacio={v.problema === 'sin_chofer' ? 'Elegir chofer…' : 'Pasárselo a otro chofer…'}
               onCambiar={(c) => setElegidos({ ...elegidos, [v.id]: c })} />
             <button className="boton" onClick={() => asignar(v.id)}>Asignar</button>

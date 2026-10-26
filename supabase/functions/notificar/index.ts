@@ -65,8 +65,9 @@ Deno.serve(async (req) => {
   let enviadas = await enviarATodos(admin, oferta.chofer_id, {
     titulo: oferta.tipo === 'automatica' ? '🔔 Viaje para vos' : '📌 Gestión te asignó un viaje',
     // Primero dónde buscar al pasajero (22/10/2026: los choferes se confundían con el destino). El destino no va: lo ve
-    // recién al aceptar (24/10/2026, para que no elijan los viajes por a dónde van).
-    cuerpo: `${cuando}\nBuscar en: ${v.origen}`,
+    // recién al aceptar (24/10/2026, para que no elijan los viajes por a dónde van); en los inmediatos, tampoco el origen
+    // (26/10/2026).
+    cuerpo: v.tipo === 'programado' ? `${cuando}\nBuscar en: ${v.origen}` : `${cuando}\nAceptalo en la app para ver a dónde ir.`,
     etiqueta: `viaje-${v.id}`,
     fuerte: true,
   })
