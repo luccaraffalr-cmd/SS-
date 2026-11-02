@@ -93,8 +93,9 @@ const ANTICIPACION_POR_DEFECTO = 30
 const ANTICIPACIONES_RAPIDAS = [10, 20, 30, 45]
 
 // Alta y edición de un viaje (gestión). fechaInicial ("2026-10-15"): viaje nuevo cargado desde un día del calendario;
-// si no es hoy, arranca como programado para ese día.
-export default function FormViaje({ viaje, fechaInicial, onListo, esAdmin = false }) {
+// si no es hoy, arranca como programado para ese día. inicial ({ origen, observaciones, adjuntos }): viaje nuevo que
+// arranca con algo compartido desde WhatsApp (2/11/2026). onVolver: qué hace "Volver" (si no, lo mismo que al guardar).
+export default function FormViaje({ viaje, fechaInicial, inicial, onListo, onVolver, esAdmin = false }) {
   const esNuevo = !viaje
   const [datos, setDatos] = useState(() => {
     const presentacion = viaje?.hora_presentacion ? new Date(viaje.hora_presentacion) : null
@@ -103,9 +104,9 @@ export default function FormViaje({ viaje, fechaInicial, onListo, esAdmin = fals
       tipo: viaje?.tipo ?? (otroDia ? 'programado' : 'inmediato'),
       cliente_nombre: viaje?.cliente_nombre ?? '',
       cliente_telefono: viaje?.cliente_telefono ?? '',
-      origen: viaje?.origen ?? '',
+      origen: viaje?.origen ?? inicial?.origen ?? '',
       destino: viaje?.destino ?? '',
-      observaciones: viaje?.observaciones ?? '',
+      observaciones: viaje?.observaciones ?? inicial?.observaciones ?? '',
       fecha: presentacion ? fechaLocal(presentacion) : (fechaInicial ?? fechaLocal()),
       hora: presentacion ? hora(presentacion) : '',
       anticipacion: presentacion
@@ -114,7 +115,7 @@ export default function FormViaje({ viaje, fechaInicial, onListo, esAdmin = fals
     }
   })
   // Links, ubicaciones, fotos, audios y archivos pegados al origen, al destino o a las observaciones (22/10/2026).
-  const [adjuntos, setAdjuntos] = useState(viaje?.adjuntos ?? [])
+  const [adjuntos, setAdjuntos] = useState(viaje?.adjuntos ?? inicial?.adjuntos ?? [])
   // Choferes a los que no se les ofrece (26/10/2026).
   const [excluidos, setExcluidos] = useState(viaje?.choferes_excluidos ?? [])
   const [error, setError] = useState('')
@@ -150,7 +151,9 @@ export default function FormViaje({ viaje, fechaInicial, onListo, esAdmin = fals
   useAtras(!!preguntaSerie, () => setPreguntaSerie(null))
   useAtras(confirmandoAnular, () => setConfirmandoAnular(false))
 
+  // Sin botón "No" (27/10/2026): tocar el modo elegido lo desmarca y vuelve a un solo viaje.
   function elegirRepetir(modo) {
+    if (modo === repetir) return setRepetir('no')
     setRepetir(modo)
     if (modo === 'sueltos' && fechasSueltas.length === 0 && datos.fecha >= fechaLocal()) setFechasSueltas([datos.fecha])
     if (modo === 'semanal' && semana.dias.length === 0) {
@@ -343,8 +346,7 @@ export default function FormViaje({ viaje, fechaInicial, onListo, esAdmin = fals
             {esNuevo && (
               <div>
                 <p className="etiqueta-campo">Repetir</p>
-                <div className="selector-tipo selector-repetir">
-                  <button type="button" className={repetir === 'no' ? 'activo' : ''} onClick={() => elegirRepetir('no')}>No</button>
+                <div className="selector-tipo">
                   <button type="button" className={repetir === 'sueltos' ? 'activo' : ''}
                     onClick={() => elegirRepetir('sueltos')}>Días sueltos</button>
                   <button type="button" className={repetir === 'semanal' ? 'activo' : ''}
@@ -390,7 +392,7 @@ export default function FormViaje({ viaje, fechaInicial, onListo, esAdmin = fals
               <label>Hora de presentación<ElegirHora valor={datos.hora} onCambiar={(hora) => setDatos({ ...datos, hora })} /></label>
             </div>
             <label>
-              Minutos de anticipación para asignar el chofer
+              Minutos antes para asignar
               <input inputMode="numeric" value={datos.anticipacion} onChange={cambiar('anticipacion')} />
             </label>
             <div className="botones-rapidos">
@@ -429,8 +431,6 @@ export default function FormViaje({ viaje, fechaInicial, onListo, esAdmin = fals
           </label>
           <EditarAdjuntos campo="observaciones" adjuntos={adjuntos} onCambiar={setAdjuntos} />
         </div>
-        <ElegirExcluidos choferes={choferes.map((c) => ({ id: c.id, nombre: c.perfiles.nombre }))}
-          excluidos={excluidos} onCambiar={setExcluidos} />
         {esNuevo && (
           <label>
             Chofer (opcional)
@@ -442,11 +442,38 @@ export default function FormViaje({ viaje, fechaInicial, onListo, esAdmin = fals
           </label>
         )}
 
-        {conChofer && (
-          <p className="ayuda sin-margen">
-            Si cambiás el horario, el origen o el destino, o le agregás un link, una ubicación o un archivo, a {viaje.chofer.nombre} le llega un aviso.
-          </p>
+        {/* Chofer de un viaje ya cargado: en el mismo lugar que "Chofer (opcional)" al crearlo (26/10/2026). */}
+        {sePuedeAnular && (
+          <div className="chofer-del-viaje">
+            <p className="sin-margen">{textoSituacion(viaje)}</p>
+            {['no_salio', 'sin_aceptar'].includes(problemaDelViaje(viaje)) && viaje.chofer?.telefono && (
+              <a className="boton secundario" href={'tel:' + viaje.chofer.telefono}>📞 Llamar a {viaje.chofer.nombre}</a>
+            )}
+            {sePuedePriorizar && (
+              <button type="button" className="boton secundario" onClick={cambiarPrioridad}>
+                {viaje.prioritario ? 'Quitar prioridad' : '⭐ Priorizar (se asigna antes que los demás)'}
+              </button>
+            )}
+            <label>
+              Chofer
+              <ElegirChofer valor={choferElegido} onCambiar={setChoferElegido} choferes={choferes} excluidos={excluidos}
+                textoVacio="Sin chofer (vuelve a la asignación automática)" />
+            </label>
+            <button type="button" className="boton"
+              disabled={enviando || (choferElegido === (viaje.chofer_id ?? '') && !viaje.espera_gestion)
+                || (!!viaje.chofer_fijo && choferElegido === viaje.chofer_fijo)}
+              onClick={guardarChofer}>
+              {choferElegido ? 'Asignar a este chofer'
+                : viaje.espera_gestion ? 'Pasar a asignación automática' : 'Dejar sin chofer'}
+            </button>
+            {conChofer && choferElegido !== viaje.chofer_id && (
+              <small className="ayuda">A {viaje.chofer.nombre} le llega el aviso "Se anuló tu viaje".</small>
+            )}
+          </div>
         )}
+        {/* "No ofrecer a", abajo de la asignación del chofer (27/10/2026). */}
+        <ElegirExcluidos choferes={choferes.map((c) => ({ id: c.id, nombre: c.perfiles.nombre }))}
+          excluidos={excluidos} onCambiar={setExcluidos} />
         {error && <p className="aviso error">{error}</p>}
         {preguntaSerie ? (
           <div className="botonera">
@@ -471,10 +498,19 @@ export default function FormViaje({ viaje, fechaInicial, onListo, esAdmin = fals
               {enviando ? 'Guardando…' : !esNuevo ? 'Guardar cambios'
                 : esProgramado && repetir !== 'no' ? 'Cargar viajes' : 'Cargar viaje'}
             </button>
-            <button type="button" className="boton secundario" onClick={onListo}>Volver</button>
+            <button type="button" className="boton secundario" onClick={onVolver ?? onListo}>Volver</button>
           </>
         )}
       </form>
+
+      {/* Debajo del viaje (26/10/2026): el link del pasajero, el recorrido, el pago, eliminar y el historial. */}
+      {/* Link del pasajero: con chofer, o en los programados desde que se cargan (para mandarlo antes; 26/10/2026). */}
+      {!esNuevo && ['sin_chofer', 'ofrecido', 'asignado'].includes(viaje.estado)
+        && (viaje.chofer_id || viaje.tipo === 'programado') && <CompartirViaje viaje={viaje} />}
+
+      {!esNuevo && viaje.iniciado_en && (
+        <RecorridoViaje viajeId={viaje.id} enCurso={viaje.estado === 'asignado'} />
+      )}
 
       {!esNuevo && viaje.estado === 'fallido' && (
         <div className="tarjeta separada">
@@ -518,41 +554,6 @@ export default function FormViaje({ viaje, fechaInicial, onListo, esAdmin = fals
             <button type="button" className="boton secundario" onClick={() => setCorrigiendoPago(true)}>
               {viaje.estado === 'pago_pendiente' ? 'Cargar el pago desde gestión' : 'Corregir el pago'}
             </button>
-          )}
-        </div>
-      )}
-
-      {!esNuevo && viaje.iniciado_en && (
-        <RecorridoViaje viajeId={viaje.id} enCurso={viaje.estado === 'asignado'} />
-      )}
-
-      {!esNuevo && viaje.chofer_id && ['ofrecido', 'asignado'].includes(viaje.estado) && <CompartirViaje viaje={viaje} />}
-
-      {sePuedeAnular && (
-        <div className="tarjeta separada">
-          <p className="sin-margen">{textoSituacion(viaje)}</p>
-          {['no_salio', 'sin_aceptar'].includes(problemaDelViaje(viaje)) && viaje.chofer?.telefono && (
-            <a className="boton secundario" href={'tel:' + viaje.chofer.telefono}>📞 Llamar a {viaje.chofer.nombre}</a>
-          )}
-          {sePuedePriorizar && (
-            <button type="button" className="boton secundario" onClick={cambiarPrioridad}>
-              {viaje.prioritario ? 'Quitar prioridad' : '⭐ Priorizar (se asigna antes que los demás)'}
-            </button>
-          )}
-          <label>
-            Chofer
-            <ElegirChofer valor={choferElegido} onCambiar={setChoferElegido} choferes={choferes} excluidos={excluidos}
-              textoVacio="Sin chofer (vuelve a la asignación automática)" />
-          </label>
-          <button type="button" className="boton"
-            disabled={enviando || (choferElegido === (viaje.chofer_id ?? '') && !viaje.espera_gestion)
-              || (!!viaje.chofer_fijo && choferElegido === viaje.chofer_fijo)}
-            onClick={guardarChofer}>
-            {choferElegido ? 'Asignar a este chofer'
-              : viaje.espera_gestion ? 'Pasar a asignación automática' : 'Dejar sin chofer'}
-          </button>
-          {conChofer && choferElegido !== viaje.chofer_id && (
-            <small className="ayuda">A {viaje.chofer.nombre} le llega el aviso "Se anuló tu viaje".</small>
           )}
         </div>
       )}

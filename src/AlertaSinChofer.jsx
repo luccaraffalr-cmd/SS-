@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { supabase } from './supabase.js'
 import { hora, problemaDelViaje, recorridoDebajo, tituloViaje } from './viajes.js'
+import { cuantoTiempo } from './estados.js'
 import ElegirChofer, { useChoferesParaAsignar } from './ElegirChofer.jsx'
 
 const CONSULTA = 'id, estado, tipo, origen, destino, cliente_nombre, hora_presentacion, hora_asignacion, iniciado_en,'
@@ -46,11 +47,10 @@ export function CartelAlertas({ viajes, ahora, onVer }) {
     .sort((a, b) => new Date(a.hora_presentacion ?? a.hora_asignacion) - new Date(b.hora_presentacion ?? b.hora_asignacion))
   if (conProblema.length === 0) return null
 
-  const minutosPara = (fecha) => Math.round((new Date(fecha).getTime() - ahora) / 60000)
   const cuando = (v) => {
     if (v.tipo !== 'programado') return `⚡ Para ya (desde ${hora(v.hora_asignacion)})`
-    const min = minutosPara(v.hora_presentacion)
-    const texto = min > 0 ? `en ${min} min` : min === 0 ? 'ya' : `hace ${-min} min`
+    const ms = new Date(v.hora_presentacion).getTime() - ahora
+    const texto = Math.abs(ms) < 60000 ? 'ya' : ms > 0 ? `en ${cuantoTiempo(ms)}` : `hace ${cuantoTiempo(-ms)}`
     return `📅 Presentarse ${hora(v.hora_presentacion)} (${texto})`
   }
   const resumen = (v) => (v.problema === 'no_salio' ? `⏰ ${v.chofer?.nombre} no salió · `

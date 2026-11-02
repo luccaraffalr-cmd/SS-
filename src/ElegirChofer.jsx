@@ -1,6 +1,5 @@
 import { useEffect, useState } from 'react'
 import { supabase } from './supabase.js'
-import { NOMBRE_ESTADO } from './estados.js'
 
 const ORDEN_ESTADO = { en_cola: 0, libre: 1, en_viaje: 2, fuera_de_servicio: 3 }
 
@@ -21,11 +20,10 @@ export function useChoferesParaAsignar() {
   return choferes
 }
 
-// excluido: el viaje tiene a este chofer en "No ofrecer a" (26/10/2026): gestión lo puede elegir igual, con el aviso.
+// Solo el nombre (pedido del 26/10/2026: sin el estado). excluido: el viaje tiene a este chofer en "No ofrecer a"
+// (26/10/2026): gestión lo puede elegir igual, con el aviso.
 export function textoOpcionChofer(c, excluido = false) {
-  const extra = c.estado === 'en_viaje' ? ' (queda como próximo viaje)' : ''
-  return `${excluido ? '⚠️ ' : ''}${c.perfiles.nombre} — ${NOMBRE_ESTADO[c.estado]}${c.oculto ? ', oculto' : ''}${extra}`
-    + (excluido ? ' — el cliente no lo quiere' : '')
+  return `${excluido ? '⚠️ ' : ''}${c.perfiles.nombre}${excluido ? ' — el cliente no lo quiere' : ''}`
 }
 
 // Selector de chofer. valor = id del chofer o '' (sin chofer). excluidos: ids de "No ofrecer a" (se marcan con ⚠️).

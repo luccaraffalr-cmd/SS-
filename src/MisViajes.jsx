@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from 'react'
 import { supabase } from './supabase.js'
-import { textoError } from './estados.js'
+import { cuantoTiempo, textoError } from './estados.js'
 import { cuando, hora } from './viajes.js'
 import FormPago from './FormPago.jsx'
 import { useAtras } from './atras.js'
@@ -38,21 +38,23 @@ function TiempoParaContestar({ vence, ahora }) {
   if (quedan === 0) return <p className="tiempo-oferta poco">⌛ Se terminó el tiempo: el viaje pasa al siguiente.</p>
   return (
     <p className={'tiempo-oferta' + (quedan <= 30 ? ' poco' : '')}>
-      ⏱️ Te quedan <strong>{Math.floor(quedan / 60)}:{String(quedan % 60).padStart(2, '0')}</strong> para contestar
+      ⏱️ Te quedan <strong>{cuantoTiempo(quedan * 1000)}</strong> para contestar
     </p>
   )
 }
 
-// App del chofer: ofertas para aceptar o rechazar, su viaje actual y los próximos.
+// App del chofer: ofertas para aceptar o rechazar, sus viajes en curso y los próximos.
 // Los viajes sin cargar el pago los muestra ViajesSinCargar abajo de todo: se los pasa con onSinPago.
-export default function MisViajes({ perfil, onSinPago }) {
+// dosViajes: puede hacer otro viaje sin terminar el que está haciendo, hasta 2 a la vez (27/10/2026).
+export default function MisViajes({ perfil, dosViajes = false, onSinPago }) {
   const [viajes, setViajes] = useState([]) // ofrecidos y asignados, sin finalizar
   const [ahora, setAhora] = useState(Date.now())
   const [error, setError] = useState('')
   const [ocupado, setOcupado] = useState(false)
   const [confirmandoRechazo, setConfirmandoRechazo] = useState(null)
-  // Al finalizar: null | 'elegir' | 'pago' | 'fallido'
+  // Al finalizar: null | 'elegir' | 'pago' | 'fallido', y de qué viaje (puede tener 2 en curso).
   const [finalizando, setFinalizando] = useState(null)
+  const [finalizandoId, setFinalizandoId] = useState(null)
   const [motivo, setMotivo] = useState('')
   const [devolviendo, setDevolviendo] = useState(null) // id del viaje que está devolviendo (26/10/2026)
   useAtras(devolviendo !== null, () => setDevolviendo(null))
@@ -123,8 +125,9 @@ export default function MisViajes({ perfil, onSinPago }) {
     if (idsOfertas.split(',').some((id) => !vistas.has(id))) avisosConLaAppAbierta().then((suena) => { if (!suena) pitido() })
     setOfertasVistas(idsOfertas)
   }, [idsOfertas]) // eslint-disable-line react-hooks/exhaustive-deps
-  const actual = viajes.find((v) => v.estado === 'asignado' && v.iniciado_en)
+  const actuales = viajes.filter((v) => v.estado === 'asignado' && v.iniciado_en)
   const aceptados = viajes.filter((v) => v.estado === 'asignado' && !v.iniciado_en)
+  const puedeSalir = actuales.length === 0 || (dosViajes && actuales.length < 2)
   const sinPago = viajes.filter((v) => v.estado === 'pago_pendiente')
   const clavesSinPago = sinPago.map((v) => v.id).join(',')
   useEffect(() => { onSinPago?.(sinPago) }, [clavesSinPago]) // eslint-disable-line react-hooks/exhaustive-deps
@@ -180,8 +183,11 @@ export default function MisViajes({ perfil, onSinPago }) {
         )
       })}
 
-      {actual && (
-        <section className="tarjeta separada mi-viaje">
+      {actuales.map((actual) => {
+        // Si tiene 2 en curso, cada uno se finaliza por separado.
+        const paso = finalizandoId === actual.id ? finalizando : null
+        return (
+        <section key={actual.id} className="tarjeta separada mi-viaje">
           <h2>🚕 Tu viaje #{actual.id}</h2>
           <BloqueOrigen viaje={actual} />
           <LineaDestino viaje={actual} />
@@ -200,17 +206,19 @@ export default function MisViajes({ perfil, onSinPago }) {
             <a className="boton" href={'tel:' + actual.cliente_telefono}>📞 Llamar al cliente ({actual.cliente_telefono})</a>
           )}
 
-          {finalizando === null && devolviendo !== actual.id && (
+          {paso === null && devolviendo !== actual.id && (
             <>
-              <button className="boton grande verde" onClick={() => setFinalizando('elegir')}>🏁 Finalicé</button>
+              <button className="boton grande verde" onClick={() => { setFinalizandoId(actual.id); setFinalizando('elegir') }}>
+                🏁 Finalicé
+              </button>
               <button className="boton-devolver" onClick={() => setDevolviendo(actual.id)}>↩️ No puedo seguir: devolver el viaje</button>
             </>
           )}
           {devolviendo === actual.id && (
-            <DevolverViaje viaje={actual} perfilId={perfil.id}
+            <DevolverViaje viaje={actual} perfilId={perfil.id} otroEnCurso={actuales.length > 1}
               onListo={() => { setDevolviendo(null); cargar() }} onCancelar={() => setDevolviendo(null)} />
           )}
-          {finalizando === 'elegir' && (
+          {paso === 'elegir' && (
             <div className="botonera">
               <p className="sin-margen"><strong>¿Cómo terminó el viaje?</strong></p>
               <button className="boton verde" onClick={() => setFinalizando('pago')}>💵 Cargar el pago ahora</button>
@@ -221,20 +229,22 @@ export default function MisViajes({ perfil, onSinPago }) {
               <button className="boton secundario" onClick={() => setFinalizando(null)}>Volver</button>
             </div>
           )}
-          {finalizando === 'pago' && (
+          {paso === 'pago' && (
             <FormPago textoBoton="Finalizar viaje" pedirDestino={!actual.destino}
               onGuardar={(importe, forma_pago, cuenta, otro, extras) =>
                 finalizar(actual.id, 'pago', { importe, forma_pago, cuenta, otro, ...extras })}
               onCancelar={() => setFinalizando('elegir')} />
           )}
-          {finalizando === 'fallido' && (
+          {paso === 'fallido' && (
             <div className="botonera">
               <label>
                 Motivo (opcional)
                 <textarea rows={2} value={motivo} onChange={(e) => setMotivo(e.target.value)}
                   placeholder="ej: el cliente no estaba" />
               </label>
-              <p className="ayuda sin-margen">Volvés al puesto 1 de la cola.</p>
+              <p className="ayuda sin-margen">
+                {actuales.length > 1 ? 'Seguís con tu otro viaje.' : 'Volvés al puesto 1 de la cola.'}
+              </p>
               <button className="boton peligro" disabled={ocupado} onClick={async () => {
                 const err = await finalizar(actual.id, 'fallido', { motivo }); if (err) setError(err)
               }}>Marcar como fallido</button>
@@ -242,7 +252,8 @@ export default function MisViajes({ perfil, onSinPago }) {
             </div>
           )}
         </section>
-      )}
+        )
+      })}
 
       {aceptados.length > 0 && (
         <section className="tarjeta separada">
@@ -256,15 +267,20 @@ export default function MisViajes({ perfil, onSinPago }) {
                 {v.cliente_nombre && <small>{v.cliente_nombre}</small>}
                 <VerAdjuntos campo="observaciones" adjuntos={v.adjuntos} />
                 <span className="viaje-cuando">{cuando(v)} · #{v.id}</span>
-                {llegoLaHora && !actual && (
+                {llegoLaHora && puedeSalir && (
                   <button className="boton verde" disabled={ocupado} onClick={() => llamar('salir_a_hacer_viaje', v.id)}>
                     🚗 Salir a hacer el viaje
                   </button>
                 )}
-                {llegoLaHora && actual && <small>Cuando termines el viaje actual, salí a hacer este.</small>}
+                {llegoLaHora && !puedeSalir && (
+                  <small>
+                    {actuales.length > 1 ? 'Cuando termines uno de tus viajes, salí a hacer este.'
+                      : 'Cuando termines el viaje actual, salí a hacer este.'}
+                  </small>
+                )}
                 {!llegoLaHora && <small>Se habilita a las {hora(v.hora_asignacion)} (te va a sonar un aviso).</small>}
                 {devolviendo === v.id ? (
-                  <DevolverViaje viaje={v} perfilId={perfil.id}
+                  <DevolverViaje viaje={v} perfilId={perfil.id} otroEnCurso={actuales.length > 0}
                     onListo={() => { setDevolviendo(null); cargar() }} onCancelar={() => setDevolviendo(null)} />
                 ) : (
                   <button className="boton-devolver" onClick={() => setDevolviendo(v.id)}>↩️ No lo puedo hacer: devolverlo</button>

@@ -1,11 +1,12 @@
 import { useEffect, useState } from 'react'
 import { supabase } from './supabase.js'
+import { haceCuanto } from './estados.js'
 
 const CADA_CUANTO = 20 * 1000
 
 // Chofer: "📣 Salió un viaje para Juan" (decidido el 20/10/2026, pedido del dueño). Viajes de la cola ofrecidos a otro
-// chofer que todavía no los aceptó, para poder avisarle si no los ve. Con el cliente (no el recorrido).
-// También les llega un aviso al celular (función "notificar").
+// chofer que todavía no los aceptó, para poder avisarle si no los ve. Sin el cliente ni el recorrido: ningún chofer
+// puede saber quién hizo un viaje (27/10/2026). También les llega un aviso al celular (función "notificar").
 export default function OfertasEnCurso({ yo }) {
   const [ofertas, setOfertas] = useState([])
   const [ahora, setAhora] = useState(Date.now())
@@ -25,11 +26,11 @@ export default function OfertasEnCurso({ yo }) {
   return (
     <section className="tarjeta separada salio-viaje">
       {deOtros.map((o) => {
-        const minutos = Math.max(0, Math.floor((ahora - new Date(o.desde)) / 60000))
+        const hace = haceCuanto(o.desde, ahora)
         return (
-          <div key={o.viaje_id} className="dato">
+          <div key={o.chofer_id + o.desde} className="dato">
             <strong>📣 Salió un viaje para {o.chofer}</strong>
-            <small>{minutos === 0 ? 'Recién' : `Hace ${minutos} min`}{o.cliente && ` · Cliente: ${o.cliente}`}</small>
+            <small>{hace[0].toUpperCase() + hace.slice(1)}</small>
           </div>
         )
       })}

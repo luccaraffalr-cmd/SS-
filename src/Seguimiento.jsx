@@ -1,7 +1,8 @@
 import { useEffect, useRef, useState } from 'react'
 import { supabase } from './supabase.js'
 import { urlFotoAuto } from './fotos.js'
-import { formatoDni } from './viajes.js'
+import { fechaCorta, formatoDni, hora } from './viajes.js'
+import { cuantoTiempo } from './estados.js'
 import { crearMapa, crearMarcador, iconoAuto } from './mapa.js'
 
 const CADA_CUANTO = 5 * 1000
@@ -11,9 +12,16 @@ function textos(d) {
   if (!d) return ['Cargando…', '']
   if (d.estado === 'inexistente') return ['Link no válido', 'Pedile uno nuevo a la remisería.']
   if (d.estado === 'terminado') return ['Viaje terminado', 'Este link ya no muestra el auto.']
-  if (d.estado === 'sin_chofer') return ['Buscando chofer', 'Todavía no hay un auto asignado a tu viaje.']
+  // El chofer todavía no salió a buscarlo (link mandado antes, 26/10/2026): la fecha y la hora, sin mapa.
+  if (d.estado === 'esperando' && d.tipo === 'programado' && d.presentacion) {
+    return [`Tu viaje: ${fechaCorta(d.presentacion)} a las ${hora(d.presentacion)}`,
+      'Cuando el chofer salga a buscarte, acá vas a ver el auto en el mapa.']
+  }
+  if (d.estado === 'esperando' || d.estado === 'sin_chofer') {
+    return ['Buscando chofer', 'Cuando un chofer salga a buscarte, acá vas a ver el auto en el mapa.']
+  }
   if (d.lat == null) return ['Buscando el auto', 'Esperando la señal del GPS.']
-  if (d.segundos > 120) return ['Última ubicación conocida', `Sin señal hace ${Math.round(d.segundos / 60)} min.`]
+  if (d.segundos > 120) return ['Última ubicación conocida', `Sin señal hace ${cuantoTiempo(d.segundos * 1000)}.`]
   if (d.velocidad > 4) return ['Tu remis está en camino', `${d.velocidad} km/h`]
   return ['Tu remis está detenido', 'Actualizado recién.']
 }
@@ -79,7 +87,7 @@ export default function Seguimiento({ codigo }) {
     <div className="seguimiento">
       <div ref={elementoMapa} className="seguimiento-mapa" />
       <div className="seguimiento-barra">
-        {datos?.estado === 'activo' && (
+        {(datos?.estado === 'activo' || (datos?.estado === 'esperando' && datos.chofer)) && (
           <div className="seguimiento-auto">
             {datos.foto && (
               <button type="button" className="seguimiento-foto" onClick={() => setFotoGrande(true)} aria-label="Ver la foto del auto en grande">

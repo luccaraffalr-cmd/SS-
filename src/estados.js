@@ -7,15 +7,23 @@ export const NOMBRE_ESTADO = {
   en_viaje: 'En viaje',
 }
 
-// "hace 3 min", "hace 2 h"…
+// Un tiempo con una sola unidad, la más grande (pedido del 2/11/2026): "2 días", "3 horas", "25 minutos" y, si falta
+// menos de un minuto, "40 segundos". Redondea para abajo (1 hora y 50 minutos → "1 hora"). ms: milisegundos.
+const UNIDADES = [[86400, 'día', 'días'], [3600, 'hora', 'horas'], [60, 'minuto', 'minutos'], [1, 'segundo', 'segundos']]
+export function cuantoTiempo(ms) {
+  const segundos = Math.max(0, Math.floor(ms / 1000))
+  for (const [cada, uno, varios] of UNIDADES) {
+    const n = Math.floor(segundos / cada)
+    if (n >= 1) return `${n} ${n === 1 ? uno : varios}`
+  }
+  return '0 segundos'
+}
+
+// "recién", "hace 3 minutos", "hace 2 horas"…
 export function haceCuanto(fecha, ahora = Date.now()) {
   if (!fecha) return 'nunca'
-  const minutos = Math.floor((ahora - new Date(fecha).getTime()) / 60000)
-  if (minutos < 1) return 'recién'
-  if (minutos < 60) return `hace ${minutos} min`
-  const horas = Math.floor(minutos / 60)
-  if (horas < 24) return `hace ${horas} h`
-  return `hace ${Math.floor(horas / 24)} d`
+  const ms = ahora - new Date(fecha).getTime()
+  return ms < 60000 ? 'recién' : `hace ${cuantoTiempo(ms)}`
 }
 
 // Mensaje de error legible a partir de un error de Supabase.

@@ -251,6 +251,9 @@ a.boton { display: block; text-align: center; text-decoration: none; }
 .panel-adjunto { display: flex; flex-direction: column; gap: 8px; padding: 12px; border-radius: 10px; background: #f3f4f6; }
 .panel-adjunto label.boton { display: block; text-align: center; cursor: pointer; }
 .panel-adjunto label.boton.deshabilitado { opacity: 0.6; cursor: default; }
+/* Chofer de un viaje ya cargado, dentro del formulario (26/10/2026) */
+.chofer-del-viaje { display: flex; flex-direction: column; gap: 10px; padding: 12px; border-radius: 10px; background: #f3f4f6; }
+.chofer-del-viaje .boton.secundario { margin-top: 0; }
 /* Devolver un viaje (chofer, 26/10/2026) */
 .boton-devolver {
   align-self: center;

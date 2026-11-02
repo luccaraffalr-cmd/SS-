@@ -4,8 +4,10 @@ import { adjuntoDeLink, esUbicacion, leerLink, subirArchivo } from './adjuntos.j
 import { archivoCompartido } from './compartidoApp.js'
 import { useAtras } from './atras.js'
 import { cuando, recorridoDebajo, tituloViaje } from './viajes.js'
+import FormViaje from './FormViaje.jsx'
 
 const PARTES = [['origen', 'Buscar en'], ['destino', 'Destino'], ['observaciones', 'Observaciones']]
+const NUEVO = 'nuevo' // en vez de un viaje: crear uno nuevo con lo compartido (2/11/2026)
 const ES_AUDIO = /\.(opus|ogg|oga|mp3|m4a|aac|wav|amr)$/i
 
 // Qué llegó, en palabras.
@@ -24,20 +26,46 @@ function queEs(compartido) {
 // "Compartir desde WhatsApp" (22/10/2026): WhatsApp → Compartir → Senda Segura abre esta pantalla. Se elige el viaje y la
 // parte (Buscar en, Destino u Observaciones) y queda como adjunto de esa parte, igual que con "Agregar" al cargar el viaje.
 // Un texto sin link se suma a las observaciones. Solo gestión.
+// Desde el 2/11/2026 también se puede crear un viaje nuevo con eso: se abre "Nuevo viaje" con lo compartido ya puesto.
 export default function AgregarCompartido({ compartido, perfil, onListo }) {
   useAtras(true, onListo)
   const [viajes, setViajes] = useState(null)
-  const [elegido, setElegido] = useState(null)
+  const [elegido, setElegido] = useState(null) // un viaje, o NUEVO
   const [campo, setCampo] = useState('')
   const [nombre, setNombre] = useState('')
   const [enviando, setEnviando] = useState(false)
   const [error, setError] = useState('')
   const [hecho, setHecho] = useState(null)
+  const [inicial, setInicial] = useState(null) // datos para el viaje nuevo (con esto, se muestra el formulario)
+  useAtras(!!inicial, () => setInicial(null))
 
   const archivo = compartido.archivo
   const link = archivo ? null : leerLink(compartido.texto)
   const soloTexto = !archivo && !link
   const esGestion = perfil.rol !== 'chofer'
+
+  // Viaje nuevo: la parte se elige siempre, también con una ubicación (2/11/2026: sin ninguna marcada de entrada).
+  function elegirNuevo() {
+    setElegido(NUEVO)
+    setCampo('')
+  }
+
+  async function crear() {
+    setError('')
+    const parte = soloTexto ? 'observaciones' : campo
+    if (!parte) return setError('Elegí en qué parte del viaje va.')
+    if (soloTexto) return setInicial({ observaciones: compartido.texto.trim() })
+    setEnviando(true)
+    try {
+      const nuevo = archivo ? await subirArchivo(parte, archivoCompartido(archivo)) : adjuntoDeLink(parte, compartido.texto, nombre)
+      // Con una ubicación en "Buscar en", el origen no queda vacío (se puede escribir la dirección encima).
+      const origen = parte === 'origen' && link && esUbicacion(link) ? 'Ubicación compartida (ver 📍)' : ''
+      setInicial({ origen, adjuntos: [nuevo] })
+    } catch (e) {
+      setError('No se pudo preparar: ' + e.message)
+    }
+    setEnviando(false)
+  }
 
   useEffect(() => {
     if (!esGestion || compartido.error) return
@@ -93,6 +121,10 @@ export default function AgregarCompartido({ compartido, perfil, onListo }) {
     )
   }
 
+  if (inicial) {
+    return <FormViaje inicial={inicial} esAdmin={perfil.rol === 'admin'} onListo={onListo} onVolver={() => setInicial(null)} />
+  }
+
   if (hecho) {
     return (
       <main className="pantalla">
@@ -123,6 +155,7 @@ export default function AgregarCompartido({ compartido, perfil, onListo }) {
       {!elegido ? (
         <section className="tarjeta separada">
           <h2>¿A qué viaje?</h2>
+          <button type="button" className="boton verde" onClick={elegirNuevo}>➕ Crear un viaje nuevo con esto</button>
           {viajes === null && <p className="sin-margen">Cargando…</p>}
           {viajes?.length === 0 && <p className="ayuda sin-margen">No hay viajes sin terminar.</p>}
           <ul className="lista-elegir">
@@ -140,11 +173,15 @@ export default function AgregarCompartido({ compartido, perfil, onListo }) {
       ) : (
         <section className="tarjeta separada">
           <h2>Viaje</h2>
-          <div className="opcion-viaje elegida">
-            <strong className="viaje-titulo">{tituloViaje(elegido)}</strong>
-            {recorridoDebajo(elegido) && <span>{recorridoDebajo(elegido)}</span>}
-            <small>{cuando(elegido)} · #{elegido.id}</small>
-          </div>
+          {elegido === NUEVO ? (
+            <div className="opcion-viaje elegida"><strong className="viaje-titulo">➕ Viaje nuevo</strong></div>
+          ) : (
+            <div className="opcion-viaje elegida">
+              <strong className="viaje-titulo">{tituloViaje(elegido)}</strong>
+              {recorridoDebajo(elegido) && <span>{recorridoDebajo(elegido)}</span>}
+              <small>{cuando(elegido)} · #{elegido.id}</small>
+            </div>
+          )}
           <button type="button" className="boton secundario" onClick={() => { setElegido(null); setCampo('') }}>Elegir otro viaje</button>
           {!soloTexto && (
             <div>
@@ -157,9 +194,15 @@ export default function AgregarCompartido({ compartido, perfil, onListo }) {
             </div>
           )}
           {error && <p className="aviso error sin-margen">{error}</p>}
-          <button type="button" className="boton verde" disabled={enviando} onClick={agregar}>
-            {enviando ? 'Agregando…' : 'Agregar al viaje'}
-          </button>
+          {elegido === NUEVO ? (
+            <button type="button" className="boton verde" disabled={enviando} onClick={crear}>
+              {enviando ? 'Preparando…' : 'Cargar el viaje'}
+            </button>
+          ) : (
+            <button type="button" className="boton verde" disabled={enviando} onClick={agregar}>
+              {enviando ? 'Agregando…' : 'Agregar al viaje'}
+            </button>
+          )}
         </section>
       )}
       {!elegido && error && <p className="aviso error">{error}</p>}

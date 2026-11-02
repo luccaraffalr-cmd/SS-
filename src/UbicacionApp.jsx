@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { Ubicacion, dejarDeCompartir, empezarACompartir } from './ubicacionApp.js'
-import { textoError } from './estados.js'
+import { cuantoTiempo, textoError } from './estados.js'
 
 // Si pasa más que esto sin mandar, algo anda mal (sin señal, GPS apagado…).
 const SEGUNDOS_SIN_ENVIO = 120
@@ -82,7 +82,7 @@ export default function UbicacionApp({ perfil, estadoChofer }) {
     if (!trabajando) return null
     return (
       <p className="ayuda centrada">
-        📍 Compartiendo tu ubicación{segundos !== null && ` · último envío hace ${segundos} s`}
+        📍 Compartiendo tu ubicación{segundos !== null && ` · último envío hace ${cuantoTiempo(segundos * 1000)}`}
       </p>
     )
   }
@@ -97,7 +97,7 @@ export default function UbicacionApp({ perfil, estadoChofer }) {
       </p>
       {sinEnviar && (
         <p className="aviso error sin-margen">
-          Hace {Math.round(segundos / 60)} min que no se manda tu ubicación. Revisá que tengas internet y el GPS prendido.
+          Hace {cuantoTiempo(segundos * 1000)} que no se manda tu ubicación. Revisá que tengas internet y el GPS prendido.
           {estado.ultimoError && <><br /><small>{estado.ultimoError}</small></>}
         </p>
       )}

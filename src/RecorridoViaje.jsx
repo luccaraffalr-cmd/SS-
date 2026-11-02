@@ -2,14 +2,15 @@ import { useEffect, useRef, useState } from 'react'
 import { supabase } from './supabase.js'
 import { crearCapa, crearMapa, dibujarRecorrido } from './mapa.js'
 import { hora } from './viajes.js'
+import { cuantoTiempo } from './estados.js'
 import { useAtras } from './atras.js'
 
 const CADA_CUANTO = 30 * 1000
 
-// "1 h 05 min" / "35 min"
+// "1 hora" / "35 minutos": una sola unidad (2/11/2026).
 function duracion(minutos) {
   const m = Number(minutos ?? 0)
-  return m >= 60 ? `${Math.floor(m / 60)} h ${String(m % 60).padStart(2, '0')} min` : `${m} min`
+  return m < 1 ? 'menos de 1 minuto' : cuantoTiempo(m * 60000)
 }
 
 // Gestión: recorrido del viaje (pedido del dueño, 24/10/2026), desde "Salir a hacer el viaje" hasta que lo finaliza:
@@ -83,7 +84,7 @@ export default function RecorridoViaje({ viajeId, enCurso }) {
           <div className="datos-recorrido">
             <span><strong>{String(datos.km).replace('.', ',')} km</strong></span>
             <span>⏱️ {duracion(datos.minutos)}</span>
-            <span className={demora > 0 ? 'texto-demora' : ''}>🔴 Demora {duracion(demora)}</span>
+            <span className={demora > 0 ? 'texto-demora' : ''}>🔴 {demora > 0 ? `Demora ${duracion(demora)}` : 'Sin demora'}</span>
           </div>
           <div className={'recorrido-mapa' + (grande ? ' en-grande' : '')}>
             <div ref={elementoMapa} className="mapa mapa-recorrido" />

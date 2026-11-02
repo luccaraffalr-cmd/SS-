@@ -1,6 +1,7 @@
 import {
   FORMAS_PAGO, NOMBRE_ESTADO_VIAJE, dinero, fechaCorta, hora, problemaDelViaje, recorridoDebajo, tituloViaje, totalCobrado,
 } from './viajes.js'
+import { haceCuanto } from './estados.js'
 
 // Datos que necesita la tarjeta (se agregan al select de viajes).
 export const CONSULTA_VIAJES = '*, chofer:perfiles!viajes_chofer_id_fkey(nombre, telefono),'
@@ -30,7 +31,7 @@ export default function TarjetaViaje({ v, ahora, mostrarFecha, onAbrir, onTickea
     : esperaFijo ? 'Chofer fijo'
     : v.estado === 'sin_chofer' && v.espera_gestion ? 'Rechazado: decidir'
     : esperando ? `Se asigna ${hora(v.hora_asignacion)}`
-    : v.estado === 'ofrecido' && !v.asignado_por ? `Ofrecido hace ${Math.max(0, Math.floor((ahora - new Date(v.asignado_en)) / 60000))} min`
+    : v.estado === 'ofrecido' && !v.asignado_por ? `Ofrecido ${haceCuanto(v.asignado_en, ahora)}`
     : v.estado === 'asignado' && !v.iniciado_en ? 'Aceptado'
     : v.estado === 'asignado' ? 'En viaje'
     : v.estado === 'finalizado' && v.aprobado_en ? '✅ Aprobado'

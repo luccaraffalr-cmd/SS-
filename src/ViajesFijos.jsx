@@ -204,7 +204,7 @@ function FormViajeFijo({ fijo, choferes, onListo }) {
         )}
         <div className="dos-columnas">
           <label>Hora de presentación<ElegirHora valor={datos.hora} onCambiar={(hora) => setDatos({ ...datos, hora })} /></label>
-          <label>Minutos para asignar<input inputMode="numeric" value={datos.anticipacion} onChange={cambiar('anticipacion')} /></label>
+          <label>Minutos antes para asignar<input inputMode="numeric" value={datos.anticipacion} onChange={cambiar('anticipacion')} /></label>
         </div>
         <div className="botones-rapidos">
           {ANTICIPACIONES_RAPIDAS.map((m) => (

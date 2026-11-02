@@ -126,7 +126,9 @@ export default function Chofer({ perfil }) {
         {estado === 'en_cola' && miPuesto > 0 && <div className="puesto">Puesto {miPuesto}</div>}
       </div>
       {AYUDA_ESTADO[estado] && <p className="ayuda centrada">{AYUDA_ESTADO[estado]}</p>}
-      {chofer.oculto && <p className="ayuda centrada">Solo recibís viajes que te asigna gestión.</p>}
+      {chofer.oculto && (
+        <p className="ayuda centrada">No entrás en la cola: te asigna viajes gestión, o tomás los que quedan sin chofer.</p>
+      )}
 
       <div className="botonera">
         {puedeAnunciarse && (
@@ -163,7 +165,7 @@ export default function Chofer({ perfil }) {
       {error && <p className="aviso error">{error}</p>}
 
       {esAppAndroid && <UbicacionApp perfil={perfil} estadoChofer={estado} />}
-      <MisViajes perfil={perfil} onSinPago={setSinPago} />
+      <MisViajes perfil={perfil} dosViajes={!!chofer.dos_viajes} onSinPago={setSinPago} />
       <ProximosViajes />
       <OfertasEnCurso yo={perfil.id} />
 

@@ -1,6 +1,6 @@
 // Manda las notificaciones push al celular del chofer (app Android y navegador). La llama la base de datos:
 // - { oferta_id }: cuando le ofrecen o asignan un viaje (disparador en "ofertas"). Si la oferta es de la cola, a los demás
-//   choferes que están trabajando les llega "📣 Salió un viaje para Juan" (con el cliente).
+//   choferes que están trabajando les llega "📣 Salió un viaje para Juan" (sin el cliente).
 // - { aviso_id }: un aviso guardado en la tabla "avisos" (es hora de salir, cambió tu viaje, se anuló,
 //   también si se lo pasaron a otro, viaje sin chofer para tomar; y a los admins, cuando nadie tomó un viaje).
 //   Lo crea la base con crear_aviso() o enviar_aviso().
@@ -18,7 +18,7 @@ webpush.setVapidDetails(
 // "es hora de salir" y las alertas a los admins. Los demás (cambió, se anuló) van por el canal "viajes", con el sonido común.
 type Aviso = { titulo: string; cuerpo: string; etiqueta: string; fuerte?: boolean }
 type Viaje = {
-  id: number; tipo: string; origen: string; destino: string | null; hora_presentacion: string | null; cliente_nombre?: string | null
+  id: number; tipo: string; origen: string; destino: string | null; hora_presentacion: string | null
 }
 
 function respuesta(cuerpo: unknown, estado = 200) {
@@ -54,7 +54,7 @@ Deno.serve(async (req) => {
   const { data: oferta } = await admin.from('ofertas')
     .update({ notificada_en: new Date().toISOString() })
     .eq('id', Number(datos.oferta_id)).eq('resultado', 'pendiente').is('notificada_en', null).gte('creada_en', hace2min)
-    .select('chofer_id, tipo, viaje:viajes(id, tipo, origen, destino, hora_presentacion, cliente_nombre)')
+    .select('chofer_id, tipo, viaje:viajes(id, tipo, origen, destino, hora_presentacion)')
     .maybeSingle()
   if (!oferta) return respuesta({ ok: true, enviadas: 0, motivo: 'oferta no válida o ya notificada' })
 
@@ -76,9 +76,9 @@ Deno.serve(async (req) => {
 })
 
 // "📣 Salió un viaje para Juan" a los demás choferes que están trabajando (decidido el 20/10/2026): así, si Juan no lo
-// ve, le pueden avisar. Con el cliente (no el recorrido) y el sonido común. Si el viaje pasa a otro chofer, el aviso
-// nuevo reemplaza al anterior (misma etiqueta). (Del 21 al 24/10/2026 también les llegaba a los admins: el dueño pidió
-// que le suene solo cuando nadie toma un viaje.)
+// ve, le pueden avisar. Con el sonido común. Si el viaje pasa a otro chofer, el aviso nuevo reemplaza al anterior
+// (misma etiqueta). (Del 21 al 24/10/2026 también les llegaba a los admins: el dueño pidió que le suene solo cuando
+// nadie toma un viaje.) Desde el 27/10/2026 sin el cliente: ningún chofer puede saber quién hizo un viaje.
 // deno-lint-ignore no-explicit-any
 async function avisarALosDemas(admin: any, choferId: string, v: Viaje) {
   const { data: ofrecido } = await admin.from('perfiles').select('nombre').eq('id', choferId).maybeSingle()
@@ -86,7 +86,7 @@ async function avisarALosDemas(admin: any, choferId: string, v: Viaje) {
     .neq('estado', 'fuera_de_servicio').eq('oculto', false).neq('id', choferId)
   const aviso: Aviso = {
     titulo: `📣 Salió un viaje para ${ofrecido?.nombre ?? 'un chofer'}`,
-    cuerpo: v.cliente_nombre ? `Cliente: ${v.cliente_nombre}` : 'Viaje de la cola',
+    cuerpo: 'Si no lo ve, avisale.',
     etiqueta: `salio-${v.id}`,
   }
   let enviadas = 0

@@ -97,6 +97,15 @@
   `DevolverViaje.jsx`, `GrabarAudio.jsx`, audios de choferes en `adjuntos/chofer/<id>/`), lista de viajes: en viaje →
   próximos → terminados sin aprobar → aprobados. **App 1.3 (código 4)**: lo de la 1.2 + permiso de micrófono (para grabar
   al devolver). Es la que se reparte a mano en cada celular (`Descargas\Remiseria.apk`); la 1.2 no se llegó a repartir.
+- **Publicado en Netlify el 2/11/2026** (SQL hasta el 045, `notificar` subida): link del pasajero con anticipación en los
+  programados (044), chofer y "No ofrecer a" dentro del formulario del viaje, lista de choferes al asignar solo con el
+  nombre, "Repetir" sin el botón "No", "Minutos antes para asignar", **tomar un viaje estando en otro: "Lo hago ahora" o
+  "Después"**, hasta 2 viajes a la vez (045, `choferes.dos_viajes`, todos en true), los **ocultos** toman viajes sin
+  chofer, **ningún chofer puede saber quién hizo un viaje** ("Salió un viaje para Juan" sin el cliente; regla en "10 bis"),
+  tiempos con una sola unidad (`cuantoTiempo` en `estados.js`) y **crear un viaje con lo compartido desde WhatsApp**.
+  Sin probar con datos reales: dos viajes a la vez y compartir → viaje nuevo (solo en el celular).
+- La consulta de solo lectura a la base anda sin que el usuario pegue nada:
+  `npx.cmd supabase db query --linked --project-ref yomjqdbaatydpvazkvvg "select …"` (para verificar SQL aplicados).
 - **26/10: app Android "Senda Segura" 1.2 (código 3) armada y subida** (`config_app` en versión 3, archivo en Storage
   `app/remiseria-3.apk` y en `Descargas\Remiseria.apk`; la anterior quedó como `Remiseria-19-10.apk`). Trae lo de la v2
   (se actualiza sola, ubicación tras reiniciar, sonido propio, ícono/nombre, frecuencia desde el servidor), **Compartir desde

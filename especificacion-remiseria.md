@@ -82,7 +82,7 @@
 - En el perfil del chofer, gestión puede activar la opción **"Oculto"**.
 - El chofer oculto **ve todo** lo que ve cualquier chofer (viajes, cola, quién está yendo).
 - **Los demás choferes no lo ven en ningún lado** (ni en la cola, ni "Yendo", ni en viaje). Gestión lo ve siempre.
-- **No entra en la cola ni recibe asignaciones automáticas.** Solo recibe viajes que gestión le asigna a mano (ej. choferes de refuerzo o que trabajan de vez en cuando).
+- **No entra en la cola ni recibe asignaciones automáticas.** Solo recibe viajes que gestión le asigna a mano (ej. choferes de refuerzo o que trabajan de vez en cuando). Desde el 27/10/2026 también puede tomar los viajes sin chofer (ver "10 bis").
 - En la app no tiene botón de "Anunciarse" (sí de "Yendo" y "Desconectarme", que solo ve gestión).
 - Comisión, cuenta corriente, notificaciones y cierre de viaje funcionan igual que para cualquier chofer.
 - **Viajes asignados a un chofer oculto:** para los demás choferes el viaje aparece como **"No disponible"**. Gestión y el chofer oculto ven el estado real.
@@ -362,6 +362,43 @@ Hoy la ubicación "desaparece" por varios minutos. Hay que diseñar para que **n
   su pantalla mientras nadie lo acepte, con el **nombre del cliente** (no el origen ni el destino), para poder avisarle si
   no lo ve. Si pasa a otro chofer, el aviso nuevo reemplaza al anterior. Solo para los viajes de la cola (no los asignados a
   mano). Cambia, para este caso, lo de "nunca datos del cliente" en los viajes ajenos.
+  **(2026-10-27) Ya no dice el cliente** (solo "Salió un viaje para Juan" y "Si no lo ve, avisale."): ningún chofer puede
+  saber quién hizo un viaje (ver la decisión del 27/10).
+- **(2026-10-27) Ningún chofer puede saber quién hizo un viaje** (pedido del dueño, regla para todo lo que venga): en
+  ninguna parte de la app un chofer puede ver qué chofer tomó o hizo un viaje ajeno (ni el cliente, ni el recorrido, ni el
+  número de viaje junto al nombre de un chofer). Revisado el 27/10: los viajes ajenos, el registro, los recorridos y las
+  ubicaciones son solo de gestión; lo único que lo mostraba era el cliente en "Salió un viaje para Juan" (se sacó). Se
+  sigue viendo la cola, los libres y "En viaje: Juan, Pedro" (no dice qué viaje hace cada uno).
+- **(2026-10-27) Tomar un viaje estando en otro: ahora o después** (pedido del dueño: por ejemplo, va a Ezeiza y cae un
+  viaje corto o uno de pasada, como Moreno → Merlo):
+  - Sigue igual que el viaje queda "sin chofer" solo si la cola no lo tomó (o sea, cuando no hay autos en la cola).
+  - El chofer que está en viaje y lo toma elige **"🚗 Lo hago ahora"** (sale a hacerlo ya, sin terminar el otro) o
+    **"⏳ Después de terminar el que estoy haciendo"** (le queda como próximo viaje). Un próximo viaje también lo puede
+    empezar cuando quiera con "Salir a hacer el viaje", aunque esté haciendo otro.
+  - **Como mucho 2 viajes a la vez**, cada uno con su "🏁 Finalicé" y su "↩️ devolver". Al terminar o devolver uno sigue
+    "En viaje" con el otro; queda Libre (o vuelve a la cola, si fue fallido) cuando termina los dos.
+  - Para **todos los choferes** (columna `choferes.dos_viajes`, en true; para sacárselo a alguno se cambia ahí: SQL 045).
+  - El recorrido del viaje largo (km y demora) incluye el desvío del corto.
+- **(2026-10-27) Los ocultos también pueden tomar los viajes sin chofer** (y les suena "🆘 Viaje sin chofer"). Siguen sin
+  entrar en la cola ni recibir ofertas automáticas.
+- **(2026-11-02) Tiempos con una sola unidad, la más grande:** "faltan 2 días", "hace 3 horas", "25 minutos" (con menos de
+  un minuto, "40 segundos"). Se redondea para abajo (1 hora y 50 minutos → "1 hora"). Vale para todo lo que muestra un
+  tiempo que falta o que pasó: el tiempo para contestar una oferta, "Ofrecido hace…", "Salió un viaje… hace…", las alertas
+  de gestión, el recorrido (duración y demora), "Sin señal hace…" en el link del pasajero, la última ubicación de los
+  choferes y el envío de la ubicación en la app. No cambian las horas del día (14:30) ni el cronómetro al grabar un audio.
+- **(2026-11-02) Crear un viaje con lo compartido desde WhatsApp:** al compartir una ubicación, un audio, una foto, un link o
+  un texto hacia la app, además de elegir un viaje ya cargado está **"➕ Crear un viaje nuevo con esto"**: se elige en qué
+  parte va (Buscar en, Destino u Observaciones; ninguna marcada de entrada, tampoco con una ubicación) y se abre "Nuevo
+  viaje" con eso ya puesto.
+  Con una ubicación en "Buscar en", el origen se completa con "Ubicación compartida (ver 📍)" (se puede escribir la
+  dirección encima).
+- **(2026-10-26) Link del pasajero con anticipación:** en los **programados** se puede mandar el link (WhatsApp / Copiar)
+  desde que se cargan, aunque no tengan chofer (por ejemplo, a la noche para un viaje de la madrugada). Hasta que el chofer
+  toca "Salir a hacer el viaje", el link muestra **la fecha y la hora** y, si ya hay un chofer que lo aceptó, su nombre, el
+  auto y la patente, **sin el mapa** (no se ve dónde está el chofer). El mapa en vivo aparece cuando sale a buscarlo. El
+  mensaje de WhatsApp dice la fecha y la hora (SQL 044).
+- **(2026-10-26) Al asignar a mano, la lista de choferes muestra solo el nombre** (sin el estado: libre, fuera de servicio…).
+  Sigue el aviso "⚠️ … — el cliente no lo quiere" para los de "No ofrecer a".
 - **(2026-10-26) Devolver un viaje** (pedido del dueño: por ejemplo, si al chofer se le rompe el auto):
   - El chofer que ya tiene el viaje (aceptado o haciéndolo) toca **"↩️ No puedo seguir: devolver el viaje"** y cuenta qué
     pasó **escribiendo y/o con un audio** grabado ahí mismo (necesita la app Android 1.3 para el micrófono). Queda en las
@@ -440,8 +477,9 @@ Hoy la ubicación "desaparece" por varios minutos. Hay que diseñar para que **n
   - Pasado el minuto, en el cartel rojo de viajes sin chofer aparece **"✋ Tomar este viaje"** (con "¿Lo tomás? Sí, lo tomo"
     para no tomarlo sin querer) y a los choferes que están trabajando les suena **"🆘 Viaje sin chofer"** (con dónde buscar).
   - **El primero que lo toma se lo queda**, sin tener que aceptarlo. Lo pueden tomar los que están **Libres, en la cola o en
-    viaje**: los libres o en la cola salen a hacerlo en el momento; al que está en viaje le queda como próximo viaje. Los fuera
-    de servicio y los ocultos no. Lo puede tomar también el que lo había rechazado o no había contestado.
+    viaje**: los libres o en la cola salen a hacerlo en el momento; al que está en viaje le queda como próximo viaje (desde
+    el 27/10/2026 elige: ahora o después). Los fuera de servicio no (los ocultos tampoco hasta el 27/10/2026; ahora sí). Lo
+    puede tomar también el que lo había rechazado o no había contestado.
   - Los viajes que esperan a gestión (un chofer rechazó una asignación a mano, chofer fijo) no se pueden tomar.
   - Queda anotado en el historial ("Juan tomó el viaje desde la app").
 - **(2026-10-22) Hora en 24 hs y link del pasajero más directo:** la hora de presentación (viaje y viaje fijo) se elige
@@ -503,6 +541,8 @@ Hoy la ubicación "desaparece" por varios minutos. Hay que diseñar para que **n
 - **(2026-10-15) Viajes que se repiten** (pedido del dueño). Se cargan desde **"Nuevo viaje" → Repetir** (programados):
   - **No** (como siempre), **Días sueltos** (se tocan los días en un calendario chico, ej. jue 15, lun 19 y vie 23, y nada más)
     o **Todas las semanas** (días de la semana + **desde** y **hasta**; sin "hasta" no termina, como los viajes fijos de antes).
+    **(2026-10-27)** Sin el botón "No": solo están **Días sueltos** y **Todas las semanas**, se marcan y desmarcan tocándolos
+    (nunca los dos juntos); si no se marca ninguno, es un solo viaje.
   - Cada serie se guarda como un viaje fijo (se ve y se cambia en "🔁 Viajes fijos"; las terminadas dicen "Terminado"). El
     servidor carga los viajes: los días sueltos, todos; los semanales, los de las próximas 4 semanas.
   - **Agrupados:** al guardar cambios de un viaje de una serie, la app pregunta **"Solo este viaje" o "Todos los que faltan"**

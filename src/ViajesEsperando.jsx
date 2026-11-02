@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from 'react'
 import { supabase } from './supabase.js'
-import { textoError } from './estados.js'
+import { cuantoTiempo, textoError } from './estados.js'
 import { fechaCorta, fechaLocal, hora } from './viajes.js'
 
 const CADA_CUANTO = 30 * 1000
@@ -30,7 +30,7 @@ export function AlertaSinChoferChofer({ chofer }) {
   const sinChofer = (viajes ?? []).filter((v) => v.estado === 'sin_chofer')
   const urgentes = sinChofer.filter((v) => new Date(v.hora_asignacion).getTime() <= ahora)
   const sePuedeTomar = (v) => !!v.tomar_desde && new Date(v.tomar_desde).getTime() <= ahora
-  const hayParaTomar = urgentes.some(sePuedeTomar) && !chofer.oculto
+  const hayParaTomar = urgentes.some(sePuedeTomar)
 
   // Mientras haya viajes sin chofer, se redibuja cada segundo: así aparecen a su hora y el botón se habilita al minuto.
   useEffect(() => {
@@ -73,21 +73,23 @@ export function AlertaSinChoferChofer({ chofer }) {
   )
 }
 
-// Botón para tomar un viaje sin chofer (con confirmación, para no tomarlo sin querer).
+// Botón para tomar un viaje sin chofer (con confirmación, para no tomarlo sin querer). Los ocultos también (27/10/2026).
+// El que está en viaje elige si lo hace ahora, sin terminar el otro (por ejemplo, uno de pasada), o después.
 function TomarViaje({ viaje, chofer, ahora, onTomado }) {
   const [confirmando, setConfirmando] = useState(false)
   const [ocupado, setOcupado] = useState(false)
   const [error, setError] = useState('')
-  if (!viaje.tomar_desde || chofer.oculto) return null
+  if (!viaje.tomar_desde) return null
 
   const faltan = Math.ceil((new Date(viaje.tomar_desde).getTime() - ahora) / 1000)
-  if (faltan > 0) return <small>Si nadie se anuncia, en {faltan} s lo vas a poder tomar.</small>
+  if (faltan > 0) return <small>Si nadie se anuncia, en {cuantoTiempo(faltan * 1000)} lo vas a poder tomar.</small>
   if (chofer.estado === 'fuera_de_servicio') return <small>Para tomarlo, tocá "Empezar a trabajar".</small>
 
-  async function tomar() {
+  async function tomar(hacerloAhora = null) {
     setError('')
     setOcupado(true)
-    const { error } = await supabase.rpc('tomar_viaje', { viaje: viaje.id })
+    const { error } = await supabase.rpc('tomar_viaje',
+      hacerloAhora === null ? { viaje: viaje.id } : { viaje: viaje.id, ahora: hacerloAhora })
     setOcupado(false)
     setConfirmando(false)
     if (error) setError(textoError(error))
@@ -102,6 +104,18 @@ function TomarViaje({ viaje, chofer, ahora, onTomado }) {
       </>
     )
   }
+  if (chofer.estado === 'en_viaje' && chofer.dos_viajes) {
+    return (
+      <div className="botonera tomar-viaje">
+        <p className="sin-margen"><strong>¿Lo tomás?</strong> Estás haciendo otro viaje.</p>
+        <button type="button" className="boton verde" disabled={ocupado} onClick={() => tomar(true)}>🚗 Lo hago ahora</button>
+        <button type="button" className="boton" disabled={ocupado} onClick={() => tomar(false)}>
+          ⏳ Después de terminar el que estoy haciendo
+        </button>
+        <button type="button" className="boton secundario" onClick={() => setConfirmando(false)}>No</button>
+      </div>
+    )
+  }
   return (
     <div className="botonera tomar-viaje">
       <p className="sin-margen">
@@ -110,7 +124,7 @@ function TomarViaje({ viaje, chofer, ahora, onTomado }) {
       </p>
       <div className="dos-columnas">
         <button type="button" className="boton secundario" onClick={() => setConfirmando(false)}>No</button>
-        <button type="button" className="boton verde" disabled={ocupado} onClick={tomar}>Sí, lo tomo</button>
+        <button type="button" className="boton verde" disabled={ocupado} onClick={() => tomar()}>Sí, lo tomo</button>
       </div>
     </div>
   )

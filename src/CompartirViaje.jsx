@@ -1,9 +1,18 @@
 import { useState } from 'react'
 import { supabase } from './supabase.js'
+import { fechaCorta, hora } from './viajes.js'
 
 const linkDe = (codigo) => `${window.location.origin}/seguir/${codigo}`
-const mensajeDe = (link) => `Tu remis está en camino. Seguilo acá: ${link}`
-const urlWhatsApp = (link) => 'https://wa.me/?text=' + encodeURIComponent(mensajeDe(link))
+
+// El mensaje para el pasajero: si es un programado que todavía no salió (link mandado antes, 26/10/2026), con la fecha.
+function mensajeDe(link, viaje) {
+  if (viaje.tipo === 'programado' && !viaje.iniciado_en && viaje.hora_presentacion) {
+    return `Tu remis del ${fechaCorta(viaje.hora_presentacion)} a las ${hora(viaje.hora_presentacion)}: `
+      + `con este link vas a poder seguirlo cuando salga a buscarte: ${link}`
+  }
+  return `Tu remis está en camino. Seguilo acá: ${link}`
+}
+const urlWhatsApp = (link, viaje) => 'https://wa.me/?text=' + encodeURIComponent(mensajeDe(link, viaje))
 
 // Abre un link afuera de la app (como tocar un link): en la app Android, WhatsApp se abre solo.
 function abrirAfuera(url) {
@@ -37,7 +46,7 @@ export default function CompartirViaje({ viaje }) {
 
   async function mandarPorWhatsApp() {
     const nuevo = await obtenerLink()
-    if (nuevo) abrirAfuera(urlWhatsApp(nuevo))
+    if (nuevo) abrirAfuera(urlWhatsApp(nuevo, viaje))
   }
 
   async function copiar() {
@@ -57,10 +66,12 @@ export default function CompartirViaje({ viaje }) {
       <h2>📍 Seguimiento para el pasajero</h2>
       <p className="ayuda sin-margen">
         Un link con el mapa del auto en vivo, la foto, el modelo y la patente. Se apaga solo cuando el viaje se finaliza o se anula.
+        {viaje.tipo === 'programado' && !viaje.iniciado_en
+          && ' Lo podés mandar desde ya: hasta que el chofer salga a buscarlo, muestra la fecha y la hora (sin el mapa).'}
       </p>
       <div className="dos-columnas">
         {codigo ? (
-          <a className="boton verde" href={urlWhatsApp(link)} target="_blank" rel="noreferrer">WhatsApp</a>
+          <a className="boton verde" href={urlWhatsApp(link, viaje)} target="_blank" rel="noreferrer">WhatsApp</a>
         ) : (
           <button type="button" className="boton verde" disabled={generando} onClick={mandarPorWhatsApp}>
             {generando ? 'Generando…' : 'WhatsApp'}

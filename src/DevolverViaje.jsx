@@ -6,8 +6,8 @@ import GrabarAudio from './GrabarAudio.jsx'
 
 // Chofer: devolver un viaje que ya tiene (pedido del dueño, 26/10/2026), por ejemplo si se le rompe el auto. Cuenta qué
 // pasó (escrito y/o con audio) y, si ya estaba con el pasajero, dónde está. El viaje vuelve a la cola como prioritario,
-// él queda Libre y a gestión le avisa (devolver_viaje, SQL 042).
-export default function DevolverViaje({ viaje, perfilId, onListo, onCancelar }) {
+// él queda Libre (si no está haciendo otro viaje: SQL 045) y a gestión le avisa (devolver_viaje, SQL 042).
+export default function DevolverViaje({ viaje, perfilId, otroEnCurso = false, onListo, onCancelar }) {
   const conPasajero = !!viaje.iniciado_en
   const [motivo, setMotivo] = useState('')
   const [audio, setAudio] = useState(null)
@@ -39,7 +39,8 @@ export default function DevolverViaje({ viaje, perfilId, onListo, onCancelar }) 
     <div className="devolver-viaje">
       <p className="sin-margen"><strong>↩️ Devolver el viaje</strong></p>
       <small className="ayuda sin-margen">
-        El viaje vuelve a la cola para otro chofer, vos quedás Libre y a gestión le llega un aviso.
+        El viaje vuelve a la cola para otro chofer, {otroEnCurso ? 'vos seguís con tu otro viaje' : 'vos quedás Libre'} y
+        a gestión le llega un aviso.
       </small>
       <label>
         ¿Qué pasó?
