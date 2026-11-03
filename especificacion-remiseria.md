@@ -105,7 +105,7 @@ Cliente (guardado o suelto), teléfono, origen, destino, observaciones, **hora d
 
 ### 4.2 Hora de asignación
 **Todos los viajes tienen una hora de asignación:**
-- **Viaje programado:** gestión carga la hora de presentación en la dirección del cliente (ej. 15:00) y la hora de asignación, que por defecto es 30 minutos antes (14:30) y es editable.
+- **Viaje programado:** gestión carga la hora de presentación en la dirección del cliente (ej. 15:00) y la hora de asignación, que por defecto es 20 minutos antes (14:40; hasta el 2/11/2026 eran 30) y es editable.
 - **Viaje inmediato:** la hora de asignación es **el momento en que se carga** en la app.
 
 Un viaje es **asignable** cuando su hora de asignación ya llegó o ya pasó.
@@ -347,7 +347,8 @@ Hoy la ubicación "desaparece" por varios minutos. Hay que diseñar para que **n
   - Como la planilla lleva las cuentas, **la cuenta corriente de los choferes, el resumen por chofer y las cuentas de los
     clientes dentro de la app quedan para cuando se pase la planilla a la app**.
 - **(2026-10-14) Más de la Etapa 3:**
-  - **Se descartan los clientes guardados** (el usuario no los ve necesarios).
+  - ~~Se descartan los clientes guardados~~ (el usuario no los veía necesarios). **Cambiado el 2026-11-02: sí hay
+    clientes guardados** (ver "Clientes guardados", más abajo).
   - Las formas de pago quedan como están (el dueño no definió nada para "Transferencia al dueño").
   - **La app se empieza a usar de verdad escribiendo en la copia de la planilla**, en paralelo con el sistema actual
     (formulario + planilla de verdad). Cuando esté todo probado, se pasa a la planilla de verdad.
@@ -381,17 +382,76 @@ Hoy la ubicación "desaparece" por varios minutos. Hay que diseñar para que **n
   - El recorrido del viaje largo (km y demora) incluye el desvío del corto.
 - **(2026-10-27) Los ocultos también pueden tomar los viajes sin chofer** (y les suena "🆘 Viaje sin chofer"). Siguen sin
   entrar en la cola ni recibir ofertas automáticas.
+  **(2026-11-02) Confirmado:** cuando un viaje se libera para todos, el aviso les llega a **todos los choferes que están
+  trabajando** (ocultos incluidos); no a los que no empezaron o terminaron el día, ni a los marcados en "🚫 No ofrecer a".
+  Cuando alguien lo toma **no se le avisa a nadie** (así nadie se entera de quién lo tomó, aunque sea un oculto).
 - **(2026-11-02) Tiempos con una sola unidad, la más grande:** "faltan 2 días", "hace 3 horas", "25 minutos" (con menos de
   un minuto, "40 segundos"). Se redondea para abajo (1 hora y 50 minutos → "1 hora"). Vale para todo lo que muestra un
   tiempo que falta o que pasó: el tiempo para contestar una oferta, "Ofrecido hace…", "Salió un viaje… hace…", las alertas
   de gestión, el recorrido (duración y demora), "Sin señal hace…" en el link del pasajero, la última ubicación de los
   choferes y el envío de la ubicación en la app. No cambian las horas del día (14:30) ni el cronómetro al grabar un audio.
 - **(2026-11-02) Crear un viaje con lo compartido desde WhatsApp:** al compartir una ubicación, un audio, una foto, un link o
-  un texto hacia la app, además de elegir un viaje ya cargado está **"➕ Crear un viaje nuevo con esto"**: se elige en qué
+  un texto hacia la app, además de elegir un viaje ya cargado está **"+ Nuevo viaje"** (botón azul oscuro): se elige en qué
   parte va (Buscar en, Destino u Observaciones; ninguna marcada de entrada, tampoco con una ubicación) y se abre "Nuevo
   viaje" con eso ya puesto.
   Con una ubicación en "Buscar en", el origen se completa con "Ubicación compartida (ver 📍)" (se puede escribir la
   dirección encima).
+- **(2026-11-02) "🔔 Mis avisos": cada uno elige qué avisos le suenan** (choferes: desplegable abajo en su pantalla;
+  gestión: en "Mi cuenta"). Cada aviso está en "🔊 Suena" o "🔕 Sin sonido"; **sin sonido le llega igual** al celular,
+  pero callado (sin sonido ni vibración). De entrada suenan todos. Se guarda por usuario (`perfiles.avisos_sin_sonido`,
+  SQL 047), así que vale en todos sus celulares.
+  - Choferes: 🔄 Cambió tu viaje, ❌ Se anuló tu viaje, ⌛ Se te pasó el viaje, 🆘 Viaje sin chofer, 📣 Salió un viaje
+    para otro chofer.
+  - Admins: ⚠️ Nadie tomó el viaje, ⚠️ Viaje sin chofer, ⚠️ Un chofer devolvió el viaje. Los operadores no reciben avisos.
+  - **Siempre suenan** (no se pueden callar, porque son sus propios viajes): 🔔 Viaje para vos / 📌 Gestión te asignó un
+    viaje y 🚗 Es hora de salir.
+- **(2026-11-02) Sacarle el viaje a un chofer, aunque ya lo esté haciendo:** dentro del viaje, gestión tiene
+  **"Pasárselo a otro chofer"** (elige el chofer → "Asignar a este chofer"; el nuevo lo tiene que aceptar) y
+  **"↩️ Mandar a la cola"** (con confirmación). Ej.: Martín está haciendo un viaje, sale otro que le quieren dar a él, y el
+  primero lo hace otro chofer.
+  - Mandado a la cola, el viaje queda **⭐ prioritario**: se le ofrece al primero de la cola antes que los otros que esperan.
+  - Al chofer que lo tenía le llega "❌ Se anuló tu viaje" (no dice a quién se lo dieron) y, si lo estaba haciendo y no
+    está haciendo otro, vuelve al **puesto 1** de la cola (los ocultos quedan Libres).
+  - **Ese viaje no se le vuelve a ofrecer**: ni la cola, ni el aviso "🆘 Viaje sin chofer", ni lo puede tomar (tabla
+    `viajes_sacados`, que ningún chofer puede leer; SQL 048). Gestión sí se lo puede volver a asignar a mano.
+  - En el historial del viaje queda "Gestión le sacó el viaje a …".
+- **(2026-11-02) Viaje asignado que el chofer no sale a hacer** (ej. un viaje de las 3:00 asignado a un chofer que se
+  quedó dormido, del que solo saben gestión y él). A toda hora, desde la hora de salir (hora de asignación):
+  - En ese momento: "🚗 Es hora de salir", con la hora límite (5 minutos después).
+  - Cada 2 minutos: "⏰ Todavía no saliste" (o "⏰ Todavía no aceptaste el viaje", si gestión se lo asignó y no lo
+    aceptó), con el sonido fuerte. **No se puede poner sin sonido.**
+  - **A los 5 minutos**, si no tocó "Salir a hacer el viaje": **la app se lo saca y lo manda a la cola como prioritario**
+    (igual que "↩️ Mandar a la cola": no se le vuelve a ofrecer). Le llega "⌛ Se te pasó el viaje"; si estaba en la
+    cola, queda Libre (para que no frene la cola sin contestar). Nadie más se entera de que era de él.
+  - Si está haciendo otro viaje, la cuenta espera y arranca de cero cuando lo termina.
+  - Sin alarma a los admins (decidido así): gestión ve el cartel rojo con la hora a la que se lo saca la app.
+  - En la pantalla del chofer se ve la hora límite. SQL 049 (`vigilar_salidas`, en el cron "aviso-hora-de-salir").
+- **(2026-11-02) Clientes guardados** (paso 1 para que el link del pasajero le llegue solo al cliente por WhatsApp: hace
+  falta su teléfono; cambia lo decidido el 14/10). SQL 050.
+  - **Pestaña "Clientes"** (admin y operadores, al lado de Viajes): buscador, lista con teléfono, cuenta y cantidad de
+    viajes, y la ficha de cada uno: nombre, **teléfono**, **nota fija** y **cuenta corriente**, sus viajes de siempre y los
+    últimos, "➕ Nuevo viaje para …", **"🔗 Juntar con otro cliente"** (repetidos: queda uno con los viajes de los dos y
+    completa lo que le falte con el otro) y "Borrar" (sus viajes quedan con el nombre escrito).
+  - **Los clientes se crean solo a mano**, desde esa pestaña. Al cargar un viaje no se guarda ningún cliente nuevo: si no
+    está, el viaje se carga igual con el nombre escrito ("No está en Clientes: el viaje se carga igual").
+  - Se cargaron de entrada **todos los clientes que estaban escritos en los viajes** (juntando los que se escriben igual
+    sin contar tildes, mayúsculas ni espacios), con el último teléfono cargado y la última cuenta corriente con la que
+    pagaron. Los repetidos con otra forma de escribirse se juntan a mano.
+  - **En el viaje** (nuevo, editar, viajes fijos y lo compartido desde WhatsApp) el campo Cliente va **arriba de todo** y
+    es un buscador (por nombre o teléfono, sin importar tildes ni mayúsculas; hasta 5, primero los que empiezan así y los
+    que más viajan). Al tocar uno queda "👤 Nombre ✕" y se completan su teléfono (se puede cambiar solo para ese viaje) y
+    su nota fija (se agrega a Observaciones). Aparecen **sus viajes de siempre** (los 4 recorridos que más repite): al
+    tocar uno se llenan origen y destino. Nada se completa sin tocarlo.
+  - **Cuenta corriente:** si el cliente tiene, al cobrar al chofer le aparece **ya elegida** ("Cuenta corriente: X") y la
+    puede cambiar a efectivo u otra forma de pago. El viaje copia la cuenta del cliente (`viajes.cuenta_sugerida_id`);
+    si gestión le cambia la cuenta al cliente, la toman sus viajes que todavía no se cobraron.
+  - **Botón "WhatsApp" del link del pasajero:** si el viaje tiene un teléfono que sirve, abre **directo el chat del
+    cliente** con el mensaje listo. Un teléfono sirve con el código de área ("11 5555-1234", "011 15 5555-1234",
+    "+54 9 11…"); si no, la app avisa "Así no sirve para WhatsApp".
+  - La lista de clientes es **solo de gestión** (ningún chofer la puede leer); el chofer sigue viendo el nombre y el
+    teléfono de **su** viaje, como antes.
+  - Más adelante (pasos 2 y 3): que el link le llegue solo por WhatsApp (con la conexión oficial de WhatsApp) y recibir
+    mensajes.
 - **(2026-10-26) Link del pasajero con anticipación:** en los **programados** se puede mandar el link (WhatsApp / Copiar)
   desde que se cargan, aunque no tengan chofer (por ejemplo, a la noche para un viaje de la madrugada). Hasta que el chofer
   toca "Salir a hacer el viaje", el link muestra **la fecha y la hora** y, si ya hay un chofer que lo aceptó, su nombre, el
@@ -452,12 +512,17 @@ Hoy la ubicación "desaparece" por varios minutos. Hay que diseñar para que **n
     por a dónde van: en la oferta dice "Llevar a: 🔒 lo ves cuando lo aceptes", y ni el aviso del celular ni "Cambió tu
     viaje" lo muestran. Cuando el viaje se libera para que lo tome cualquiera, ahí sí se ve origen y destino (antes de eso, el
     cartel de viajes sin chofer muestra solo el horario). Reemplaza "el destino se le muestra al chofer en la oferta" (28/9).
+    **(2026-11-02) Salvo en los programados que asigna gestión** (a mano o con chofer fijo): ahí el chofer ve el destino
+    antes de aceptar (en la pantalla, en el aviso del celular y en "Cambió tu viaje" / "Se anuló tu viaje"; SQL 046). Sigue
+    oculto en las ofertas de la cola, y en los inmediatos sin aceptar no se ve nada de la dirección.
   - **La hora se escribe** con el teclado de números ("1430" → "14:30"), siempre en 24 hs (reemplaza las dos listas del 22/10).
   - **Avisos al admin: solo cuando no hay nadie para tomar un viaje**: le suena "⚠️ Nadie tomó el viaje" en el momento en que
     se libera para todos los choferes. Ya no le suenan "Salió un viaje para Juan", "no aceptó" ni "no salió" (siguen en el
     cartel rojo). De los viajes que esperan a gestión (un chofer rechazó una asignación a mano) le sigue sonando "Viaje sin
     chofer" a su hora, porque esos no se liberan nunca.
-  - El botón **"Agregar"** de los adjuntos va a la derecha, para no tocarlo sin querer al ir a escribir.
+  - El botón **"Agregar"** de los adjuntos va a la derecha, para no tocarlo sin querer al ir a escribir. **(2026-11-02)** Ahora es
+    un **📎 clip adentro del campo**, a la derecha (sin el renglón "Agregar" abajo), y el formulario del viaje (y el de
+    viajes fijos) quedó más apretado (pedido del dueño).
   - **Aprobar los pagos:** en la lista de viajes, los finalizados sin aprobar tienen un **tick a la derecha**. Se tickean uno
     o varios y aparece abajo una **burbuja verde "✅ Aprobar N pagos"** para confirmar (o "Cancelar"). Quedan **"✅ Aprobado"**.
     Arriba de la lista, "✓ N pagos para aprobar" lleva a los finalizados (no hay una categoría aparte: los que faltan
@@ -500,7 +565,7 @@ Hoy la ubicación "desaparece" por varios minutos. Hay que diseñar para que **n
   "🚗 Es hora de salir" también: primero "Buscar en: …" y abajo "Llevar a: …" (SQL 032).
 - **(2026-10-22) Adjuntos en los viajes** (pedido del dueño: autorizaciones de los countries, audios, ubicaciones):
   - No van en una lista aparte: se **pegan a una parte del viaje** (Origen, Destino u Observaciones) con el botón
-    **"📎 Agregar"** que hay debajo de cada una. Así, si el cliente manda dos ubicaciones, una va al origen y otra al destino.
+    **📎 clip** que hay en cada una (desde el 2/11/2026, adentro del campo). Así, si el cliente manda dos ubicaciones, una va al origen y otra al destino.
   - Se puede **pegar un link o una ubicación** (si es de Google Maps o Waze, o unas coordenadas, se guarda como ubicación; a un
     link se le puede poner un nombre, ej. "Autorización") o **subir una foto, un audio o un archivo** (las fotos se achican).
   - Los carga gestión. **Los ve el chofer de ese viaje desde la oferta**, como botoncitos chicos debajo de cada dato (para no

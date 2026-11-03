@@ -1,12 +1,14 @@
 import { useEffect, useState } from 'react'
 import BotonSalir from './BotonSalir.jsx'
 import ActivarNotificaciones from './ActivarNotificaciones.jsx'
+import MisAvisos from './MisAvisos.jsx'
 import { esAppAndroid } from './ubicacionApp.js'
 import { sonarConLaAppAbierta } from './notificacionesApp.js'
 import Usuarios from './Usuarios.jsx'
 import Choferes from './Choferes.jsx'
 import Viajes from './Viajes.jsx'
 import CuentasCorrientes from './CuentasCorrientes.jsx'
+import Clientes from './Clientes.jsx'
 import Mapa from './Mapa.jsx'
 import AlertaSinChofer from './AlertaSinChofer.jsx'
 import { NOMBRE_ROL } from './usuarios.js'
@@ -16,11 +18,11 @@ export default function Gestion({ perfil }) {
   const esAdmin = perfil.rol === 'admin'
   const [seccion, setSeccion] = useState('viajes')
 
-  // Para el admin, Mapa va al final de todo (pedido del 21/10/2026).
+  // Para el admin, Mapa va al final de todo (pedido del 21/10/2026). Clientes, al lado de Viajes (2/11/2026).
   const pestanas = esAdmin
-    ? [['viajes', 'Viajes'], ['choferes', 'Choferes'], ['cuentas', 'Cuentas'], ['usuarios', 'Usuarios'],
-        ['cuenta', 'Mi cuenta'], ['mapa', 'Mapa']]
-    : [['viajes', 'Viajes'], ['choferes', 'Choferes'], ['mapa', 'Mapa'], ['cuenta', 'Mi cuenta']]
+    ? [['viajes', 'Viajes'], ['clientes', 'Clientes'], ['choferes', 'Choferes'], ['cuentas', 'Cuentas'],
+        ['usuarios', 'Usuarios'], ['cuenta', 'Mi cuenta'], ['mapa', 'Mapa']]
+    : [['viajes', 'Viajes'], ['clientes', 'Clientes'], ['choferes', 'Choferes'], ['mapa', 'Mapa'], ['cuenta', 'Mi cuenta']]
 
   // Los admins reciben avisos (21/10/2026; desde el 24/10, solo cuando nadie toma un viaje).
   useEffect(() => {
@@ -45,6 +47,7 @@ export default function Gestion({ perfil }) {
       )}
 
       {seccion === 'viajes' && <Viajes esAdmin={esAdmin} />}
+      {seccion === 'clientes' && <Clientes esAdmin={esAdmin} />}
       {seccion === 'choferes' && <Choferes />}
       {seccion === 'mapa' && <Mapa />}
       {seccion === 'cuentas' && esAdmin && <CuentasCorrientes />}
@@ -56,6 +59,7 @@ export default function Gestion({ perfil }) {
             {perfil.nombre}<br />
             <small>Rol: {NOMBRE_ROL[perfil.rol]}</small>
           </p>
+          <MisAvisos perfil={perfil} />
           <BotonSalir />
         </main>
       )}

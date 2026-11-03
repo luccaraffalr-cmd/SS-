@@ -5,6 +5,7 @@ import { NOMBRE_ESTADO, textoError } from './estados.js'
 import { cuando } from './viajes.js'
 import MisViajes from './MisViajes.jsx'
 import ViajesSinCargar from './ViajesSinCargar.jsx'
+import MisAvisos from './MisAvisos.jsx'
 import OfertasEnCurso from './OfertasEnCurso.jsx'
 import ActivarNotificaciones from './ActivarNotificaciones.jsx'
 import ProximosViajes, { AlertaSinChoferChofer } from './ViajesEsperando.jsx'
@@ -195,6 +196,7 @@ export default function Chofer({ perfil }) {
         </p>
       </div>
 
+      <MisAvisos perfil={perfil} desplegable />
       <ViajesSinCargar viajes={sinPago} />
 
       <button className="boton secundario" onClick={salir}>Cerrar sesión</button>

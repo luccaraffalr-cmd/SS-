@@ -155,7 +155,7 @@ export default function AgregarCompartido({ compartido, perfil, onListo }) {
       {!elegido ? (
         <section className="tarjeta separada">
           <h2>¿A qué viaje?</h2>
-          <button type="button" className="boton verde" onClick={elegirNuevo}>➕ Crear un viaje nuevo con esto</button>
+          <button type="button" className="boton azul-oscuro" onClick={elegirNuevo}>+ Nuevo viaje</button>
           {viajes === null && <p className="sin-margen">Cargando…</p>}
           {viajes?.length === 0 && <p className="ayuda sin-margen">No hay viajes sin terminar.</p>}
           <ul className="lista-elegir">

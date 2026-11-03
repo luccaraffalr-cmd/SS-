@@ -16,7 +16,8 @@ webpush.setVapidDetails(
 
 // fuerte: suena con el sonido propio y largo (canal "avisos_viaje", app versión 2 o más): viaje ofrecido o asignado,
 // "es hora de salir" y las alertas a los admins. Los demás (cambió, se anuló) van por el canal "viajes", con el sonido común.
-type Aviso = { titulo: string; cuerpo: string; etiqueta: string; fuerte?: boolean }
+// silencio: lo puso sin sonido en "Mis avisos" (canal "silencioso", que crea la app; en el navegador, sin sonido).
+type Aviso = { titulo: string; cuerpo: string; etiqueta: string; fuerte?: boolean; silencio?: boolean }
 type Viaje = {
   id: number; tipo: string; origen: string; destino: string | null; hora_presentacion: string | null
 }
@@ -66,8 +67,10 @@ Deno.serve(async (req) => {
     titulo: oferta.tipo === 'automatica' ? '🔔 Viaje para vos' : '📌 Gestión te asignó un viaje',
     // Primero dónde buscar al pasajero (22/10/2026: los choferes se confundían con el destino). El destino no va: lo ve
     // recién al aceptar (24/10/2026, para que no elijan los viajes por a dónde van); en los inmediatos, tampoco el origen
-    // (26/10/2026).
-    cuerpo: v.tipo === 'programado' ? `${cuando}\nBuscar en: ${v.origen}` : `${cuando}\nAceptalo en la app para ver a dónde ir.`,
+    // (26/10/2026). Los programados que asigna gestión, con el destino (2/11/2026).
+    cuerpo: v.tipo !== 'programado' ? `${cuando}\nAceptalo en la app para ver a dónde ir.`
+      : oferta.tipo !== 'automatica' && v.destino ? `${cuando}\nBuscar en: ${v.origen}\nLlevar a: ${v.destino}`
+      : `${cuando}\nBuscar en: ${v.origen}`,
     etiqueta: `viaje-${v.id}`,
     fuerte: true,
   })
@@ -97,9 +100,31 @@ async function avisarALosDemas(admin: any, choferId: string, v: Viaje) {
   return enviadas
 }
 
+// Qué aviso es, para "Mis avisos" (2/11/2026: cada uno elige cuáles le suenan; SQL 047). null: los de sus propios viajes
+// (viaje para vos, gestión te asignó un viaje, es hora de salir), que suenan siempre.
+function tipoDeAviso({ titulo, etiqueta }: Aviso): string | null {
+  if (etiqueta.startsWith('cambio-')) return 'cambio'
+  if (etiqueta.startsWith('tomar-')) return 'para_tomar'
+  if (etiqueta.startsWith('salio-')) return 'salio'
+  if (etiqueta.startsWith('alerta-')) {
+    return titulo.includes('devolvió') ? 'devolvio' : titulo.includes('Nadie tomó') ? 'nadie_tomo' : 'sin_chofer'
+  }
+  if (etiqueta.startsWith('viaje-') && titulo.startsWith('❌')) return 'anulado'
+  if (etiqueta.startsWith('viaje-') && titulo.startsWith('⌛')) return 'se_paso'
+  return null
+}
+
 // Manda el aviso a todos los celulares del chofer: app Android (Firebase) y navegador (web push).
+// Si puso ese aviso sin sonido en "Mis avisos", le llega igual pero callado.
 // deno-lint-ignore no-explicit-any
-async function enviarATodos(admin: any, choferId: string, aviso: Aviso) {
+async function enviarATodos(admin: any, choferId: string, avisoOriginal: Aviso) {
+  const tipo = tipoDeAviso(avisoOriginal)
+  let silencio = false
+  if (tipo) {
+    const { data: perfil } = await admin.from('perfiles').select('avisos_sin_sonido').eq('id', choferId).maybeSingle()
+    silencio = (perfil?.avisos_sin_sonido ?? []).includes(tipo)
+  }
+  const aviso: Aviso = { ...avisoOriginal, silencio }
   let enviadas = 0
   try {
     enviadas += await enviarALaApp(admin, choferId, aviso)
@@ -184,7 +209,8 @@ async function enviarALaApp(admin: any, choferId: string, aviso: Aviso) {
   let enviadas = 0
   for (const { token, version } of tokens) {
     // El sonido propio está solo en la app versión 2 o más (la 1 no tiene el canal "avisos_viaje").
-    const conSonidoPropio = !!aviso.fuerte && (version ?? 1) >= 2
+    const conSonidoPropio = !aviso.silencio && !!aviso.fuerte && (version ?? 1) >= 2
+    const canal = aviso.silencio ? 'silencioso' : conSonidoPropio ? 'avisos_viaje' : 'viajes' // los canales los crea la app
     const r = await fetch(`https://fcm.googleapis.com/v1/projects/${cuenta.project_id}/messages:send`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + permiso },
@@ -196,11 +222,11 @@ async function enviarALaApp(admin: any, choferId: string, aviso: Aviso) {
             priority: 'HIGH',
             ttl: '3600s',
             notification: {
-              channel_id: conSonidoPropio ? 'avisos_viaje' : 'viajes', // los canales los crea la app
+              channel_id: canal,
               tag: aviso.etiqueta,
-              sound: conSonidoPropio ? 'aviso_viaje' : 'default', // (solo cuenta en Android 7; desde el 8 manda el canal)
-              default_vibrate_timings: true,
-              notification_priority: 'PRIORITY_MAX',
+              // (El sonido y la prioridad solo cuentan en Android 7; desde el 8 manda el canal.)
+              ...(aviso.silencio ? {} : { sound: conSonidoPropio ? 'aviso_viaje' : 'default', default_vibrate_timings: true }),
+              notification_priority: aviso.silencio ? 'PRIORITY_LOW' : 'PRIORITY_MAX',
               visibility: 'PUBLIC',
             },
           },

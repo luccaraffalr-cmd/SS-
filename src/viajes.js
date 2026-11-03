@@ -37,6 +37,12 @@ export function totalCobrado(v) {
   return Number(v.importe ?? 0) + Number(v.demora ?? 0) + Number(v.peaje ?? 0)
 }
 
+// Al cargar el pago: si el cliente del viaje tiene cuenta corriente, aparece ya elegida (y se puede cambiar a
+// efectivo u otra forma de pago). Para pasarle a FormPago (2/11/2026, SQL 050).
+export function pagoSugerido(v) {
+  return v.cuenta_sugerida_id ? { formaInicial: 'cuenta_corriente', cuentaInicial: v.cuenta_sugerida_id } : {}
+}
+
 // Convierte lo que escribe la persona ("12.500", "12500,50") en número; null si no es válido.
 export function leerImporte(texto) {
   const limpio = String(texto).trim().replace(/\$/g, '').replace(/\s/g, '')
@@ -118,6 +124,15 @@ export function problemaDelViaje(viaje, ahora = Date.now()) {
   if (viaje.estado === 'ofrecido' && viaje.asignado_por) return 'sin_aceptar'
   if (viaje.estado === 'asignado') return 'no_salio'
   return null
+}
+
+// Hasta qué hora tiene el chofer para salir a hacer el viaje (SQL 049, 2/11/2026): 5 minutos desde que le llegó la hora
+// (si estaba haciendo otro viaje, desde que lo terminó). Pasado eso, la app se lo saca y lo manda a la cola.
+// null: todavía no corre la cuenta.
+export const MINUTOS_PARA_SALIR = 5
+export function limiteParaSalir(viaje) {
+  if (!viaje.salida_vigilada_desde || viaje.iniciado_en) return null
+  return new Date(new Date(viaje.salida_vigilada_desde).getTime() + MINUTOS_PARA_SALIR * 60000)
 }
 
 // Tipo de viaje + hora para mostrar: "Presentarse 15:00" o "Inmediato".

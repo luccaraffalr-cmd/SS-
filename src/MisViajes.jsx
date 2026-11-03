@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState } from 'react'
 import { supabase } from './supabase.js'
 import { cuantoTiempo, textoError } from './estados.js'
-import { cuando, hora } from './viajes.js'
+import { cuando, hora, limiteParaSalir, MINUTOS_PARA_SALIR, pagoSugerido } from './viajes.js'
 import FormPago from './FormPago.jsx'
 import { useAtras } from './atras.js'
 import { pitido } from './notificaciones.js'
@@ -143,19 +143,31 @@ export default function MisViajes({ perfil, dosViajes = false, onSinPago }) {
             <h2>{automatica ? '🔔 Viaje para vos' : '📌 Gestión te asignó un viaje'}</h2>
             {automatica && v.oferta_vence && <TiempoParaContestar vence={v.oferta_vence} ahora={ahora} />}
             {/* Que no elijan los viajes por a dónde van (pedidos del dueño): en los inmediatos no se ve nada de la dirección
-                ni las observaciones hasta aceptar (26/10/2026); en los programados, el destino (24/10/2026). */}
+                ni las observaciones hasta aceptar (26/10/2026); en los programados de la cola, el destino (24/10/2026). Los
+                programados que asigna gestión, con todo (2/11/2026). */}
             {v.tipo === 'inmediato' ? (
               <div className="buscar-en">
                 <small>📍 Buscar en</small>
                 <strong className="viaje-titulo">🔒 Lo ves cuando lo aceptes</strong>
               </div>
-            ) : (
+            ) : automatica ? (
               <>
                 <BloqueOrigen viaje={v} />
                 <div className="llevar-a">Llevar a: <strong>🔒 lo ves cuando lo aceptes</strong></div>
               </>
+            ) : (
+              <>
+                <BloqueOrigen viaje={v} />
+                <LineaDestino viaje={v} />
+              </>
             )}
             <div className="dato"><small>Cuándo</small><strong>{cuando(v)}</strong></div>
+            {!automatica && limiteParaSalir(v) && (
+              <p className="aviso error sin-margen">
+                ⏰ Ya es hora de salir: aceptalo y tocá "Salir a hacer el viaje" antes de las {hora(limiteParaSalir(v))}.
+                Si no, pasa a otro chofer.
+              </p>
+            )}
             {v.tipo !== 'inmediato' && (v.observaciones || tieneAdjuntos(v, 'observaciones')) && (
               <div className="dato">
                 <small>Observaciones</small>{v.observaciones && <span className="texto-dato">{v.observaciones}</span>}
@@ -230,7 +242,7 @@ export default function MisViajes({ perfil, dosViajes = false, onSinPago }) {
             </div>
           )}
           {paso === 'pago' && (
-            <FormPago textoBoton="Finalizar viaje" pedirDestino={!actual.destino}
+            <FormPago textoBoton="Finalizar viaje" pedirDestino={!actual.destino} {...pagoSugerido(actual)}
               onGuardar={(importe, forma_pago, cuenta, otro, extras) =>
                 finalizar(actual.id, 'pago', { importe, forma_pago, cuenta, otro, ...extras })}
               onCancelar={() => setFinalizando('elegir')} />
@@ -272,13 +284,23 @@ export default function MisViajes({ perfil, dosViajes = false, onSinPago }) {
                     🚗 Salir a hacer el viaje
                   </button>
                 )}
+                {llegoLaHora && puedeSalir && limiteParaSalir(v) && (
+                  <small className="limite-salida">
+                    ⏰ Tocalo antes de las {hora(limiteParaSalir(v))}: si no, el viaje pasa a otro chofer.
+                  </small>
+                )}
                 {llegoLaHora && !puedeSalir && (
                   <small>
                     {actuales.length > 1 ? 'Cuando termines uno de tus viajes, salí a hacer este.'
                       : 'Cuando termines el viaje actual, salí a hacer este.'}
                   </small>
                 )}
-                {!llegoLaHora && <small>Se habilita a las {hora(v.hora_asignacion)} (te va a sonar un aviso).</small>}
+                {!llegoLaHora && (
+                  <small>
+                    Se habilita a las {hora(v.hora_asignacion)} (te va a sonar un aviso). Si no salís en
+                    {' '}{MINUTOS_PARA_SALIR} minutos, pasa a otro chofer.
+                  </small>
+                )}
                 {devolviendo === v.id ? (
                   <DevolverViaje viaje={v} perfilId={perfil.id} otroEnCurso={actuales.length > 0}
                     onListo={() => { setDevolviendo(null); cargar() }} onCancelar={() => setDevolviendo(null)} />

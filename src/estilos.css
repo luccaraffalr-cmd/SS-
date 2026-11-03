@@ -190,6 +190,7 @@ h2 { font-size: 1.2rem; margin: 0; }
 a.boton { display: block; text-align: center; text-decoration: none; }
 
 .boton.verde { background: #16a34a; }
+.boton.azul-oscuro { background: #1e3a8a; }
 .boton.peligro { width: 100%; background: #dc2626; }
 
 .mi-viaje { border: 3px solid #7c3aed; }
@@ -232,21 +233,30 @@ a.boton { display: block; text-align: center; text-decoration: none; }
 .adjunto-con-sacar { display: inline-flex; align-items: center; max-width: 100%; border-radius: 999px; background: #e0e7ff; }
 .adjunto-con-sacar .adjunto { padding-right: 4px; }
 .sacar-adjunto { border: none; background: none; color: #3730a3; font: inherit; padding: 6px 12px 6px 6px; cursor: pointer; }
-/* "Agregar" a la derecha, lejos del campo, para no tocarlo sin querer al ir a escribir (24/10/2026). */
-.agregar-adjunto {
-  margin-left: auto;
-  display: inline-flex;
-  align-items: center;
-  gap: 5px;
-  border: 1px solid #d1d5db;
-  border-radius: 999px;
-  background: #fff;
-  padding: 5px 12px;
-  color: #374151;
-  font: inherit;
-  font-size: 0.9rem;
+/* Clip para agregar adjuntos, adentro del campo a la derecha (2/11/2026: antes era un renglón "Agregar" abajo). */
+.con-clip { position: relative; display: flex; }
+.con-clip > input, .con-clip > textarea { flex: 1; min-width: 0; padding-right: 48px; }
+.clip-en-campo {
+  position: absolute;
+  top: 3px;
+  right: 3px;
+  width: 40px;
+  height: 40px;
+  display: grid;
+  place-items: center;
+  border: none;
+  border-radius: 7px;
+  background: none;
+  color: #6b7280;
   cursor: pointer;
 }
+.clip-en-campo .icono-clip { width: 22px; height: 22px; }
+.clip-en-campo.abierto { background: #e0e7ff; color: #3730a3; }
+.campo-con-adjuntos .adjuntos { margin-top: 0; }
+/* Formulario del viaje más apretado (pedido del dueño, 2/11/2026). */
+.formulario-apretado { gap: 10px; }
+.formulario-apretado label:not(.casilla) { gap: 4px; }
+.formulario-apretado .campo-con-adjuntos { gap: 6px; }
 .icono-clip { width: 1.05em; height: 1.05em; flex-shrink: 0; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
 .panel-adjunto { display: flex; flex-direction: column; gap: 8px; padding: 12px; border-radius: 10px; background: #f3f4f6; }
 .panel-adjunto label.boton { display: block; text-align: center; cursor: pointer; }
@@ -271,6 +281,24 @@ a.boton { display: block; text-align: center; text-decoration: none; }
 .grabar-audio audio { width: 100%; }
 .chip-chofer.elegido-aca { border-color: #16a34a; background: #dcfce7; color: #166534; font-weight: 600; }
 /* "No ofrecer a": choferes a los que no se les ofrece el viaje (26/10/2026) */
+/* Mis avisos: cuáles suenan (3/11/2026) */
+.lista-avisos { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 12px; }
+.lista-avisos li { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.lista-avisos li > span { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.lista-avisos small { color: #6b7280; }
+.interruptor-aviso {
+  flex-shrink: 0;
+  padding: 8px 10px;
+  border: 1px solid #d1d5db;
+  border-radius: 10px;
+  background: #f3f4f6;
+  color: #6b7280;
+  font: inherit;
+  font-size: 0.9rem;
+  white-space: nowrap;
+}
+.interruptor-aviso.suena { border-color: #16a34a; background: #dcfce7; color: #166534; }
+.interruptor-aviso:disabled { opacity: 0.6; }
 .campo-excluidos { display: flex; flex-direction: column; gap: 8px; }
 .boton-desplegar {
   display: flex;
@@ -320,10 +348,39 @@ a.boton { display: block; text-align: center; text-decoration: none; }
 }
 .opcion-viaje small { color: #6b7280; }
 .opcion-viaje.elegida { border-color: #16a34a; background: #dcfce7; cursor: default; }
+/* Clientes guardados (2/11/2026): buscador en el viaje, cliente elegido y su ficha */
+.elegir-cliente { display: flex; flex-direction: column; gap: 10px; }
+.cliente-elegido {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 4px 4px 4px 12px;
+  border: 1px solid #c7d2fe;
+  border-radius: 8px;
+  background: #eef2ff;
+  color: #1e3a8a;
+  overflow-wrap: anywhere;
+}
+.cliente-elegido button {
+  flex-shrink: 0;
+  width: 40px;
+  height: 40px;
+  border: none;
+  border-radius: 8px;
+  background: none;
+  color: #3730a3;
+  font: inherit;
+  font-size: 1.1rem;
+  cursor: pointer;
+}
+.nota-cliente { margin: 0; padding: 10px 12px; border-radius: 10px; background: #ecfdf5; color: #065f46; }
+.buscador-clientes { width: 100%; box-sizing: border-box; }
 .proximo { display: flex; flex-direction: column; gap: 2px; padding: 10px 12px; border-radius: 10px; background: #f3f4f6; overflow-wrap: anywhere; }
 .proximo small { color: #6b7280; }
 .proximo.es-hora { background: #dcfce7; }
 .proximo .boton { margin-top: 8px; }
+.proximo small.limite-salida { color: #b91c1c; font-weight: 600; } /* hora límite para salir (2/11/2026) */
 
 .oferta { border: 3px solid #f59e0b; }
 .tiempo-oferta { margin: 0; padding: 8px 12px; border-radius: 10px; background: #fef3c7; color: #92400e; font-size: 1rem; }

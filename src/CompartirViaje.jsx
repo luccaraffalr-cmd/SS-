@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { supabase } from './supabase.js'
 import { fechaCorta, hora } from './viajes.js'
+import { telefonoParaWhatsApp } from './clientes.js'
 
 const linkDe = (codigo) => `${window.location.origin}/seguir/${codigo}`
 
@@ -12,7 +13,9 @@ function mensajeDe(link, viaje) {
   }
   return `Tu remis está en camino. Seguilo acá: ${link}`
 }
-const urlWhatsApp = (link, viaje) => 'https://wa.me/?text=' + encodeURIComponent(mensajeDe(link, viaje))
+// Con un teléfono que sirve, abre directo el chat del cliente (2/11/2026); si no, WhatsApp pregunta a quién mandarlo.
+const urlWhatsApp = (link, viaje) => 'https://wa.me/' + (telefonoParaWhatsApp(viaje.cliente_telefono) ?? '')
+  + '?text=' + encodeURIComponent(mensajeDe(link, viaje))
 
 // Abre un link afuera de la app (como tocar un link): en la app Android, WhatsApp se abre solo.
 function abrirAfuera(url) {
@@ -68,6 +71,7 @@ export default function CompartirViaje({ viaje }) {
         Un link con el mapa del auto en vivo, la foto, el modelo y la patente. Se apaga solo cuando el viaje se finaliza o se anula.
         {viaje.tipo === 'programado' && !viaje.iniciado_en
           && ' Lo podés mandar desde ya: hasta que el chofer salga a buscarlo, muestra la fecha y la hora (sin el mapa).'}
+        {telefonoParaWhatsApp(viaje.cliente_telefono) && ` "WhatsApp" abre directo el chat con ${viaje.cliente_telefono}.`}
       </p>
       <div className="dos-columnas">
         {codigo ? (

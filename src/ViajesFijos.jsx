@@ -3,8 +3,9 @@ import { supabase } from './supabase.js'
 import ElegirFechas from './ElegirFechas.jsx'
 import ElegirHora from './ElegirHora.jsx'
 import { useAtras } from './atras.js'
-import { EditarAdjuntos } from './Adjuntos.jsx'
+import { CampoConAdjuntos } from './Adjuntos.jsx'
 import ElegirExcluidos from './ElegirExcluidos.jsx'
+import ElegirCliente from './ElegirCliente.jsx'
 import { deFechaLocal, fechaCorta, fechaLocal, recorridoDebajo, tituloViaje } from './viajes.js'
 
 // Orden de la semana para mostrar (lunes primero). Valores: 0 = domingo … 6 = sábado.
@@ -12,7 +13,7 @@ export const SEMANA = [[1, 'Lun'], [2, 'Mar'], [3, 'Mié'], [4, 'Jue'], [5, 'Vie
 const NOMBRE_DIA = { 0: 'domingos', 1: 'lunes', 2: 'martes', 3: 'miércoles', 4: 'jueves', 5: 'viernes', 6: 'sábados' }
 const ANTICIPACIONES_RAPIDAS = [10, 20, 30, 45]
 const VACIO = {
-  dias: [], hora: '', anticipacion: '30', origen: '', destino: '', cliente_nombre: '', cliente_telefono: '',
+  dias: [], hora: '', anticipacion: '20', origen: '', destino: '', cliente_id: null, cliente_nombre: '', cliente_telefono: '',
   observaciones: '', chofer_id: '', activo: true, desde: '', hasta: '', fechas: null,
 }
 
@@ -141,6 +142,7 @@ function FormViajeFijo({ fijo, choferes, onListo }) {
       anticipacion: minutos,
       origen: datos.origen.trim(),
       destino: datos.destino.trim() || null,
+      cliente_id: datos.cliente_id ?? null,
       cliente_nombre: datos.cliente_nombre.trim() || null,
       cliente_telefono: datos.cliente_telefono.trim() || null,
       observaciones: datos.observaciones.trim() || null,
@@ -178,7 +180,7 @@ function FormViajeFijo({ fijo, choferes, onListo }) {
     <main className="pantalla">
       <h1>{esNuevo ? 'Nuevo viaje fijo' : datos.fechas ? 'Viaje en días sueltos' : 'Viaje fijo'}</h1>
       {!esNuevo && !fijo.activo && <p className="aviso">⏸️ Pausado: no se están cargando viajes.</p>}
-      <form className="tarjeta" onSubmit={guardar}>
+      <form className="tarjeta formulario-apretado" onSubmit={guardar}>
         {datos.fechas ? (
           <div>
             <p className="etiqueta-campo">Días (tocá para marcar o desmarcar)</p>
@@ -213,23 +215,16 @@ function FormViajeFijo({ fijo, choferes, onListo }) {
           ))}
         </div>
 
-        <div className="campo-con-adjuntos">
-          <label>Origen (dirección de búsqueda)<input value={datos.origen} onChange={cambiar('origen')} required /></label>
-          <EditarAdjuntos campo="origen" adjuntos={adjuntos} onCambiar={setAdjuntos} />
-        </div>
-        <div className="campo-con-adjuntos">
-          <label>Destino<input value={datos.destino} onChange={cambiar('destino')} /></label>
-          <EditarAdjuntos campo="destino" adjuntos={adjuntos} onCambiar={setAdjuntos} />
-        </div>
-        <label>Cliente<input value={datos.cliente_nombre} onChange={cambiar('cliente_nombre')} /></label>
-        <label>Teléfono del cliente<input type="tel" value={datos.cliente_telefono} onChange={cambiar('cliente_telefono')} /></label>
-        <div className="campo-con-adjuntos">
-          <label>
-            Observaciones
-            <textarea rows={2} value={datos.observaciones} onChange={cambiar('observaciones')} />
-          </label>
-          <EditarAdjuntos campo="observaciones" adjuntos={adjuntos} onCambiar={setAdjuntos} />
-        </div>
+        <ElegirCliente datos={datos} onCambiar={(cambios) => setDatos((d) => ({ ...d, ...cambios }))} />
+        <CampoConAdjuntos etiqueta="Origen (dirección de búsqueda)" campo="origen" adjuntos={adjuntos} onCambiar={setAdjuntos}>
+          <input value={datos.origen} onChange={cambiar('origen')} required />
+        </CampoConAdjuntos>
+        <CampoConAdjuntos etiqueta="Destino" campo="destino" adjuntos={adjuntos} onCambiar={setAdjuntos}>
+          <input value={datos.destino} onChange={cambiar('destino')} />
+        </CampoConAdjuntos>
+        <CampoConAdjuntos etiqueta="Observaciones" campo="observaciones" adjuntos={adjuntos} onCambiar={setAdjuntos}>
+          <textarea rows={2} value={datos.observaciones} onChange={cambiar('observaciones')} />
+        </CampoConAdjuntos>
         <ElegirExcluidos choferes={choferes} excluidos={excluidos} onCambiar={setExcluidos} />
         <label>
           Chofer fijo (opcional)

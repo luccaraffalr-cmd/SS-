@@ -21,9 +21,11 @@ export default function VerAdjuntos({ campo, adjuntos }) {
   )
 }
 
-// Gestión: los adjuntos de una parte del viaje, con ✕ para sacarlos, y "Agregar" (pegar un link o una ubicación,
-// o subir una foto, un audio o un archivo). onCambiar recibe una función que cambia la lista.
-export function EditarAdjuntos({ campo, adjuntos, onCambiar }) {
+// Gestión: un campo del viaje (children: el input o textarea) con un clip adentro, a la derecha, para agregar (pegar un
+// link o una ubicación, o subir una foto, un audio o un archivo); abajo, sus adjuntos con ✕ para sacarlos. El clip va
+// adentro del campo para que el formulario quede más apretado (pedido del dueño, 2/11/2026; antes era un renglón
+// "Agregar" debajo de cada campo). onCambiar recibe una función que cambia la lista.
+export function CampoConAdjuntos({ etiqueta, campo, adjuntos, onCambiar, children }) {
   const [abierto, setAbierto] = useState(false)
   const [texto, setTexto] = useState('')
   const [nombre, setNombre] = useState('')
@@ -65,7 +67,16 @@ export function EditarAdjuntos({ campo, adjuntos, onCambiar }) {
   }
 
   return (
-    <>
+    <div className="campo-con-adjuntos">
+      <label>
+        {etiqueta}
+        <span className="con-clip">
+          {children}
+          <button type="button" className={'clip-en-campo' + (abierto ? ' abierto' : '')}
+            aria-label="Agregar link, ubicación, foto, audio o archivo"
+            onClick={() => (abierto ? cerrar() : setAbierto(true))}><Clip /></button>
+        </span>
+      </label>
       <div className="adjuntos">
         {deEsteCampo.map((a) => (
           <span key={a.id} className="adjunto-con-sacar">
@@ -74,9 +85,6 @@ export function EditarAdjuntos({ campo, adjuntos, onCambiar }) {
               onClick={() => onCambiar((lista) => lista.filter((x) => x.id !== a.id))}>✕</button>
           </span>
         ))}
-        {!abierto && (
-          <button type="button" className="agregar-adjunto" onClick={() => setAbierto(true)}><Clip /> Agregar</button>
-        )}
       </div>
       {abierto && (
         <div className="panel-adjunto">
@@ -100,7 +108,7 @@ export function EditarAdjuntos({ campo, adjuntos, onCambiar }) {
           <button type="button" className="boton secundario" onClick={cerrar}>Cancelar</button>
         </div>
       )}
-    </>
+    </div>
   )
 }
 

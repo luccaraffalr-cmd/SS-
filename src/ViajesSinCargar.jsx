@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { supabase } from './supabase.js'
 import { textoError } from './estados.js'
-import { cuando } from './viajes.js'
+import { cuando, pagoSugerido } from './viajes.js'
 import FormPago from './FormPago.jsx'
 import { useAtras } from './atras.js'
 
@@ -42,7 +42,7 @@ export default function ViajesSinCargar({ viajes }) {
               {v.destino && <span>→ {v.destino}</span>}
               <span className="viaje-cuando">{cuando(v)} · #{v.id}</span>
               {cargandoPago === v.id ? (
-                <FormPago textoBoton="Guardar pago" pedirDestino={!v.destino}
+                <FormPago textoBoton="Guardar pago" pedirDestino={!v.destino} {...pagoSugerido(v)}
                   onGuardar={(importe, forma, cuenta, otro, extras) => cargarPago(v.id, importe, forma, cuenta, otro, extras)}
                   onCancelar={() => setCargandoPago(null)} />
               ) : (

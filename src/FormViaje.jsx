@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { supabase } from './supabase.js'
-import { NOMBRE_ESTADO_VIAJE, deFechaLocal, fechaLocal, hora, problemaDelViaje, unirFechaHora } from './viajes.js'
+import { NOMBRE_ESTADO_VIAJE, deFechaLocal, fechaLocal, hora, limiteParaSalir, problemaDelViaje, unirFechaHora } from './viajes.js'
 import ElegirFechas from './ElegirFechas.jsx'
 import ElegirHora from './ElegirHora.jsx'
 import { useAtras } from './atras.js'
@@ -10,9 +10,10 @@ import FormPago from './FormPago.jsx'
 import HistorialViaje from './HistorialViaje.jsx'
 import CompartirViaje from './CompartirViaje.jsx'
 import EstadoPlanilla from './EstadoPlanilla.jsx'
-import { FORMAS_PAGO, dinero, fechaCorta, totalCobrado } from './viajes.js'
+import { FORMAS_PAGO, dinero, fechaCorta, pagoSugerido, totalCobrado } from './viajes.js'
+import ElegirCliente from './ElegirCliente.jsx'
 import { cuandoSeOfrece } from './TarjetaViaje.jsx'
-import { EditarAdjuntos } from './Adjuntos.jsx'
+import { CampoConAdjuntos } from './Adjuntos.jsx'
 import RecorridoViaje from './RecorridoViaje.jsx'
 import ElegirExcluidos from './ElegirExcluidos.jsx'
 
@@ -20,13 +21,16 @@ import ElegirExcluidos from './ElegirExcluidos.jsx'
 function textoSituacion(v) {
   const nombre = v.chofer?.nombre
   const problema = problemaDelViaje(v)
+  // Si no sale en 5 minutos, la app se lo saca (SQL 049, 2/11/2026).
+  const limite = limiteParaSalir(v)
+  const seLoSaca = limite ? ` Si no sale antes de las ${hora(limite)}, la app se lo saca y lo manda a la cola.` : ''
   if (problema === 'no_salio') {
     return `⚠️ ${nombre} lo aceptó pero todavía no salió a hacerlo (se habilitó a las ${hora(v.hora_asignacion)}). `
-      + 'Llamalo o asignáselo a otro.'
+      + 'Llamalo o asignáselo a otro.' + seLoSaca
   }
   if (problema === 'sin_aceptar') {
     return `⚠️ Asignado a mano a ${nombre}, pero todavía no lo aceptó y ya llegó la hora (${hora(v.hora_asignacion)}). `
-      + 'Llamalo o asignáselo a otro.'
+      + 'Llamalo o asignáselo a otro.' + seLoSaca
   }
   if (v.estado === 'sin_chofer' && v.chofer_fijo) {
     return `📌 Chofer fijo: ${v.fijo?.nombre ?? '?'}. Se le ofrece el ${fechaCorta(cuandoSeOfrece(v))} (7 días antes) y lo tiene que aceptar. `
@@ -89,24 +93,27 @@ function AprobacionPago({ viaje, esAdmin, onListo }) {
   )
 }
 
-const ANTICIPACION_POR_DEFECTO = 30
+const ANTICIPACION_POR_DEFECTO = 20 // 2/11/2026 (antes 30)
 const ANTICIPACIONES_RAPIDAS = [10, 20, 30, 45]
 
 // Alta y edición de un viaje (gestión). fechaInicial ("2026-10-15"): viaje nuevo cargado desde un día del calendario;
 // si no es hoy, arranca como programado para ese día. inicial ({ origen, observaciones, adjuntos }): viaje nuevo que
-// arranca con algo compartido desde WhatsApp (2/11/2026). onVolver: qué hace "Volver" (si no, lo mismo que al guardar).
+// arranca con algo compartido desde WhatsApp (2/11/2026); { cliente }: desde la ficha del cliente (2/11/2026).
+// onVolver: qué hace "Volver" (si no, lo mismo que al guardar).
 export default function FormViaje({ viaje, fechaInicial, inicial, onListo, onVolver, esAdmin = false }) {
   const esNuevo = !viaje
   const [datos, setDatos] = useState(() => {
     const presentacion = viaje?.hora_presentacion ? new Date(viaje.hora_presentacion) : null
     const otroDia = !!fechaInicial && fechaInicial !== fechaLocal()
+    const cliente = inicial?.cliente
     return {
       tipo: viaje?.tipo ?? (otroDia ? 'programado' : 'inmediato'),
-      cliente_nombre: viaje?.cliente_nombre ?? '',
-      cliente_telefono: viaje?.cliente_telefono ?? '',
+      cliente_id: viaje?.cliente_id ?? cliente?.id ?? null,
+      cliente_nombre: viaje?.cliente_nombre ?? cliente?.nombre ?? '',
+      cliente_telefono: viaje?.cliente_telefono ?? cliente?.telefono ?? '',
       origen: viaje?.origen ?? inicial?.origen ?? '',
       destino: viaje?.destino ?? '',
-      observaciones: viaje?.observaciones ?? inicial?.observaciones ?? '',
+      observaciones: viaje?.observaciones ?? inicial?.observaciones ?? cliente?.nota ?? '',
       fecha: presentacion ? fechaLocal(presentacion) : (fechaInicial ?? fechaLocal()),
       hora: presentacion ? hora(presentacion) : '',
       anticipacion: presentacion
@@ -121,7 +128,9 @@ export default function FormViaje({ viaje, fechaInicial, inicial, onListo, onVol
   const [error, setError] = useState('')
   const [enviando, setEnviando] = useState(false)
   const [confirmandoAnular, setConfirmandoAnular] = useState(false)
-  const [choferElegido, setChoferElegido] = useState(viaje?.chofer_id ?? viaje?.chofer_fijo ?? '')
+  // Con chofer, el selector es para pasárselo a otro: arranca vacío (2/11/2026).
+  const [choferElegido, setChoferElegido] = useState(viaje?.chofer_id ? '' : viaje?.chofer_fijo ?? '')
+  const [confirmandoCola, setConfirmandoCola] = useState(false)
   const choferes = useChoferesParaAsignar()
   const cambiar = (campo) => (e) => setDatos({ ...datos, [campo]: e.target.value })
   const sePuedeAnular = !esNuevo && ['sin_chofer', 'ofrecido', 'asignado'].includes(viaje.estado)
@@ -150,6 +159,7 @@ export default function FormViaje({ viaje, fechaInicial, inicial, onListo, onVol
   useAtras(corrigiendoPago, () => setCorrigiendoPago(false))
   useAtras(!!preguntaSerie, () => setPreguntaSerie(null))
   useAtras(confirmandoAnular, () => setConfirmandoAnular(false))
+  useAtras(confirmandoCola, () => setConfirmandoCola(false))
 
   // Sin botón "No" (27/10/2026): tocar el modo elegido lo desmarca y vuelve a un solo viaje.
   function elegirRepetir(modo) {
@@ -188,6 +198,16 @@ export default function FormViaje({ viaje, fechaInicial, inicial, onListo, onVol
     else onListo()
   }
 
+  // Sacarle el viaje al chofer (aunque lo esté haciendo) y ofrecerlo a la cola, como prioritario (2/11/2026).
+  async function mandarALaCola() {
+    setError('')
+    setEnviando(true)
+    const { error } = await supabase.rpc('mandar_a_la_cola', { p_viaje: viaje.id })
+    setEnviando(false)
+    if (error) setError('No se pudo mandar a la cola: ' + error.message)
+    else onListo()
+  }
+
   // funcion: 'anular_viaje' (solo este) o 'anular_serie' (este y los que siguen de la serie).
   async function anular(funcion = 'anular_viaje') {
     setError('')
@@ -216,6 +236,7 @@ export default function FormViaje({ viaje, fechaInicial, inicial, onListo, onVol
 
     const fila = {
       tipo: datos.tipo,
+      cliente_id: datos.cliente_id, // con el cliente, el viaje copia solo su cuenta corriente (SQL 050)
       cliente_nombre: datos.cliente_nombre.trim() || null,
       cliente_telefono: datos.cliente_telefono.trim() || null,
       origen: datos.origen.trim(),
@@ -267,6 +288,7 @@ export default function FormViaje({ viaje, fechaInicial, inicial, onListo, onVol
       anticipacion: minutos,
       origen: datos.origen.trim(),
       destino: datos.destino.trim() || null,
+      cliente_id: datos.cliente_id,
       cliente_nombre: datos.cliente_nombre.trim() || null,
       cliente_telefono: datos.cliente_telefono.trim() || null,
       observaciones: datos.observaciones.trim() || null,
@@ -307,7 +329,7 @@ export default function FormViaje({ viaje, fechaInicial, inicial, onListo, onVol
       ({ error } = await supabase.rpc('cambiar_serie', {
         viaje: viaje.id, p_hora: datos.hora, p_anticipacion: minutos, p_origen: fila.origen, p_destino: fila.destino,
         p_cliente_nombre: fila.cliente_nombre, p_cliente_telefono: fila.cliente_telefono, p_observaciones: fila.observaciones,
-        p_adjuntos: fila.adjuntos, p_excluidos: fila.choferes_excluidos,
+        p_adjuntos: fila.adjuntos, p_excluidos: fila.choferes_excluidos, p_cliente_id: fila.cliente_id ?? 0, // 0 = sin cliente
       }))
     }
     setEnviando(false)
@@ -333,7 +355,7 @@ export default function FormViaje({ viaje, fechaInicial, inicial, onListo, onVol
           {deUnaSerie && ' Al guardar cambios o eliminarlo, te pregunto si es solo este o todos los que faltan.'}
         </p>
       )}
-      <form className="tarjeta" onSubmit={guardar}>
+      <form className="tarjeta formulario-apretado" onSubmit={guardar}>
         <div className="selector-tipo">
           <button type="button" className={datos.tipo === 'inmediato' ? 'activo' : ''}
             onClick={() => setDatos({ ...datos, tipo: 'inmediato' })}>⚡ Inmediato</button>
@@ -413,24 +435,18 @@ export default function FormViaje({ viaje, fechaInicial, inicial, onListo, onVol
           </div>
         )}
 
-        <div className="campo-con-adjuntos">
-          <label>Origen (dirección de búsqueda)<input value={datos.origen} onChange={cambiar('origen')} required /></label>
-          <EditarAdjuntos campo="origen" adjuntos={adjuntos} onCambiar={setAdjuntos} />
-        </div>
-        <div className="campo-con-adjuntos">
-          <label>Destino<input value={datos.destino} onChange={cambiar('destino')} /></label>
-          <EditarAdjuntos campo="destino" adjuntos={adjuntos} onCambiar={setAdjuntos} />
-        </div>
-        <label>Cliente<input value={datos.cliente_nombre} onChange={cambiar('cliente_nombre')} /></label>
-        <label>Teléfono del cliente<input type="tel" value={datos.cliente_telefono} onChange={cambiar('cliente_telefono')} /></label>
-        <div className="campo-con-adjuntos">
-          <label>
-            Observaciones
-            <textarea rows={3} value={datos.observaciones} onChange={cambiar('observaciones')}
-              placeholder="ej: con espera, ida y vuelta, lleva valija…" />
-          </label>
-          <EditarAdjuntos campo="observaciones" adjuntos={adjuntos} onCambiar={setAdjuntos} />
-        </div>
+        {/* El cliente va antes del origen: al elegirlo, sus viajes de siempre llenan origen y destino (2/11/2026). */}
+        <ElegirCliente datos={datos} onCambiar={(cambios) => setDatos((d) => ({ ...d, ...cambios }))} />
+        <CampoConAdjuntos etiqueta="Origen (dirección de búsqueda)" campo="origen" adjuntos={adjuntos} onCambiar={setAdjuntos}>
+          <input value={datos.origen} onChange={cambiar('origen')} required />
+        </CampoConAdjuntos>
+        <CampoConAdjuntos etiqueta="Destino" campo="destino" adjuntos={adjuntos} onCambiar={setAdjuntos}>
+          <input value={datos.destino} onChange={cambiar('destino')} />
+        </CampoConAdjuntos>
+        <CampoConAdjuntos etiqueta="Observaciones" campo="observaciones" adjuntos={adjuntos} onCambiar={setAdjuntos}>
+          <textarea rows={3} value={datos.observaciones} onChange={cambiar('observaciones')}
+            placeholder="ej: con espera, ida y vuelta, lleva valija…" />
+        </CampoConAdjuntos>
         {esNuevo && (
           <label>
             Chofer (opcional)
@@ -454,20 +470,45 @@ export default function FormViaje({ viaje, fechaInicial, inicial, onListo, onVol
                 {viaje.prioritario ? 'Quitar prioridad' : '⭐ Priorizar (se asigna antes que los demás)'}
               </button>
             )}
+            {/* Con chofer (aunque ya lo esté haciendo): pasárselo a otro o mandarlo a la cola (2/11/2026). */}
             <label>
-              Chofer
-              <ElegirChofer valor={choferElegido} onCambiar={setChoferElegido} choferes={choferes} excluidos={excluidos}
-                textoVacio="Sin chofer (vuelve a la asignación automática)" />
+              {conChofer ? 'Pasárselo a otro chofer' : 'Chofer'}
+              <ElegirChofer valor={choferElegido} onCambiar={setChoferElegido} excluidos={excluidos}
+                choferes={conChofer ? choferes.filter((c) => c.id !== viaje.chofer_id) : choferes}
+                textoVacio={conChofer ? 'Elegí el chofer…' : 'Sin chofer (vuelve a la asignación automática)'} />
             </label>
             <button type="button" className="boton"
-              disabled={enviando || (choferElegido === (viaje.chofer_id ?? '') && !viaje.espera_gestion)
+              disabled={enviando
+                || (conChofer ? !choferElegido : choferElegido === (viaje.chofer_id ?? '') && !viaje.espera_gestion)
                 || (!!viaje.chofer_fijo && choferElegido === viaje.chofer_fijo)}
               onClick={guardarChofer}>
-              {choferElegido ? 'Asignar a este chofer'
+              {choferElegido || conChofer ? 'Asignar a este chofer'
                 : viaje.espera_gestion ? 'Pasar a asignación automática' : 'Dejar sin chofer'}
             </button>
-            {conChofer && choferElegido !== viaje.chofer_id && (
-              <small className="ayuda">A {viaje.chofer.nombre} le llega el aviso "Se anuló tu viaje".</small>
+            {conChofer && choferElegido && (
+              <small className="ayuda">
+                A {viaje.chofer.nombre} le llega el aviso "Se anuló tu viaje"
+                {viaje.iniciado_en && ' y, si no está haciendo otro viaje, vuelve al puesto 1 de la cola'}.
+              </small>
+            )}
+            {conChofer && !confirmandoCola && (
+              <button type="button" className="boton azul-oscuro" onClick={() => setConfirmandoCola(true)}>
+                ↩️ Mandar a la cola
+              </button>
+            )}
+            {conChofer && confirmandoCola && (
+              <>
+                <p className="sin-margen">
+                  ¿Le sacás el viaje a <strong>{viaje.chofer.nombre}</strong> y lo mandás a la cola? Se le ofrece al primero
+                  de la cola antes que los otros viajes (queda ⭐ prioritario). A {viaje.chofer.nombre} le llega "Se anuló
+                  tu viaje"{viaje.iniciado_en && ' y, si no está haciendo otro viaje, vuelve al puesto 1 de la cola'}. Este
+                  viaje no se le vuelve a ofrecer.
+                </p>
+                <button type="button" className="boton azul-oscuro" disabled={enviando} onClick={mandarALaCola}>
+                  Sí, mandarlo a la cola
+                </button>
+                <button type="button" className="boton secundario" onClick={() => setConfirmandoCola(false)}>No</button>
+              </>
             )}
           </div>
         )}
@@ -546,8 +587,9 @@ export default function FormViaje({ viaje, fechaInicial, inicial, onListo, onVol
             <p className="aviso sin-margen">Este pago está aprobado: si lo corregís, deja de estarlo y hay que volver a aprobarlo.</p>
           )}
           {corrigiendoPago ? (
-            <FormPago importeInicial={viaje.importe} formaInicial={viaje.forma_pago}
-              cuentaInicial={viaje.cuenta_id} otroInicial={viaje.cuenta_otro}
+            <FormPago importeInicial={viaje.importe} {...pagoSugerido(viaje)}
+              {...(viaje.forma_pago && { formaInicial: viaje.forma_pago, cuentaInicial: viaje.cuenta_id })}
+              otroInicial={viaje.cuenta_otro}
               demoraInicial={viaje.demora} peajeInicial={viaje.peaje} naftaInicial={viaje.nafta}
               textoBoton="Guardar (queda registrado)" onGuardar={corregirPago} onCancelar={() => setCorrigiendoPago(false)} />
           ) : (

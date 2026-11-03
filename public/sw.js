@@ -8,12 +8,18 @@ self.addEventListener('push', (evento) => {
   let datos = {}
   try { datos = evento.data ? evento.data.json() : {} } catch { datos = { cuerpo: evento.data?.text() } }
 
+  // silencio: lo puso sin sonido en "Mis avisos" (2/11/2026): llega igual, callado.
+  const sonido = datos.silencio
+    ? { silent: true }
+    : {
+        renotify: true,             // vuelve a sonar aunque haya una notificación anterior
+        requireInteraction: true,   // queda en pantalla hasta que la toque
+        vibrate: [300, 150, 300, 150, 600],
+      }
   evento.waitUntil(self.registration.showNotification(datos.titulo || 'Remisería', {
     body: datos.cuerpo || '',
     tag: datos.etiqueta || 'remiseria',
-    renotify: true,             // vuelve a sonar aunque haya una notificación anterior
-    requireInteraction: true,   // queda en pantalla hasta que la toque
-    vibrate: [300, 150, 300, 150, 600],
+    ...sonido,
     icon: '/icono-192.png',
     badge: '/icono-192.png',
     data: { url: '/' },

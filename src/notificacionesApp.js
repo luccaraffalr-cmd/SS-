@@ -25,9 +25,14 @@ function escucharRegistro() {
 //   "viajes": sonido común (cambió tu viaje, se anuló).
 //   "avisos_viaje" (app versión 2 o más, que trae el sonido adentro): sonido propio y largo, para que se escuche con el
 //   celular en el bolsillo (viaje para vos, gestión te asignó un viaje, es hora de salir).
+//   "silencioso": los avisos que cada uno puso sin sonido en "Mis avisos" (2/11/2026): llegan, pero callados.
 async function crearCanales() {
   const comun = { importance: 5, visibility: 1, vibration: true, lights: true }
   await PushNotifications.createChannel({ id: 'viajes', name: 'Viajes', description: 'Cambios y anulaciones de tus viajes', ...comun })
+  await PushNotifications.createChannel({
+    id: 'silencioso', name: 'Sin sonido', description: 'Los avisos que pusiste sin sonido en "Mis avisos"',
+    importance: 2, visibility: 1, vibration: false, lights: false,
+  })
   if (versionApp >= 2) {
     await PushNotifications.createChannel({
       id: 'avisos_viaje', name: 'Viaje para vos', description: 'Cuando te ofrecen o te asignan un viaje, y cuando es hora de salir',

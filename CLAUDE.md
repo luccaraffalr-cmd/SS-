@@ -104,6 +104,14 @@
   chofer, **ningún chofer puede saber quién hizo un viaje** ("Salió un viaje para Juan" sin el cliente; regla en "10 bis"),
   tiempos con una sola unidad (`cuantoTiempo` en `estados.js`) y **crear un viaje con lo compartido desde WhatsApp**.
   Sin probar con datos reales: dos viajes a la vez y compartir → viaje nuevo (solo en el celular).
+- **Publicado en Netlify el 3/11/2026** (SQL hasta el 051, `notificar` subida): "🔔 Mis avisos" (047,
+  `MisAvisos.jsx`), destino en los programados asignados (046), "+ Nuevo viaje" azul oscuro, 20 min de anticipación,
+  **sacarle el viaje a un chofer / "↩️ Mandar a la cola"** (048, `viajes_sacados`), **viaje asignado que no sale: se lo saca
+  la app a los 5 min** (049, `vigilar_salidas`), clip adentro del campo y formulario más apretado, y **clientes guardados**
+  (050: tabla `clientes` solo de gestión, pestaña `Clientes.jsx`, buscador `ElegirCliente.jsx`, `clientes.js`; cuenta
+  corriente ya elegida al cobrar con `viajes.cuenta_sugerida_id`; WhatsApp directo al teléfono del cliente). Es el paso 1
+  para mandarle el link solo al cliente por WhatsApp (pasos 2 y 3, después). El 050 rompió un rato la lista de viajes
+  (dos FK a `cuentas_corrientes`; arreglado con el 051) y desde entonces `src/supabase.js` no usa la caché del navegador.
 - La consulta de solo lectura a la base anda sin que el usuario pegue nada:
   `npx.cmd supabase db query --linked --project-ref yomjqdbaatydpvazkvvg "select …"` (para verificar SQL aplicados).
 - **26/10: app Android "Senda Segura" 1.2 (código 3) armada y subida** (`config_app` en versión 3, archivo en Storage
@@ -121,8 +129,8 @@
   en la planilla de la remisería (Google Sheets), que sigue siendo la principal para la plata. Hecho y probado el 13/10 con
   una **copia** de la planilla (SQL 025, función `planilla`, secret `PLANILLA_ID`); falta pasar a la de verdad (pasos en
   `etapa-3-gestion.md`) y publicar en Netlify. **El repo es público**: nada de la planilla (nombres, montos) va al repo.
-  Decidido 14/10: se empieza a usar la app **en paralelo** con el sistema actual, escribiendo en la copia; clientes guardados
-  descartado.
+  Decidido 14/10: se empieza a usar la app **en paralelo** con el sistema actual, escribiendo en la copia (los clientes guardados,
+  descartados ese día, se hicieron el 2/11).
 - **Calendario como el de Samsung** (14/10, falta publicar): cada día muestra sus viajes, se desliza para cambiar de mes y
   se carga un viaje desde un día.
 - **Viajes que se repiten** (15/10, SQL 026, falta probar con datos reales y publicar): "Nuevo viaje" → Repetir (días sueltos o
