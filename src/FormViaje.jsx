@@ -44,7 +44,7 @@ function textoSituacion(v) {
       + 'trabajando lo puede tomar desde la app (y les suena un aviso).'
   }
   if (v.estado === 'ofrecido' && !v.asignado_por) {
-    return `Se le ofreció a ${nombre} (primero de la cola). Esperando que acepte. Si no contesta en 2 minutos y medio, `
+    return `Se le ofreció a ${nombre} (primero de la cola). Esperando que acepte. Si no contesta en 1 minuto y 15 segundos, `
       + 'pasa solo al siguiente de la cola.'
   }
   if (v.estado === 'ofrecido') return `📌 Asignado a mano a ${nombre}. Esperando que lo acepte.`

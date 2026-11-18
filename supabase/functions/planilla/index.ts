@@ -1,11 +1,14 @@
 // Escribe los viajes en la planilla de la remisería (Google Sheets), igual que el formulario de Google de los choferes
 // (decidido el 9/10/2026: la app reemplaza al formulario y la planilla sigue siendo la principal para la plata).
 // La llama la base de datos cuando se carga o corrige un pago (tabla "planilla_envios"), y cada 5 minutos si quedó algo.
-// No recibe datos: siempre trabaja con lo que está pendiente en la base.
+// No recibe datos: siempre trabaja con lo que está pendiente en la base (salvo { accion: 'hojas' }, ver abajo).
 // Secrets: FIREBASE_CUENTA (cuenta de servicio de Google, la misma de los avisos), PLANILLA_ID (el pedazo largo del link
 // de la planilla) y, si hace falta, PLANILLA_HOJA (por defecto "Respuestas de formulario 1").
 // La planilla tiene que estar compartida como editor con el client_email de la cuenta de servicio, y la Google Sheets API
 // activada en el proyecto de Google ("senda-segura").
+// Desde el 3/11/2026 escribe todos los pendientes de una vez (pocas llamadas a Google: así se pueden reescribir cientos de
+// filas, por ejemplo al cambiarle el nombre en la planilla a un chofer), las filas nuevas van al final de la hoja, y con
+// { accion: 'hojas' } (solo gestión) devuelve los nombres de las hojas de los choferes (su celda A2).
 import { createClient } from 'npm:@supabase/supabase-js@2'
 
 const HOJA = Deno.env.get('PLANILLA_HOJA') || 'Respuestas de formulario 1'
@@ -28,79 +31,141 @@ const CLIENTE_TRANSFERENCIA_DUENIO = 'Transferencia al dueño'
 type Envio = { viaje_id: number; pedido_en: string; intentos: number; planilla: string | null }
 type Cuenta = { client_email: string; private_key: string }
 
-function respuesta(cuerpo: unknown, estado = 200) {
-  return new Response(JSON.stringify(cuerpo), { status: estado, headers: { 'Content-Type': 'application/json' } })
+// Para que la pueda llamar la página (lista de hojas en la ficha del chofer). Sin esto, el navegador la bloqueaba
+// (visto en la auditoría del 17/11/2026) y el pedido previo (OPTIONS) disparaba una vuelta de escritura.
+const CORS = {
+  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+  'Access-Control-Allow-Methods': 'POST, OPTIONS',
 }
 
-Deno.serve(async () => {
+function respuesta(cuerpo: unknown, estado = 200) {
+  return new Response(JSON.stringify(cuerpo), { status: estado, headers: { ...CORS, 'Content-Type': 'application/json' } })
+}
+
+Deno.serve(async (req) => {
+  if (req.method === 'OPTIONS') return new Response('ok', { headers: CORS })
   const planillaId = Deno.env.get('PLANILLA_ID')
   const secreto = Deno.env.get('FIREBASE_CUENTA')
   // Sin configurar: los viajes quedan pendientes y se pasan cuando se configure.
   if (!planillaId || !secreto) return respuesta({ ok: false, motivo: 'Falta configurar la planilla (PLANILLA_ID)' })
 
   const admin = createClient(Deno.env.get('SUPABASE_URL')!, Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!)
+  const cuerpo = await req.json().catch(() => ({}))
+  if (cuerpo?.accion === 'hojas') return hojasDeChoferes(req, admin, planillaId, JSON.parse(secreto) as Cuenta)
+
   let planilla: Planilla | null = null
   let escritos = 0, fallidos = 0
 
+  // deno-lint-ignore no-explicit-any
+  const fallo = async (e: Envio, err: any) => {
+    fallidos++
+    const mensaje = (err as Error).message
+    console.error('Viaje', e.viaje_id, mensaje)
+    await admin.from('planilla_envios').update({ tomado_en: null, intentos: e.intentos + 1, error: mensaje.slice(0, 500) })
+      .eq('viaje_id', e.viaje_id)
+  }
+
   // Varias vueltas: si un viaje se corrige mientras se escribe, se vuelve a tomar en la vuelta siguiente.
-  for (let vuelta = 0; vuelta < 3; vuelta++) {
-    const { data: envios, error } = await admin.rpc('tomar_envios_planilla')
+  for (let vuelta = 0; vuelta < 10; vuelta++) {
+    const { data: envios, error } = await admin.rpc('tomar_envios_planilla', { p_limite: 100 })
     if (error) return respuesta({ error: error.message }, 500)
     if (!envios?.length) break
 
+    // Ya se habían escrito en otra planilla (la de prueba): no se pasan a esta.
+    const lista: Envio[] = []
     for (const e of envios as Envio[]) {
-      try {
-        // Ya se había escrito en otra planilla (la de prueba): no se pasa a esta.
-        if (e.planilla && e.planilla !== planillaId) {
-          await admin.from('planilla_envios').update({ pendiente: false, tomado_en: null,
-            error: 'Este viaje se había anotado en otra planilla (la de prueba). No se pasa a la de ahora.' })
-            .eq('viaje_id', e.viaje_id)
-          continue
-        }
-        const fila = await armarFila(admin, e.viaje_id)
-        if (!fila) { // el viaje ya no está finalizado: no hay nada que escribir
-          await admin.from('planilla_envios').update({ pendiente: false, tomado_en: null }).eq('viaje_id', e.viaje_id)
-          continue
-        }
-        planilla ??= await Planilla.abrir(planillaId, JSON.parse(secreto) as Cuenta)
-        const { numero, corregida } = await planilla.guardar(e.viaje_id, fila)
+      if (e.planilla && e.planilla !== planillaId) {
+        await admin.from('planilla_envios').update({ pendiente: false, tomado_en: null,
+          error: 'Este viaje se había anotado en otra planilla (la de prueba). No se pasa a la de ahora.' })
+          .eq('viaje_id', e.viaje_id)
+      } else lista.push(e)
+    }
+    if (!lista.length) continue
 
-        const ahora = new Date().toISOString()
-        const { data: cerrado } = await admin.from('planilla_envios')
-          .update({ pendiente: false, tomado_en: null, enviado_en: ahora, fila: numero, planilla: planillaId, error: null })
-          .eq('viaje_id', e.viaje_id).eq('pedido_en', e.pedido_en).select('viaje_id')
-        if (!cerrado?.length) { // lo corrigieron mientras se escribía: queda pendiente para la vuelta siguiente
-          await admin.from('planilla_envios').update({ tomado_en: null, fila: numero, planilla: planillaId })
-            .eq('viaje_id', e.viaje_id)
-        }
-        await admin.from('registro').insert({ viaje_id: e.viaje_id,
-          accion: `📄 ${corregida ? 'Corregido' : 'Anotado'} en la planilla (fila ${numero})` })
-        escritos++
-      } catch (err) {
-        fallidos++
-        const mensaje = (err as Error).message
-        console.error('Viaje', e.viaje_id, mensaje)
-        await admin.from('planilla_envios').update({ tomado_en: null, intentos: e.intentos + 1, error: mensaje.slice(0, 500) })
+    let filas: Map<number, (string | number)[]>
+    try {
+      filas = await armarFilas(admin, lista.map((e) => e.viaje_id))
+    } catch (err) {
+      for (const e of lista) await fallo(e, err)
+      continue
+    }
+    // Los que ya no están finalizados: no hay nada que escribir.
+    const aEscribir = lista.filter((e) => filas.has(e.viaje_id))
+    for (const e of lista.filter((e) => !filas.has(e.viaje_id))) {
+      await admin.from('planilla_envios').update({ pendiente: false, tomado_en: null }).eq('viaje_id', e.viaje_id)
+    }
+    if (!aEscribir.length) continue
+
+    let resultados: { numero: number; corregida: boolean }[]
+    try {
+      planilla ??= await Planilla.abrir(planillaId, JSON.parse(secreto) as Cuenta)
+      resultados = await planilla.guardarVarios(aEscribir.map((e) => ({ viajeId: e.viaje_id, fila: filas.get(e.viaje_id)! })))
+    } catch (err) {
+      for (const e of aEscribir) await fallo(e, err)
+      continue
+    }
+
+    const ahora = new Date().toISOString()
+    const cerrar = async (e: Envio, numero: number) => {
+      const { data: cerrado } = await admin.from('planilla_envios')
+        .update({ pendiente: false, tomado_en: null, enviado_en: ahora, fila: numero, planilla: planillaId, error: null })
+        .eq('viaje_id', e.viaje_id).eq('pedido_en', e.pedido_en).select('viaje_id')
+      if (!cerrado?.length) { // lo corrigieron mientras se escribía: queda pendiente para la vuelta siguiente
+        await admin.from('planilla_envios').update({ tomado_en: null, fila: numero, planilla: planillaId })
           .eq('viaje_id', e.viaje_id)
       }
     }
+    for (let desde = 0; desde < aEscribir.length; desde += 20) { // de a 20 a la vez
+      await Promise.all(aEscribir.slice(desde, desde + 20).map((e, k) => cerrar(e, resultados[desde + k].numero)))
+    }
+    await admin.from('registro').insert(aEscribir.map((e, i) => ({ viaje_id: e.viaje_id,
+      accion: `📄 ${resultados[i].corregida ? 'Corregido' : 'Anotado'} en la planilla (fila ${resultados[i].numero})` })))
+    escritos += aEscribir.length
   }
   return respuesta({ ok: true, escritos, fallidos })
 })
 
-// La fila del viaje, tal cual la escribía el formulario (null si el viaje no está finalizado).
+// Los nombres de las hojas de los choferes (la celda A2 de cada hoja que en A1 dice "Nombre del Chofer"), para elegir el
+// "Nombre en la planilla" de cada chofer en su ficha. Solo para gestión.
 // deno-lint-ignore no-explicit-any
-async function armarFila(admin: any, viajeId: number) {
-  const { data: v, error } = await admin.from('viajes')
+async function hojasDeChoferes(req: Request, admin: any, planillaId: string, cuenta: Cuenta) {
+  const token = (req.headers.get('Authorization') ?? '').replace(/^Bearer\s+/i, '')
+  const { data: usuario } = await admin.auth.getUser(token)
+  const { data: perfil } = usuario?.user
+    ? await admin.from('perfiles').select('rol').eq('id', usuario.user.id).maybeSingle()
+    : { data: null }
+  if (!['admin', 'operador'].includes(perfil?.rol)) return respuesta({ error: 'Solo para gestión' }, 403)
+  try {
+    const planilla = await Planilla.abrirSoloLectura(planillaId, cuenta)
+    return respuesta({ nombres: await planilla.nombresDeChoferes() })
+  } catch (err) {
+    return respuesta({ error: (err as Error).message }, 500)
+  }
+}
+
+// Las filas de los viajes, tal cual las escribía el formulario (los que no están finalizados no aparecen).
+// deno-lint-ignore no-explicit-any
+async function armarFilas(admin: any, viajeIds: number[]) {
+  const { data: viajes, error } = await admin.from('viajes')
     .select('id, estado, tipo, cliente_nombre, origen, destino, hora_presentacion, hora_asignacion, iniciado_en,'
       + ' pago_cargado_en, importe, forma_pago, cuenta_otro, demora, peaje, nafta, chofer_id,'
-      + ' chofer:perfiles!viajes_chofer_id_fkey(nombre), cuenta:cuentas_corrientes(nombre)')
-    .eq('id', viajeId).single()
-  if (error) throw new Error('No se pudo leer el viaje: ' + error.message)
-  if (v.estado !== 'finalizado') return null
+      + ' chofer:perfiles!viajes_chofer_id_fkey(nombre), cuenta:cuentas_corrientes!viajes_cuenta_id_fkey(nombre)')
+    .in('id', viajeIds)
+  if (error) throw new Error('No se pudieron leer los viajes: ' + error.message)
+  const finalizados = viajes.filter((v: { estado: string }) => v.estado === 'finalizado')
+  const choferIds = [...new Set(finalizados.map((v: { chofer_id: string }) => v.chofer_id))]
+  const { data: choferes } = choferIds.length
+    ? await admin.from('choferes').select('id, nombre_planilla').in('id', choferIds)
+    : { data: [] }
+  const nombres = new Map((choferes ?? []).map((c: { id: string; nombre_planilla: string | null }) => [c.id, c.nombre_planilla]))
+  // deno-lint-ignore no-explicit-any
+  return new Map(finalizados.map((v: any) => [v.id, armarFila(v, nombres.get(v.chofer_id) as string | null)]))
+}
 
-  const { data: ch } = await admin.from('choferes').select('nombre_planilla').eq('id', v.chofer_id).maybeSingle()
-  const chofer = ch?.nombre_planilla?.trim() || v.chofer?.nombre || ''
+// deno-lint-ignore no-explicit-any
+function armarFila(v: any, nombrePlanilla: string | null) {
+  const chofer = nombrePlanilla?.trim() || v.chofer?.nombre || ''
 
   // Fecha del viaje: la de presentación si es programado; si no, cuando salió a hacerlo.
   const cuando = v.tipo === 'programado' && v.hora_presentacion ? v.hora_presentacion : (v.iniciado_en ?? v.hora_asignacion)
@@ -149,16 +214,19 @@ const rango = (a1: string) => `'${HOJA.replace(/'/g, "''")}'!${a1}`
 
 // La hoja de respuestas de la planilla, por la API de Google Sheets.
 class Planilla {
-  private constructor(
-    private id: string,
-    private permiso: string,
-    private columnaNumero: number,          // dónde va el n.º de viaje de la app
-    private filas: Map<number, number>,     // n.º de viaje → fila
-  ) {}
+  private columnaNumero = 0                  // dónde va el n.º de viaje de la app
+  private filas = new Map<number, number>()  // n.º de viaje → fila
+  private ultima = 1                         // última fila con datos (columna A, la marca temporal)
+
+  private constructor(private id: string, private permiso: string) {}
+
+  // Solo para leer (los nombres de las hojas de los choferes).
+  static async abrirSoloLectura(id: string, cuenta: Cuenta) {
+    return new Planilla(id, await permisoDeGoogle(cuenta))
+  }
 
   static async abrir(id: string, cuenta: Cuenta) {
-    const permiso = await permisoDeGoogle(cuenta)
-    const p = new Planilla(id, permiso, 0, new Map())
+    const p = await Planilla.abrirSoloLectura(id, cuenta)
     // Encabezados: si todavía no está la columna del n.º de viaje, se agrega después de la última (la M).
     const encabezados = (await p.leer(rango('1:1')))[0] ?? []
     let columna = encabezados.findIndex((t: unknown) => String(t).trim() === ENCABEZADO_NUMERO)
@@ -173,28 +241,66 @@ class Planilla {
       const n = Number(fila[0])
       if (i > 0 && Number.isInteger(n) && n > 0) p.filas.set(n, i + 1)
     })
+    p.ultima = Math.max(1, (await p.leer(rango('A:A'))).length)
     return p
   }
 
-  // Escribe la fila del viaje: la corrige si ya estaba (busca el n.º de viaje), o la agrega al final.
-  async guardar(viajeId: number, fila: (string | number)[]) {
-    const completa = [...fila]
-    while (completa.length < this.columnaNumero) completa.push('')
-    completa[this.columnaNumero] = viajeId
+  // Escribe las filas de los viajes, con dos pedidos a Google en total: corrige las que ya estaban (busca el n.º de viaje)
+  // y agrega las otras juntas al final de la hoja. Devuelve la fila de cada uno, en el mismo orden.
+  async guardarVarios(viajes: { viajeId: number; fila: (string | number)[] }[]) {
     const fin = letra(this.columnaNumero)
+    const completas = viajes.map(({ viajeId, fila }) => {
+      const completa = [...fila]
+      while (completa.length < this.columnaNumero) completa.push('')
+      completa[this.columnaNumero] = viajeId
+      return completa
+    })
+    const resultados: { numero: number; corregida: boolean }[] = new Array(viajes.length)
 
-    const existente = this.filas.get(viajeId)
-    if (existente) {
-      // Se deja la marca temporal original (columna A).
-      await this.escribir(rango(`B${existente}:${fin}${existente}`), [completa.slice(1)])
-      return { numero: existente, corregida: true }
+    // Las que ya estaban: se deja la marca temporal original (columna A).
+    const correcciones = viajes.map((v, i) => ({ i, numero: this.filas.get(v.viajeId) })).filter((c) => c.numero)
+    if (correcciones.length) {
+      await this.pedir(':batchUpdate', { method: 'POST', body: JSON.stringify({
+        valueInputOption: 'USER_ENTERED',
+        data: correcciones.map(({ i, numero }) => ({ range: rango(`B${numero}:${fin}${numero}`), values: [completas[i].slice(1)] })),
+      }) })
+      for (const { i, numero } of correcciones) resultados[i] = { numero: numero!, corregida: true }
     }
-    const r = await this.pedir(
-      `${encodeURIComponent(rango(`A:${fin}`))}:append?valueInputOption=USER_ENTERED&insertDataOption=INSERT_ROWS`,
-      { method: 'POST', body: JSON.stringify({ values: [completa] }) })
-    const numero = Number(/!\D+(\d+)/.exec(r.updates?.updatedRange ?? '')?.[1])
-    if (numero) this.filas.set(viajeId, numero)
-    return { numero, corregida: false }
+
+    // Las nuevas, después de la última fila con datos (si se le da toda la columna, Google a veces las mete más arriba).
+    const nuevas = viajes.map((_, i) => i).filter((i) => !resultados[i])
+    if (nuevas.length) {
+      const r = await this.pedir(
+        `${encodeURIComponent(rango(`A${this.ultima}:${fin}${this.ultima}`))}:append?valueInputOption=USER_ENTERED&insertDataOption=INSERT_ROWS`,
+        { method: 'POST', body: JSON.stringify({ values: nuevas.map((i) => completas[i]) }) })
+      const desde = Number(/!\D+(\d+)/.exec(r.updates?.updatedRange ?? '')?.[1])
+      nuevas.forEach((i, k) => {
+        const numero = desde ? desde + k : 0
+        if (numero) this.filas.set(viajes[i].viajeId, numero)
+        resultados[i] = { numero, corregida: false }
+      })
+      if (desde) this.ultima = desde + nuevas.length - 1
+    }
+    return resultados
+  }
+
+  // Las hojas de los choferes: en A1 dicen "Nombre del Chofer" y en A2, el nombre que se busca en la columna B (Chofer).
+  async nombresDeChoferes() {
+    const r = await fetch(`https://sheets.googleapis.com/v4/spreadsheets/${this.id}?fields=sheets.properties.title`,
+      { headers: { Authorization: 'Bearer ' + this.permiso } })
+    const datos = await r.json().catch(() => ({}))
+    if (!r.ok) throw new Error(explicarError(r.status, datos?.error?.message ?? ''))
+    // deno-lint-ignore no-explicit-any
+    const titulos: string[] = (datos.sheets ?? []).map((h: any) => h.properties.title).filter((t: string) => t !== HOJA)
+    if (!titulos.length) return []
+    const rangos = titulos.map((t) => 'ranges=' + encodeURIComponent(`'${t.replace(/'/g, "''")}'!A1:A2`)).join('&')
+    const valores = await this.pedir(`:batchGet?${rangos}&valueRenderOption=FORMATTED_VALUE`)
+    const nombres = new Set<string>()
+    for (const v of valores.valueRanges ?? []) {
+      const [a1, a2] = (v.values ?? []).map((f: unknown[]) => String(f?.[0] ?? '').trim())
+      if (/^nombre del chofer/i.test(a1 ?? '') && a2) nombres.add(a2)
+    }
+    return [...nombres].sort((a, b) => a.localeCompare(b, 'es'))
   }
 
   // Si la hoja tiene menos columnas que las que hacen falta, le agrega las que faltan al final.
@@ -229,8 +335,9 @@ class Planilla {
       { method: 'PUT', body: JSON.stringify({ values: valores }) })
   }
 
+  // ruta: un rango ("Hoja!A1:B2…") o una acción de varios rangos (":batchUpdate", ":batchGet?…").
   private async pedir(ruta: string, opciones: RequestInit = {}) {
-    const r = await fetch(`https://sheets.googleapis.com/v4/spreadsheets/${this.id}/values/${ruta}`, {
+    const r = await fetch(`https://sheets.googleapis.com/v4/spreadsheets/${this.id}/values${ruta.startsWith(':') ? '' : '/'}${ruta}`, {
       ...opciones,
       headers: { Authorization: 'Bearer ' + this.permiso, 'Content-Type': 'application/json' },
     })

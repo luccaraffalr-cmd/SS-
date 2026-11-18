@@ -314,7 +314,7 @@ Hoy la ubicación "desaparece" por varios minutos. Hay que diseñar para que **n
 - **(2026-09-28) Cola ordenable "tipo Spotify":** en gestión se arrastra a cada chofer al puesto que se quiera.
 - **(2026-09-28) Asignación con aceptación del chofer.** Reemplaza "El chofer no puede rechazar viajes" (4.3):
   - **Oferta automática:** el viaje se le ofrece al primero de la cola. ~~Sin tiempo límite~~ **Desde el 22/10/2026 tiene
-    2 minutos y medio para contestar** (ver la decisión del 22/10 más abajo). (El 28/9 se había sacado el límite de 3 minutos.)
+    2 minutos y medio para contestar** (ver la decisión del 22/10 más abajo; **desde el 3/11, 1 minuto y 15 segundos**). (El 28/9 se había sacado el límite de 3 minutos.)
     - **Rechaza:** el viaje pasa al siguiente y él **sigue primero en la cola** (cambiado el 28/9/2026: antes salía de la cola).
     - No se le vuelve a ofrecer el mismo viaje.
   - **Asignación manual (gestión):** el chofer la acepta al recibirla (sin tiempo límite) y, cuando llega la hora o termina el viaje que está haciendo, toca **"Salir a hacer el viaje"**. Si la rechaza, el viaje **vuelve a gestión** (no se asigna solo).
@@ -351,7 +351,8 @@ Hoy la ubicación "desaparece" por varios minutos. Hay que diseñar para que **n
     clientes guardados** (ver "Clientes guardados", más abajo).
   - Las formas de pago quedan como están (el dueño no definió nada para "Transferencia al dueño").
   - **La app se empieza a usar de verdad escribiendo en la copia de la planilla**, en paralelo con el sistema actual
-    (formulario + planilla de verdad). Cuando esté todo probado, se pasa a la planilla de verdad.
+    (formulario + planilla de verdad). ~~Cuando esté todo probado, se pasa a la planilla de verdad.~~ **Cambiado el
+    2026-11-06:** no se pasa a la de verdad (ver "La planilla de la app", más abajo).
 - **(2026-10-14) Calendario como el de Samsung** (pedido del dueño):
   - En el mes, **cada día muestra sus viajes**: hora y origen, 2 por día y "+N" si hay más. En rojo, los que necesitan
     atención (sin chofer, sin aceptar, no salió). Los anulados no se muestran.
@@ -452,6 +453,26 @@ Hoy la ubicación "desaparece" por varios minutos. Hay que diseñar para que **n
     teléfono de **su** viaje, como antes.
   - Más adelante (pasos 2 y 3): que el link le llegue solo por WhatsApp (con la conexión oficial de WhatsApp) y recibir
     mensajes.
+- **(2026-11-03) La hoja de cada chofer en la planilla:** en la planilla, cada chofer tiene su hoja (en la celda A2 dice
+  su nombre) y le suman las filas que en la columna "Chofer" dicen **exactamente** eso. La app anotaba a casi todos con el
+  nombre del usuario ("Roberto Casco" en vez de "Roberto"), así que sus viajes no les sumaban. Ahora:
+  - En la ficha del chofer, **"Su hoja en la planilla"** se elige de una lista con las hojas de la planilla (las que en A1
+    dicen "Nombre del Chofer"), con un aviso ⚠️ si está vacía o no coincide con ninguna. SQL 053.
+  - **La primera vez que se elige**, se vuelven a anotar sus viajes ya pasados con ese nombre (así le suman). **Si después
+    se cambia a otra hoja**, los viajes ya anotados quedan en la anterior y solo los nuevos van a la otra (por ejemplo, si
+    cambia de auto y el dueño le arma otra hoja).
+  - Se eligieron las hojas de todos los choferes reales y se reescribieron las 618 filas que ya había anotado la app.
+  - Las filas nuevas van **al final** de la hoja de respuestas (antes la app las metía arriba, desde la fila 2) y se
+    escriben todas juntas, para no pasarse del límite de Google al reescribir muchas.
+  - **(2026-11-04)** En la planilla, "Comisiones" pasa a ser una lista fija (todos con 20%): al armar la hoja de un chofer
+    nuevo hay que agregarlo ahí. "Facturacion por dia" ahora suma a todos los choferes del día. Detalle en
+    `etapa-3-gestion.md`.
+- **(2026-11-06) La planilla de la app:** no se pasa nada a la planilla oficial de la remisería. La copia ("PRUEBA app -
+  Senda Segura", la que usa la app hoy) **pasa a ser la planilla nuestra**: la app sigue escribiendo cada viaje ahí y se la
+  va a personalizar. La oficial queda como está, con el formulario de Google.
+- **(2026-11-06) Link del pasajero con el viaje terminado:** se corta la ubicación (no hay mapa), pero **siguen apareciendo
+  el nombre del chofer, el auto y los datos para transferir (DNI y alias, con "Copiar")**, para que el pasajero pueda pagar
+  después. Si el viaje se anuló o no se pudo hacer, el link no muestra nada del chofer. Sin límite de tiempo. SQL 054.
 - **(2026-10-26) Link del pasajero con anticipación:** en los **programados** se puede mandar el link (WhatsApp / Copiar)
   desde que se cargan, aunque no tengan chofer (por ejemplo, a la noche para un viaje de la madrugada). Hasta que el chofer
   toca "Salir a hacer el viaje", el link muestra **la fecha y la hora** y, si ya hay un chofer que lo aceptó, su nombre, el
@@ -538,7 +559,7 @@ Hoy la ubicación "desaparece" por varios minutos. Hay que diseñar para que **n
     tu viaje".
 - **(2026-10-22) Los choferes pueden tomar los viajes sin chofer** (cuando nos quedamos sin choferes disponibles):
   - Cuando un viaje queda sin chofer (llegó su hora y la cola no lo tomó: nadie en la cola, o todos rechazaron o no
-    contestaron), se **espera 1 minuto**: si alguien se anuncia, se le ofrece como siempre (2:30 para aceptar).
+    contestaron), se **espera 1 minuto**: si alguien se anuncia, se le ofrece como siempre (2:30 para aceptar; 1:15 desde el 3/11).
   - Pasado el minuto, en el cartel rojo de viajes sin chofer aparece **"✋ Tomar este viaje"** (con "¿Lo tomás? Sí, lo tomo"
     para no tomarlo sin querer) y a los choferes que están trabajando les suena **"🆘 Viaje sin chofer"** (con dónde buscar).
   - **El primero que lo toma se lo queda**, sin tener que aceptarlo. Lo pueden tomar los que están **Libres, en la cola o en
@@ -559,6 +580,7 @@ Hoy la ubicación "desaparece" por varios minutos. Hay que diseñar para que **n
   - Si no queda nadie en la cola, el viaje queda sin chofer: cartel rojo y aviso con sonido a los admins.
   - Si un chofer no contesta varias seguidas, por ahora no pasa nada más (gestión lo puede sacar de la cola a mano).
   - Las asignaciones a mano de gestión siguen sin tiempo límite.
+  - **(2026-11-03) Pasa a 1 minuto y 15 segundos** (pedido del dueño; SQL 052). Todo lo demás sigue igual.
 - **(2026-10-22) Origen destacado para el chofer** (los choferes se confundían con el destino): en la oferta, "Tu viaje"
   y "Tus viajes asignados", el origen va en un **recuadro verde "📍 BUSCAR EN"** con letra grande; el destino queda abajo,
   más chico y gris, como **"Llevar a: …"**. En los avisos "🔔 Viaje para vos", "📌 Gestión te asignó un viaje" y

@@ -11,6 +11,7 @@ const CADA_CUANTO = 5 * 1000
 function textos(d) {
   if (!d) return ['Cargando…', '']
   if (d.estado === 'inexistente') return ['Link no válido', 'Pedile uno nuevo a la remisería.']
+  if (d.estado === 'terminado' && d.chofer) return ['Viaje terminado', 'Ya no se ve el auto en el mapa. Los datos del chofer siguen acá.']
   if (d.estado === 'terminado') return ['Viaje terminado', 'Este link ya no muestra el auto.']
   // El chofer todavía no salió a buscarlo (link mandado antes, 26/10/2026): la fecha y la hora, sin mapa.
   if (d.estado === 'esperando' && d.tipo === 'programado' && d.presentacion) {
@@ -87,7 +88,7 @@ export default function Seguimiento({ codigo }) {
     <div className="seguimiento">
       <div ref={elementoMapa} className="seguimiento-mapa" />
       <div className="seguimiento-barra">
-        {(datos?.estado === 'activo' || (datos?.estado === 'esperando' && datos.chofer)) && (
+        {(datos?.estado === 'activo' || (['esperando', 'terminado'].includes(datos?.estado) && datos.chofer)) && (
           <div className="seguimiento-auto">
             {datos.foto && (
               <button type="button" className="seguimiento-foto" onClick={() => setFotoGrande(true)} aria-label="Ver la foto del auto en grande">
@@ -103,7 +104,7 @@ export default function Seguimiento({ codigo }) {
             </div>
           </div>
         )}
-        {datos?.estado === 'activo' && datos.alias && (
+        {['activo', 'terminado'].includes(datos?.estado) && datos.alias && (
           <div className="seguimiento-alias">
             <span>Alias: <strong>{datos.alias}</strong></span>
             <button type="button" className="boton" onClick={copiarAlias}>{copiado ? 'Copiado ✅' : 'Copiar'}</button>

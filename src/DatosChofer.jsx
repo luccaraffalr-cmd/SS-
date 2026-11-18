@@ -11,6 +11,17 @@ export default function DatosChofer({ choferId }) {
   const [mensaje, setMensaje] = useState('')
   const [guardando, setGuardando] = useState(false)
   const [subiendo, setSubiendo] = useState(false)
+  // Las hojas de los choferes en la planilla (lo que dice su celda A2). null = cargando; si falla, se escribe a mano.
+  const [hojas, setHojas] = useState(null)
+  const [errorHojas, setErrorHojas] = useState('')
+
+  useEffect(() => {
+    supabase.functions.invoke('planilla', { body: { accion: 'hojas' } }).then(async ({ data, error: err }) => {
+      const motivo = err && (await err.context?.json?.().catch(() => null))?.error
+      if (err || !Array.isArray(data?.nombres)) setErrorHojas(motivo || err?.message || 'sin respuesta')
+      else setHojas(data.nombres)
+    })
+  }, [])
 
   useEffect(() => {
     Promise.all([
@@ -31,6 +42,9 @@ export default function DatosChofer({ choferId }) {
   if (!datos) return <div className="tarjeta separada"><p>Cargando datos del chofer…</p></div>
 
   const cambiar = (campo) => (e) => setDatos({ ...datos, [campo]: e.target.value })
+  // La planilla no distingue mayúsculas (sí las tildes).
+  const hoja = datos.nombre_planilla.trim()
+  const hojaElegida = hojas?.find((h) => h.toLowerCase() === hoja.toLowerCase())
 
   async function guardar() {
     setError('')
@@ -119,11 +133,28 @@ export default function DatosChofer({ choferId }) {
         <small className="ayuda">El DNI y el alias los ve el pasajero en el link de seguimiento. Los otros choferes no.</small>
       </label>
       <label>
-        Nombre en la planilla
-        <input value={datos.nombre_planilla} onChange={cambiar('nombre_planilla')} placeholder="ej: Pérez Juan" />
+        Su hoja en la planilla
+        {hojas ? (
+          <select value={hojaElegida ?? hoja} onChange={cambiar('nombre_planilla')}>
+            <option value="">— Elegí su hoja —</option>
+            {hoja && !hojaElegida && <option value={hoja}>{hoja} (no hay una hoja así)</option>}
+            {hojas.map((h) => <option key={h} value={h}>{h}</option>)}
+          </select>
+        ) : (
+          <input value={datos.nombre_planilla} onChange={cambiar('nombre_planilla')} placeholder="ej: Pérez Juan"
+            disabled={!errorHojas} />
+        )}
+        {!hoja && (hojas || errorHojas) && (
+          <small className="aviso error">⚠️ Sin hoja: sus viajes no le suman en ninguna hoja de la planilla.</small>
+        )}
+        {hojas && hoja && !hojaElegida && (
+          <small className="aviso error">⚠️ En la planilla no hay una hoja con ese nombre: sus viajes no le suman.</small>
+        )}
         <small className="ayuda">
-          Tal cual lo elegía en el formulario (columna "Chofer" de la planilla): con ese nombre se anotan sus viajes.
-          Si lo dejás vacío, se usa el nombre del usuario.
+          {errorHojas && `No se pudo leer la planilla (${errorHojas}): escribilo tal cual dice en su hoja, arriba de todo. `}
+          Sus viajes se anotan con este nombre en la columna "Chofer", y así le suman en su hoja. La primera vez que se
+          elige, también se corrigen sus viajes ya anotados; si después se cambia a otra hoja, los anteriores quedan donde
+          estaban.
         </small>
       </label>
       <label>

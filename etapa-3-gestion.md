@@ -71,8 +71,40 @@ planilla" en `DatosChofer`, `EstadoPlanilla` en el viaje y aviso rojo en Viajes 
 nombre en la planilla "Alejandro". Se agregó la fila (52827) y la columna M "N.º viaje app" (la hoja tenía solo A–L: la función
 agrega la columna sola), la corrección actualizó la misma fila, y la hoja "Alejandro" y "Cuenta Corriente" (Priva) lo sumaron
 bien. Fechas y números quedan como los del formulario. La planilla está en locale es_MX.
+**Arreglado el 3/11** (las hojas de los choferes no sumaban los viajes de la app): casi ningún chofer tenía "Nombre en la
+planilla" y se anotaban con el nombre del usuario, que no coincide con la celda A2 de su hoja. SQL 053 + "Su hoja en la
+planilla" como lista en `DatosChofer` (la función `planilla` con `{ accion: 'hojas' }`, solo gestión, devuelve las A2 de las
+hojas que en A1 dicen "Nombre del Chofer"). Los nombres de cada chofer se cargaron con un SQL aparte (no va al repo) y se
+reescribieron las 618 filas. La función ahora escribe todo junto (una corrección y un agregado por vuelta, de a 100) y agrega
+las filas nuevas al final (antes las metía desde la fila 2: en la copia, las filas 2 a 619 son de la app; eso corrió la
+fórmula de "Comisiones" a `B620:B1666`, no pasa en la de verdad). La hoja "Brian" tiene días solo hasta el 26/3/2026: el
+dueño tiene que estirarla.
+**Arreglado el 4/11 en la copia** (venía así de la planilla original, no lo rompió la app; la de verdad tiene lo mismo):
+- "Comisiones": la columna A era `SORT(UNIQUE(...))` de las primeras 1047 respuestas (junio de 2023), con 16 choferes; los
+  demás daban #N/A en la comisión (C2 de su hoja) y en todo lo que depende de ella (saldo, ganancia, total dueño auto, y
+  el saldo de Federico, que resta el 2% de Alberto, Diego Cantalejo, etc.). Ahora es una **lista fija** con las 67 hojas de
+  choferes, todos con 20% (los 16 ya estaban con 20%; los dos 15% de las filas 24 y 25 no tenían chofer al lado). **Al armar
+  la hoja de un chofer nuevo, hay que agregarlo en "Comisiones".**
+- "TD Comision" (tabla dinámica por fecha y chofer): no repetía la fecha, y "Facturacion por dia" (`SUMIFS` por fecha) sumaba
+  solo al primer chofer de cada día. Ahora repite la fecha; verificado: el total del día = la suma de las hojas. Fórmulas de
+  E:F estiradas hasta la fila 21291.
+- "Brian": 1000 días más (hasta el 20/12/2028, como las demás).
+- (6/11) "Marca temporal" de las 618 filas que la app metió arriba (2 a 619): tomaron el formato del encabezado y se veían
+  como un número (46314,85956). Ahora tienen el mismo formato de fecha y hora que el resto (`m/d/yyyy h:mm:ss`, el del
+  formulario). Las que la app agrega al final ya salían bien.
+- Se hizo con `supabase/functions/arreglar-planilla` (no queda subida; cómo usarla, arriba de todo en el archivo). **Al pasar
+  a la de verdad, correrla también ahí** (con `estirar` para las hojas que estén cortas).
+- Sin tocar, a preguntarle al dueño: en "Federico", la columna "Ojeda Armando" (2%) apunta 1000 filas más abajo de la fecha
+  (da siempre 0), y en "Alberto", "Comision Dario" usa la hoja vieja "Dario" (vacía; ¿debería ser "Bianchi Dario"?).
+- Visto en la base: hay viajes cobrados con importe $0, $1 o $2 (Roberto Casco, Alberto Berrastro, Federico Yabel, Victor
+  Gutierrez y otros, desde el 19/10): en la planilla suman eso.
 
-**Para pasar a la planilla de verdad** (cuando los choferes empiecen a usar la app en serio):
+**6/11: no se pasa nada a la planilla oficial. La copia ("PRUEBA app - Senda Segura") pasa a ser la planilla de la app**
+(la nuestra): la app sigue escribiendo todo ahí y se la va a personalizar. La oficial queda como está, con el formulario de
+Google (el dueño pidió pasar solo a Alejandro y enseguida se descartó). Los pasos de abajo ya no van, salvo que se decida
+otra cosa.
+
+~~Para pasar a la planilla de verdad~~ (ya no va, 6/11):
 1. ~~Borrarle "Alejandro" del "Nombre en la planilla" a `p2`~~ (hecho el 19/10). No usar choferes de prueba después del cambio.
 2. Que el usuario comparta la planilla de verdad con `firebase-adminsdk-fbsvc@senda-segura.iam.gserviceaccount.com` (editor).
 3. `npx.cmd supabase secrets set PLANILLA_ID=<id de la de verdad> --project-ref yomjqdbaatydpvazkvvg`. Los viajes que ya

@@ -37,5 +37,5 @@ Invoke-RestMethod -Method Patch -Uri "https://$ref.supabase.co/rest/v1/config_ap
 
 Copy-Item $apk "$env:USERPROFILE\Downloads\Remiseria.apk" -Force
 Write-Host "Publicada la versión $nombre. Los celulares con la app 1.1 o más la ofrecen sola; el archivo también quedó en Descargas\Remiseria.apk."
-# Ojo: la app carga las pantallas de Netlify. Si la versión nueva necesita pantallas nuevas, hay que publicar también en
-# Netlify (push a main).
+# Ojo: desde la 1.4 (18/11/2026) la app carga las pantallas de Cloudflare Pages (https://senda-segura.pages.dev; antes,
+# Netlify). Si la versión nueva necesita pantallas nuevas, hay que publicarlas también (push a main).

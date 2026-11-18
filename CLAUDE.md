@@ -112,6 +112,14 @@
   corriente ya elegida al cobrar con `viajes.cuenta_sugerida_id`; WhatsApp directo al teléfono del cliente). Es el paso 1
   para mandarle el link solo al cliente por WhatsApp (pasos 2 y 3, después). El 050 rompió un rato la lista de viajes
   (dos FK a `cuentas_corrientes`; arreglado con el 051) y desde entonces `src/supabase.js` no usa la caché del navegador.
+- **3/11, después de publicar (falta publicar):** ofertas de la cola con **1:15** (SQL 052) y **arreglo de la planilla**
+  (SQL 053, función `planilla` subida): "Su hoja en la planilla" se elige de una lista en `DatosChofer` (las A2 de las hojas
+  de los choferes, con `{ accion: 'hojas' }`); la primera vez reescribe sus viajes ya anotados. Filas nuevas al final y todo
+  junto. Los nombres de las hojas de cada chofer se cargaron con un SQL aparte (no va al repo). Detalle en `etapa-3-gestion.md`.
+  **4/11:** arreglada la copia (comisiones con #N/A, "Facturacion por dia" que sumaba un chofer por día, hoja "Brian" corta)
+  con `supabase/functions/arreglar-planilla` (no queda subida). **6/11: la copia pasa a ser la planilla de la app**
+  (ver Etapa 3, abajo). También en el 6/11, sin publicar: SQL 054 (link del pasajero con el viaje terminado:
+  chofer, DNI y alias sin el mapa, `Seguimiento.jsx`).
 - La consulta de solo lectura a la base anda sin que el usuario pegue nada:
   `npx.cmd supabase db query --linked --project-ref yomjqdbaatydpvazkvvg "select …"` (para verificar SQL aplicados).
 - **26/10: app Android "Senda Segura" 1.2 (código 3) armada y subida** (`config_app` en versión 3, archivo en Storage
@@ -127,8 +135,9 @@
   app en cada celular (permisos: ubicación "todo el tiempo", batería sin restricciones, notificaciones).
 - **Etapa 3** (contexto y estado en `etapa-3-gestion.md`): la app **reemplaza al formulario de Google** y escribe cada viaje
   en la planilla de la remisería (Google Sheets), que sigue siendo la principal para la plata. Hecho y probado el 13/10 con
-  una **copia** de la planilla (SQL 025, función `planilla`, secret `PLANILLA_ID`); falta pasar a la de verdad (pasos en
-  `etapa-3-gestion.md`) y publicar en Netlify. **El repo es público**: nada de la planilla (nombres, montos) va al repo.
+  una **copia** de la planilla (SQL 025, función `planilla`, secret `PLANILLA_ID`). **Decidido 6/11: no se pasa nada a la
+  planilla oficial; la copia ("PRUEBA app - Senda Segura") es la planilla de la app** y se la va a personalizar.
+  **El repo es público**: nada de la planilla (nombres, montos) va al repo.
   Decidido 14/10: se empieza a usar la app **en paralelo** con el sistema actual, escribiendo en la copia (los clientes guardados,
   descartados ese día, se hicieron el 2/11).
 - **Calendario como el de Samsung** (14/10, falta publicar): cada día muestra sus viajes, se desliza para cambiar de mes y

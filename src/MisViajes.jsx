@@ -32,7 +32,7 @@ function LineaDestino({ viaje, sinDestino }) {
   )
 }
 
-// Ofertas de la cola: 2 minutos y medio para contestar (22/10/2026); si no, el viaje pasa al siguiente.
+// Ofertas de la cola: 1 minuto y 15 segundos para contestar (3/11/2026; antes 2:30); si no, el viaje pasa al siguiente.
 function TiempoParaContestar({ vence, ahora }) {
   const quedan = Math.max(0, Math.ceil((new Date(vence).getTime() - ahora) / 1000))
   if (quedan === 0) return <p className="tiempo-oferta poco">⌛ Se terminó el tiempo: el viaje pasa al siguiente.</p>

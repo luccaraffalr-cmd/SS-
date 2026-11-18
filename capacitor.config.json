@@ -3,7 +3,7 @@
   "appName": "Senda Segura",
   "webDir": "dist",
   "server": {
-    "url": "https://fastidious-cocada-43719b.netlify.app",
+    "url": "https://senda-segura.pages.dev",
     "errorPath": "sin-internet.html"
   },
   "plugins": {
